@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import { SiteLayout, Wrap, SectionHead } from "@/components/site/Layout";
 import { Reveal } from "@/components/site/Reveal";
 import heroMark from "@/assets/hero-mark.jpg";
