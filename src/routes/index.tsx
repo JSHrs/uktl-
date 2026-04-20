@@ -41,12 +41,52 @@ function Index() {
 }
 
 function Hero() {
+  const markRef = useRef<HTMLDivElement | null>(null);
+  const [entered, setEntered] = useState(false);
+
+  useEffect(() => {
+    // Fade-in on mount
+    const t = window.setTimeout(() => setEntered(true), 120);
+
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return () => window.clearTimeout(t);
+
+    let raf = 0;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      raf = window.requestAnimationFrame(() => {
+        const el = markRef.current;
+        if (el) {
+          const y = window.scrollY;
+          // Slow parallax drift + gentle scale; clamp so it stays subtle
+          const translate = Math.min(y * 0.18, 160);
+          const scale = 1 + Math.min(y * 0.00018, 0.06);
+          // Soften opacity slightly as it leaves the viewport
+          const fade = Math.max(1 - y / 1200, 0.55);
+          el.style.transform = `translate3d(0, ${translate}px, 0) scale(${scale})`;
+          el.style.setProperty("--mark-fade", String(fade));
+        }
+        ticking = false;
+      });
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener("scroll", onScroll);
+      window.cancelAnimationFrame(raf);
+    };
+  }, []);
+
   return (
     <section className="relative min-h-screen pt-44 pb-20 md:pt-44 md:pb-20 flex flex-col justify-between overflow-hidden">
-      {/* Cartographic mark — subtle background art */}
+      {/* Cartographic mark — subtle background art with parallax + fade-in */}
       <div
+        ref={markRef}
         aria-hidden="true"
-        className="absolute inset-0 z-0 pointer-events-none opacity-[0.22] md:opacity-[0.28]"
+        className="absolute inset-0 z-0 pointer-events-none will-change-transform"
         style={{
           backgroundImage: `url(${heroMark})`,
           backgroundSize: "cover",
@@ -56,6 +96,8 @@ function Hero() {
           WebkitMaskImage:
             "radial-gradient(ellipse 75% 70% at 70% 45%, black 0%, black 35%, transparent 85%)",
           mixBlendMode: "multiply",
+          opacity: entered ? `calc(var(--mark-fade, 1) * 0.26)` : 0,
+          transition: "opacity 1800ms var(--ease-publication)",
         }}
       />
       {/* Soft mesh tint over the mark */}
