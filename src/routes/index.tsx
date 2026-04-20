@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout, Wrap, SectionHead } from "@/components/site/Layout";
 import { Reveal } from "@/components/site/Reveal";
+import heroMark from "@/assets/hero-mark.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -41,7 +42,32 @@ function Index() {
 function Hero() {
   return (
     <section className="relative min-h-screen pt-44 pb-20 md:pt-44 md:pb-20 flex flex-col justify-between overflow-hidden">
+      {/* Cartographic mark — subtle background art */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 z-0 pointer-events-none opacity-[0.22] md:opacity-[0.28]"
+        style={{
+          backgroundImage: `url(${heroMark})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center right",
+          maskImage:
+            "radial-gradient(ellipse 75% 70% at 70% 45%, black 0%, black 35%, transparent 85%)",
+          WebkitMaskImage:
+            "radial-gradient(ellipse 75% 70% at 70% 45%, black 0%, black 35%, transparent 85%)",
+          mixBlendMode: "multiply",
+        }}
+      />
+      {/* Soft mesh tint over the mark */}
       <div className="absolute inset-0 z-0 pointer-events-none hero-mesh" />
+      {/* Paper wash to keep type crisp */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(180deg, var(--paper) 0%, transparent 18%, transparent 78%, var(--paper) 100%)",
+        }}
+      />
       <Wrap className="relative z-10 flex-1 flex flex-col justify-between">
         <div>
           <div className="eyebrow-rise font-mono text-xs tracking-[0.12em] uppercase text-ink-mute flex items-center gap-3.5">
