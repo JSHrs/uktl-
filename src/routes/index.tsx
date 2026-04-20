@@ -60,12 +60,13 @@ function Hero() {
         const el = markRef.current;
         if (el) {
           const y = window.scrollY;
-          // Slow parallax drift + gentle scale; clamp so it stays subtle
-          const translate = Math.min(y * 0.18, 160);
-          const scale = 1 + Math.min(y * 0.00018, 0.06);
+          // Parallax drift + gentle scale + slow rotation for editorial drift
+          const translate = Math.min(y * 0.28, 240);
+          const scale = 1 + Math.min(y * 0.0003, 0.09);
+          const rotate = Math.min(y * 0.008, 4);
           // Soften opacity slightly as it leaves the viewport
-          const fade = Math.max(1 - y / 1200, 0.55);
-          el.style.transform = `translate3d(0, ${translate}px, 0) scale(${scale})`;
+          const fade = Math.max(1 - y / 1400, 0.4);
+          el.style.transform = `translate3d(0, ${translate}px, 0) scale(${scale}) rotate(${rotate}deg)`;
           el.style.setProperty("--mark-fade", String(fade));
         }
         ticking = false;
