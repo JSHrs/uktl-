@@ -3,6 +3,10 @@ import { useEffect, useRef, useState } from "react";
 import { SiteLayout, Wrap, SectionHead } from "@/components/site/Layout";
 import { Reveal } from "@/components/site/Reveal";
 import heroMark from "@/assets/hero-mark.jpg";
+import approach01 from "@/assets/approach-01.jpg";
+import approach02 from "@/assets/approach-02.jpg";
+import approach03 from "@/assets/approach-03.jpg";
+import approach04 from "@/assets/approach-04.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -201,6 +205,8 @@ function Approach() {
       title: "We sit on your side of the table.",
       body: "No commissions. No preferred vendors. Just aligned advice — in writing, on the record, and grounded in what we see day to day.",
       tag: "Independent",
+      image: approach01,
+      caption: "In conference, Chancery Lane.",
     },
     {
       idx: "ii.",
@@ -211,6 +217,8 @@ function Approach() {
       ),
       body: "Every recruitment and HR engagement is checked against UK statute and case law before it ships. The mistakes we prevent are the ones you never have to read about.",
       tag: "Compliant",
+      image: approach02,
+      caption: "Statute, in the working library.",
     },
     {
       idx: "iii.",
@@ -221,12 +229,16 @@ function Approach() {
       ),
       body: "Our best work rarely appears on our website. Senior searches, sensitive exits, cross-border restructuring — handled quietly and in one place.",
       tag: "Confidential",
+      image: approach03,
+      caption: "After hours, WC2.",
     },
     {
       idx: "iv.",
       title: "Written by humans. Drafted by specialists.",
       body: "Contracts, policies, offer letters and process documents that hold up when you actually need them to — because a real practitioner wrote them.",
       tag: "Expertise",
+      image: approach04,
+      caption: "Drafting, by hand first.",
     },
   ];
 
@@ -248,30 +260,67 @@ function Approach() {
           />
         </Reveal>
 
-        <Reveal stagger>
-          <ul className="list-none p-0 m-0">
-            {items.map((it, i) => (
-              <li
-                key={i}
-                className={`grid md:grid-cols-[80px_1fr_2fr_auto] gap-x-10 gap-y-3 items-start py-9 border-t border-rule ${
-                  i === items.length - 1 ? "border-b border-rule" : ""
-                } transition-[padding] duration-400 hover:px-3 [transition-timing-function:var(--ease-publication)]`}
-              >
-                <div className="font-mono text-[13px] text-ink-mute pt-2">{it.idx}</div>
-                <h3
-                  className="font-display font-light leading-[1.05] tracking-[-0.02em] m-0"
-                  style={{ fontSize: "clamp(26px, 3.5vw, 44px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
+        <div className="border-t border-rule">
+          {items.map((it, i) => {
+            const imageLeft = i % 2 === 0;
+            return (
+              <Reveal key={i}>
+                <article
+                  className={`grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 lg:gap-16 items-center py-14 md:py-20 ${
+                    i === items.length - 1 ? "" : "border-b border-rule"
+                  }`}
                 >
-                  {it.title}
-                </h3>
-                <p className="m-0 text-ink-soft text-base max-w-[48ch]">{it.body}</p>
-                <div className="font-mono text-[11px] tracking-[0.1em] uppercase text-ink-mute pt-3 whitespace-nowrap">
-                  {it.tag}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Reveal>
+                  <figure
+                    className={`m-0 col-span-1 md:col-span-5 ${
+                      imageLeft ? "md:order-1" : "md:order-2"
+                    }`}
+                  >
+                    <div className="relative overflow-hidden bg-paper-deep aspect-[4/5]">
+                      <img
+                        src={it.image}
+                        alt=""
+                        loading="lazy"
+                        width={1024}
+                        height={1280}
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-[1200ms] hover:scale-[1.03] [transition-timing-function:var(--ease-publication)]"
+                        style={{ filter: "grayscale(100%) contrast(1.02)" }}
+                      />
+                    </div>
+                    <figcaption className="font-mono text-[11px] tracking-[0.1em] uppercase text-ink-mute mt-4 flex items-center gap-3">
+                      <span className="w-5 h-px bg-ink-mute" />
+                      {it.caption}
+                    </figcaption>
+                  </figure>
+
+                  <div
+                    className={`col-span-1 md:col-span-7 ${
+                      imageLeft ? "md:order-2" : "md:order-1"
+                    }`}
+                  >
+                    <div className="flex items-baseline gap-5 mb-5">
+                      <span className="font-mono text-[13px] text-ink-mute">{it.idx}</span>
+                      <span className="font-mono text-[11px] tracking-[0.1em] uppercase text-ink-mute">
+                        {it.tag}
+                      </span>
+                    </div>
+                    <h3
+                      className="font-display font-light leading-[1.05] tracking-[-0.02em] m-0 max-w-[18ch]"
+                      style={{
+                        fontSize: "clamp(28px, 3.6vw, 48px)",
+                        fontVariationSettings: '"opsz" 144, "SOFT" 40',
+                      }}
+                    >
+                      {it.title}
+                    </h3>
+                    <p className="m-0 mt-6 text-ink-soft text-[17px] leading-[1.55] max-w-[48ch]">
+                      {it.body}
+                    </p>
+                  </div>
+                </article>
+              </Reveal>
+            );
+          })}
+        </div>
       </Wrap>
     </section>
   );
