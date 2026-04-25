@@ -53,7 +53,7 @@ export function Nav() {
         <li>
           <Link
             to="/app"
-            className="text-[13px] text-ink-soft hover:text-ink transition-colors"
+            className="text-[13px] px-[18px] py-2.5 bg-ink text-paper rounded-full transition-all duration-250 hover:bg-ink-soft [transition-timing-function:var(--ease-publication)]"
           >
             Talent Compass →
           </Link>
@@ -91,6 +91,15 @@ export function Nav() {
               </Link>
             </li>
           ))}
+          <li>
+            <Link
+              to="/app"
+              onClick={() => setOpen(false)}
+              className="text-sm font-medium text-ink"
+            >
+              Talent Compass →
+            </Link>
+          </li>
         </ul>
       )}
     </nav>
