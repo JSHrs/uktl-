@@ -110,7 +110,14 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
     if (!(file instanceof File)) {
       throw new Error("No file uploaded");
     }
-    const env = await getEnv();
+    const env = await safeEnv();
+    if (!env) {
+      return {
+        id: "",
+        status: "failed" as const,
+        error: "Backend bindings unavailable in preview. Deploy to Cloudflare to enable uploads.",
+      };
+    }
     const bytes = await file.arrayBuffer();
     const id = newId();
     const r2Key = `cvs/${id}/${sanitiseFilename(file.name)}`;
@@ -165,7 +172,8 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
 export const rematchCandidateFn = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
-    const env = await getEnv();
+    const env = await safeEnv();
+    if (!env) return { count: 0 };
     const detail = await getCandidate(env, data.id);
     if (!detail) throw new Error("Candidate not found");
     const rawRow = await env.DB.prepare(
