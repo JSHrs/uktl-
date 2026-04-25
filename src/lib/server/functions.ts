@@ -30,9 +30,18 @@ function newId(): string {
   );
 }
 
+async function safeEnv() {
+  try {
+    return await getEnv();
+  } catch {
+    return null;
+  }
+}
+
 export const listCandidatesFn = createServerFn({ method: "GET" }).handler(
   async () => {
-    const env = await getEnv();
+    const env = await safeEnv();
+    if (!env) return [];
     return await listCandidates(env);
   },
 );
@@ -40,7 +49,8 @@ export const listCandidatesFn = createServerFn({ method: "GET" }).handler(
 export const getCandidateDetailFn = createServerFn({ method: "GET" })
   .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
-    const env = await getEnv();
+    const env = await safeEnv();
+    if (!env) return null;
     const candidate = await getCandidate(env, data.id);
     if (!candidate) return null;
     const matches = await getMatchesForCandidate(env, data.id);
@@ -50,7 +60,8 @@ export const getCandidateDetailFn = createServerFn({ method: "GET" })
 export const getAnonymisedCandidateFn = createServerFn({ method: "GET" })
   .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
-    const env = await getEnv();
+    const env = await safeEnv();
+    if (!env) return null;
     const row = await getCandidate(env, data.id);
     if (!row?.source_r2_key) return null;
     const rawProfile = await env.DB.prepare(
@@ -66,14 +77,16 @@ export const getAnonymisedCandidateFn = createServerFn({ method: "GET" })
   });
 
 export const listJobsFn = createServerFn({ method: "GET" }).handler(async () => {
-  const env = await getEnv();
+  const env = await safeEnv();
+  if (!env) return [];
   return await listJobs(env);
 });
 
 export const getJobDetailFn = createServerFn({ method: "GET" })
   .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
-    const env = await getEnv();
+    const env = await safeEnv();
+    if (!env) return null;
     const job = await getJob(env, data.id);
     if (!job) return null;
     const matches = await getMatchesForJob(env, data.id);
