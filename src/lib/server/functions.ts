@@ -110,7 +110,14 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
     if (!(file instanceof File)) {
       throw new Error("No file uploaded");
     }
-    const env = await getEnv();
+    const env = await safeEnv();
+    if (!env) {
+      return {
+        id: "",
+        status: "failed" as const,
+        error: "Backend bindings unavailable in preview. Deploy to Cloudflare to enable uploads.",
+      };
+    }
     const bytes = await file.arrayBuffer();
     const id = newId();
     const r2Key = `cvs/${id}/${sanitiseFilename(file.name)}`;
