@@ -349,11 +349,11 @@ function executeRows(mock: MockState, query: string, values: unknown[]): Row[] {
       .sort((a, b) => Number(b.score) - Number(a.score))
       .slice(0, 50)
       .map((match) => {
-        const candidate = mock.candidates.get(String(match.candidate_id)) ?? {};
+        const candidate = mock.candidates.get(String(match.candidate_id));
         return {
           ...match,
-          c_name: candidate.name,
-          c_headline: candidate.headline,
+          c_name: candidate?.name ?? null,
+          c_headline: candidate?.headline ?? null,
         };
       });
   }
