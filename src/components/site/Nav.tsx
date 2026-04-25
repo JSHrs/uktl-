@@ -52,6 +52,14 @@ export function Nav() {
         ))}
         <li>
           <Link
+            to="/app"
+            className="text-[13px] text-ink-soft hover:text-ink transition-colors"
+          >
+            Talent Compass →
+          </Link>
+        </li>
+        <li>
+          <Link
             to="/contact"
             className="text-[13px] px-[18px] py-2.5 border border-ink text-ink rounded-full transition-all duration-250 hover:bg-ink hover:text-paper [transition-timing-function:var(--ease-publication)]"
           >
