@@ -16,6 +16,7 @@ let cached: AppEnv | null = null;
 export async function getEnv(): Promise<AppEnv> {
   if (cached) return cached;
   try {
+    // @ts-expect-error - cloudflare:workers is a virtual module provided by the Cloudflare Vite plugin at runtime
     const mod = (await import("cloudflare:workers")) as unknown as {
       env: AppEnv;
     };
