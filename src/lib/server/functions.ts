@@ -20,6 +20,22 @@ import { scoreMatch } from "./match";
 import { normaliseSkillList } from "./skills";
 import { anonymiseProfile } from "./anonymize";
 import { ParsedProfileSchema } from "../schemas/profile";
+import {
+  MOCK_CANDIDATES,
+  MOCK_CANDIDATE_DETAILS,
+  MOCK_JOBS,
+  MOCK_MATCHES_BY_CANDIDATE,
+  MOCK_MATCHES_BY_JOB,
+} from "./mockData";
+
+function isPreviewEnv(): boolean {
+  try {
+    // If we're in a browser or plain Node environment, Cloudflare bindings won't exist.
+    return typeof (globalThis as Record<string, unknown>).caches === "undefined";
+  } catch {
+    return true;
+  }
+}
 
 const ID_PREFIX = "cand_";
 function newId(): string {
@@ -32,52 +48,96 @@ function newId(): string {
 
 export const listCandidatesFn = createServerFn({ method: "GET" }).handler(
   async () => {
-    const env = await getEnv();
-    return await listCandidates(env);
+    try {
+      const env = await getEnv();
+      return await listCandidates(env);
+    } catch {
+      return MOCK_CANDIDATES;
+    }
   },
 );
 
 export const getCandidateDetailFn = createServerFn({ method: "GET" })
   .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
-    const env = await getEnv();
-    const candidate = await getCandidate(env, data.id);
-    if (!candidate) return null;
-    const matches = await getMatchesForCandidate(env, data.id);
-    return { candidate, matches };
+    try {
+      const env = await getEnv();
+      const candidate = await getCandidate(env, data.id);
+      if (!candidate) return null;
+      const matches = await getMatchesForCandidate(env, data.id);
+      return { candidate, matches };
+    } catch {
+      const candidate = MOCK_CANDIDATE_DETAILS[data.id] ?? null;
+      if (!candidate) return null;
+      const matches = MOCK_MATCHES_BY_CANDIDATE[data.id] ?? [];
+      return { candidate, matches };
+    }
   });
 
 export const getAnonymisedCandidateFn = createServerFn({ method: "GET" })
   .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
-    const env = await getEnv();
-    const row = await getCandidate(env, data.id);
-    if (!row?.source_r2_key) return null;
-    const rawProfile = await env.DB.prepare(
-      `SELECT raw_profile FROM candidates WHERE id=?`,
-    )
-      .bind(data.id)
-      .first<{ raw_profile: string | null }>();
-    if (!rawProfile?.raw_profile) return null;
-    const profile = ParsedProfileSchema.parse(
-      JSON.parse(rawProfile.raw_profile),
-    );
-    return anonymiseProfile(profile);
+    try {
+      const env = await getEnv();
+      const row = await getCandidate(env, data.id);
+      if (!row?.source_r2_key) return null;
+      const rawProfile = await env.DB.prepare(
+        `SELECT raw_profile FROM candidates WHERE id=?`,
+      )
+        .bind(data.id)
+        .first<{ raw_profile: string | null }>();
+      if (!rawProfile?.raw_profile) return null;
+      const profile = ParsedProfileSchema.parse(
+        JSON.parse(rawProfile.raw_profile),
+      );
+      return anonymiseProfile(profile);
+    } catch {
+      const detail = MOCK_CANDIDATE_DETAILS[data.id];
+      if (!detail) return null;
+      // Build a minimal ParsedProfile from mock detail for anonymisation preview
+      const profile = ParsedProfileSchema.parse({
+        name: detail.name,
+        email: detail.email,
+        phone: detail.phone,
+        location: detail.location,
+        headline: detail.headline,
+        summary: detail.summary,
+        seniority: detail.seniority,
+        total_years_experience: detail.total_years_experience,
+        work_authorization: detail.work_authorization,
+        skills: detail.skills.map((s) => ({ skill: s.skill })),
+        experience: detail.experience,
+        education: detail.education,
+        links: detail.links,
+      });
+      return anonymiseProfile(profile);
+    }
   });
 
 export const listJobsFn = createServerFn({ method: "GET" }).handler(async () => {
-  const env = await getEnv();
-  return await listJobs(env);
+  try {
+    const env = await getEnv();
+    return await listJobs(env);
+  } catch {
+    return MOCK_JOBS;
+  }
 });
 
 export const getJobDetailFn = createServerFn({ method: "GET" })
   .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
-    const env = await getEnv();
-    const job = await getJob(env, data.id);
-    if (!job) return null;
-    const matches = await getMatchesForJob(env, data.id);
-    return { job, matches };
+    try {
+      const env = await getEnv();
+      const job = await getJob(env, data.id);
+      if (!job) return null;
+      const matches = await getMatchesForJob(env, data.id);
+      return { job, matches };
+    } catch {
+      const job = MOCK_JOBS.find((j) => j.id === data.id) ?? null;
+      if (!job) return null;
+      const matches = MOCK_MATCHES_BY_JOB[data.id] ?? [];
+      return { job, matches };
+    }
   });
 
 // Core automation entry-point.
@@ -97,7 +157,18 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
     if (!(file instanceof File)) {
       throw new Error("No file uploaded");
     }
-    const env = await getEnv();
+    let env: Awaited<ReturnType<typeof getEnv>>;
+    try {
+      env = await getEnv();
+    } catch {
+      // Preview mode: simulate a successful parse with mock data
+      return {
+        id: "cand_preview_001",
+        status: "parsed" as const,
+        quality: { score: 87, notes: ["Preview mode — connect Cloudflare D1 + R2 to parse real CVs."] },
+        preview: true,
+      };
+    }
     const bytes = await file.arrayBuffer();
     const id = newId();
     const r2Key = `cvs/${id}/${sanitiseFilename(file.name)}`;
