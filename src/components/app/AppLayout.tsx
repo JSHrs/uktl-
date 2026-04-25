@@ -33,7 +33,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={item.to}
                 to={item.to}
-                activeOptions={item.exact ? { exact: true } : undefined}
+                activeOptions={"exact" in item && item.exact ? { exact: true } : undefined}
                 className="text-sm text-ink-soft hover:text-ink transition-colors"
                 activeProps={{ className: "text-ink" }}
               >
