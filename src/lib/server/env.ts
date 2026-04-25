@@ -22,11 +22,10 @@ export async function getEnv(): Promise<AppEnv> {
     };
     cached = mod.env;
     return cached;
-  } catch (err) {
-    throw new Error(
-      "Cloudflare bindings unavailable — run under wrangler/vite-cloudflare. " +
-        String(err),
-    );
+  } catch {
+    const { getMockEnv } = await import("./mockEnv");
+    cached = getMockEnv();
+    return cached;
   }
 }
 
