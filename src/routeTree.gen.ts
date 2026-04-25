@@ -14,7 +14,14 @@ import { Route as SectorsRouteImport } from './routes/sectors'
 import { Route as ReachRouteImport } from './routes/reach'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ApproachRouteImport } from './routes/approach'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppIndexRouteImport } from './routes/app/index'
+import { Route as AppUploadRouteImport } from './routes/app/upload'
+import { Route as AppJobsIndexRouteImport } from './routes/app/jobs/index'
+import { Route as AppCandidatesIndexRouteImport } from './routes/app/candidates/index'
+import { Route as AppJobsIdRouteImport } from './routes/app/jobs/$id'
+import { Route as AppCandidatesIdRouteImport } from './routes/app/candidates/$id'
 
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
@@ -41,19 +48,61 @@ const ApproachRoute = ApproachRouteImport.update({
   path: '/approach',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUploadRoute = AppUploadRouteImport.update({
+  id: '/upload',
+  path: '/upload',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJobsIndexRoute = AppJobsIndexRouteImport.update({
+  id: '/jobs/',
+  path: '/jobs/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCandidatesIndexRoute = AppCandidatesIndexRouteImport.update({
+  id: '/candidates/',
+  path: '/candidates/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJobsIdRoute = AppJobsIdRouteImport.update({
+  id: '/jobs/$id',
+  path: '/jobs/$id',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCandidatesIdRoute = AppCandidatesIdRouteImport.update({
+  id: '/candidates/$id',
+  path: '/candidates/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
   '/approach': typeof ApproachRoute
   '/contact': typeof ContactRoute
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
+  '/app/upload': typeof AppUploadRoute
+  '/app/': typeof AppIndexRoute
+  '/app/candidates/$id': typeof AppCandidatesIdRoute
+  '/app/jobs/$id': typeof AppJobsIdRoute
+  '/app/candidates/': typeof AppCandidatesIndexRoute
+  '/app/jobs/': typeof AppJobsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,39 +111,79 @@ export interface FileRoutesByTo {
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
+  '/app/upload': typeof AppUploadRoute
+  '/app': typeof AppIndexRoute
+  '/app/candidates/$id': typeof AppCandidatesIdRoute
+  '/app/jobs/$id': typeof AppJobsIdRoute
+  '/app/candidates': typeof AppCandidatesIndexRoute
+  '/app/jobs': typeof AppJobsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/app': typeof AppRouteWithChildren
   '/approach': typeof ApproachRoute
   '/contact': typeof ContactRoute
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
+  '/app/upload': typeof AppUploadRoute
+  '/app/': typeof AppIndexRoute
+  '/app/candidates/$id': typeof AppCandidatesIdRoute
+  '/app/jobs/$id': typeof AppJobsIdRoute
+  '/app/candidates/': typeof AppCandidatesIndexRoute
+  '/app/jobs/': typeof AppJobsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/app'
     | '/approach'
     | '/contact'
     | '/reach'
     | '/sectors'
     | '/services'
+    | '/app/upload'
+    | '/app/'
+    | '/app/candidates/$id'
+    | '/app/jobs/$id'
+    | '/app/candidates/'
+    | '/app/jobs/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/approach' | '/contact' | '/reach' | '/sectors' | '/services'
-  id:
-    | '__root__'
+  to:
     | '/'
     | '/approach'
     | '/contact'
     | '/reach'
     | '/sectors'
     | '/services'
+    | '/app/upload'
+    | '/app'
+    | '/app/candidates/$id'
+    | '/app/jobs/$id'
+    | '/app/candidates'
+    | '/app/jobs'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/approach'
+    | '/contact'
+    | '/reach'
+    | '/sectors'
+    | '/services'
+    | '/app/upload'
+    | '/app/'
+    | '/app/candidates/$id'
+    | '/app/jobs/$id'
+    | '/app/candidates/'
+    | '/app/jobs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
   ApproachRoute: typeof ApproachRoute
   ContactRoute: typeof ContactRoute
   ReachRoute: typeof ReachRoute
@@ -139,6 +228,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApproachRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -146,11 +242,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/upload': {
+      id: '/app/upload'
+      path: '/upload'
+      fullPath: '/app/upload'
+      preLoaderRoute: typeof AppUploadRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/jobs/': {
+      id: '/app/jobs/'
+      path: '/jobs'
+      fullPath: '/app/jobs/'
+      preLoaderRoute: typeof AppJobsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/candidates/': {
+      id: '/app/candidates/'
+      path: '/candidates'
+      fullPath: '/app/candidates/'
+      preLoaderRoute: typeof AppCandidatesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/jobs/$id': {
+      id: '/app/jobs/$id'
+      path: '/jobs/$id'
+      fullPath: '/app/jobs/$id'
+      preLoaderRoute: typeof AppJobsIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/candidates/$id': {
+      id: '/app/candidates/$id'
+      path: '/candidates/$id'
+      fullPath: '/app/candidates/$id'
+      preLoaderRoute: typeof AppCandidatesIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppUploadRoute: typeof AppUploadRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppCandidatesIdRoute: typeof AppCandidatesIdRoute
+  AppJobsIdRoute: typeof AppJobsIdRoute
+  AppCandidatesIndexRoute: typeof AppCandidatesIndexRoute
+  AppJobsIndexRoute: typeof AppJobsIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppUploadRoute: AppUploadRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppCandidatesIdRoute: AppCandidatesIdRoute,
+  AppJobsIdRoute: AppJobsIdRoute,
+  AppCandidatesIndexRoute: AppCandidatesIndexRoute,
+  AppJobsIndexRoute: AppJobsIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
   ApproachRoute: ApproachRoute,
   ContactRoute: ContactRoute,
   ReachRoute: ReachRoute,
@@ -160,3 +319,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
