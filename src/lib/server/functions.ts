@@ -38,7 +38,7 @@ export const listCandidatesFn = createServerFn({ method: "GET" }).handler(
 );
 
 export const getCandidateDetailFn = createServerFn({ method: "GET" })
-  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
     const env = await getEnv();
     const candidate = await getCandidate(env, data.id);
@@ -48,7 +48,7 @@ export const getCandidateDetailFn = createServerFn({ method: "GET" })
   });
 
 export const getAnonymisedCandidateFn = createServerFn({ method: "GET" })
-  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
     const env = await getEnv();
     const row = await getCandidate(env, data.id);
@@ -71,7 +71,7 @@ export const listJobsFn = createServerFn({ method: "GET" }).handler(async () => 
 });
 
 export const getJobDetailFn = createServerFn({ method: "GET" })
-  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
     const env = await getEnv();
     const job = await getJob(env, data.id);
@@ -86,7 +86,7 @@ export const getJobDetailFn = createServerFn({ method: "GET" })
 // job → persist matches. Client-facing effect: after one upload the candidate
 // is searchable, ranked, and shortlistable with zero consultant effort.
 export const uploadAndParseCvFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown): FormData => {
+  .inputValidator((raw: unknown): FormData => {
     if (!(raw instanceof FormData)) {
       throw new Error("Expected multipart form data");
     }
@@ -150,7 +150,7 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
   });
 
 export const rematchCandidateFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
     const env = await getEnv();
     const detail = await getCandidate(env, data.id);
