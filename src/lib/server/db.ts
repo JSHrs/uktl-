@@ -1,448 +1,432 @@
 import type { AppEnv } from "./env";
-import type { ParsedProfile, QualityAssessment } from "../schemas/profile";
-import { JobSchema, type Job, type Match } from "../schemas/job";
+import type {
+  Lead,
+  Candidate,
+  ContentItem,
+  LeadInput,
+  CandidateInput,
+  Priority,
+  LeadStatus,
+  Stage,
+  ContentType,
+} from "../schemas";
 
-export type CandidateRow = {
+const ID_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
+function id(prefix: string): string {
+  let s = prefix + "_";
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  for (const b of bytes) s += ID_ALPHABET[b % ID_ALPHABET.length];
+  return s;
+}
+
+// ─── Leads ────────────────────────────────────────────────────────────────────
+
+type LeadRow = {
   id: string;
   created_at: number;
   updated_at: number;
-  status: string;
-  source_filename: string | null;
-  source_r2_key: string | null;
-  name: string | null;
-  email: string | null;
-  location: string | null;
-  headline: string | null;
-  seniority: string | null;
-  total_years_experience: number | null;
-  quality_score: number | null;
-};
-
-export type CandidateDetail = CandidateRow & {
+  name: string;
+  company: string | null;
+  email: string;
   phone: string | null;
-  summary: string | null;
-  work_authorization: string | null;
-  quality_notes: string[];
-  links: Record<string, string | null>;
-  skills: Array<{ skill: string; skill_raw: string; years_experience: number | null }>;
-  experience: Array<{
-    company: string | null;
-    title: string | null;
-    start_date: string | null;
-    end_date: string | null;
-    is_current: boolean;
-    location: string | null;
-    description: string | null;
-  }>;
-  education: Array<{
-    institution: string | null;
-    degree: string | null;
-    field: string | null;
-    start_year: string | null;
-    end_year: string | null;
-  }>;
-  parse_error: string | null;
+  service: string;
+  message: string | null;
+  score: number;
+  priority: string;
+  status: string;
+  ai_draft: string | null;
 };
 
-export async function insertCandidateShell(
-  env: AppEnv,
-  args: { id: string; filename: string; r2Key: string; sizeBytes: number },
-): Promise<void> {
-  const now = Date.now();
-  await env.DB.prepare(
-    `INSERT INTO candidates
-      (id, created_at, updated_at, status, source_filename, source_r2_key, source_bytes)
-     VALUES (?, ?, ?, 'uploaded', ?, ?, ?)`,
-  )
-    .bind(args.id, now, now, args.filename, args.r2Key, args.sizeBytes)
-    .run();
+function rowToLead(r: LeadRow): Lead {
+  return {
+    id: r.id,
+    created_at: r.created_at,
+    updated_at: r.updated_at,
+    name: r.name,
+    company: r.company,
+    email: r.email,
+    phone: r.phone,
+    service: r.service,
+    message: r.message,
+    score: r.score,
+    priority: r.priority as Priority,
+    status: r.status as LeadStatus,
+    ai_draft: r.ai_draft,
+  };
 }
 
-export async function markCandidateParsing(env: AppEnv, id: string): Promise<void> {
-  await env.DB.prepare(
-    `UPDATE candidates SET status='parsing', updated_at=? WHERE id=?`,
-  )
-    .bind(Date.now(), id)
-    .run();
-}
-
-export async function markCandidateFailed(
-  env: AppEnv,
-  id: string,
-  error: string,
-): Promise<void> {
-  await env.DB.prepare(
-    `UPDATE candidates SET status='failed', parse_error=?, updated_at=? WHERE id=?`,
-  )
-    .bind(error.slice(0, 2000), Date.now(), id)
-    .run();
-}
-
-export async function writeParsedProfile(
-  env: AppEnv,
-  id: string,
-  profile: ParsedProfile,
-  normalisedSkills: string[],
-  quality: QualityAssessment,
-): Promise<void> {
-  const now = Date.now();
-  const statements: D1PreparedStatement[] = [];
-
-  statements.push(
-    env.DB.prepare(
-      `UPDATE candidates SET
-        status='parsed',
-        updated_at=?,
-        name=?, email=?, phone=?, location=?, headline=?, summary=?,
-        total_years_experience=?, seniority=?, work_authorization=?,
-        quality_score=?, quality_notes=?, links=?, raw_profile=?, parse_error=NULL
-       WHERE id=?`,
-    ).bind(
-      now,
-      profile.name ?? null,
-      profile.email ?? null,
-      profile.phone ?? null,
-      profile.location ?? null,
-      profile.headline ?? null,
-      profile.summary ?? null,
-      profile.total_years_experience ?? null,
-      profile.seniority ?? null,
-      profile.work_authorization ?? null,
-      quality.score,
-      JSON.stringify(quality.notes),
-      JSON.stringify(profile.links ?? {}),
-      JSON.stringify(profile),
-      id,
-    ),
-  );
-
-  statements.push(
-    env.DB.prepare(`DELETE FROM candidate_skills WHERE candidate_id=?`).bind(id),
-  );
-  statements.push(
-    env.DB.prepare(`DELETE FROM candidate_experience WHERE candidate_id=?`).bind(id),
-  );
-  statements.push(
-    env.DB.prepare(`DELETE FROM candidate_education WHERE candidate_id=?`).bind(id),
-  );
-
-  const skillsPaired = (profile.skills ?? []).map((s, i) => ({
-    raw: s.skill,
-    normal: normalisedSkills[i] ?? s.skill.toLowerCase(),
-    yoe: s.years_experience ?? null,
-  }));
-  const seen = new Set<string>();
-  for (const s of skillsPaired) {
-    if (!s.normal || seen.has(s.normal)) continue;
-    seen.add(s.normal);
-    statements.push(
-      env.DB.prepare(
-        `INSERT INTO candidate_skills (candidate_id, skill, skill_raw, years_experience)
-         VALUES (?, ?, ?, ?)`,
-      ).bind(id, s.normal, s.raw, s.yoe),
-    );
-  }
-
-  (profile.experience ?? []).forEach((exp, i) => {
-    statements.push(
-      env.DB.prepare(
-        `INSERT INTO candidate_experience
-          (id, candidate_id, company, title, start_date, end_date, is_current,
-           location, description, sort_order)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      ).bind(
-        `${id}_exp_${i}`,
-        id,
-        exp.company ?? null,
-        exp.title ?? null,
-        exp.start_date ?? null,
-        exp.end_date ?? null,
-        exp.is_current ? 1 : 0,
-        exp.location ?? null,
-        exp.description ?? null,
-        i,
-      ),
-    );
-  });
-
-  (profile.education ?? []).forEach((ed, i) => {
-    statements.push(
-      env.DB.prepare(
-        `INSERT INTO candidate_education
-          (id, candidate_id, institution, degree, field, start_year, end_year)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      ).bind(
-        `${id}_edu_${i}`,
-        id,
-        ed.institution ?? null,
-        ed.degree ?? null,
-        ed.field ?? null,
-        ed.start_year ?? null,
-        ed.end_year ?? null,
-      ),
-    );
-  });
-
-  await env.DB.batch(statements);
-}
-
-export async function listCandidates(env: AppEnv, limit = 50): Promise<CandidateRow[]> {
+export async function listLeads(env: AppEnv): Promise<Lead[]> {
   const res = await env.DB.prepare(
-    `SELECT id, created_at, updated_at, status, source_filename, source_r2_key,
-            name, email, location, headline, seniority, total_years_experience,
-            quality_score
-       FROM candidates
-      ORDER BY created_at DESC
-      LIMIT ?`,
+    `SELECT * FROM leads ORDER BY created_at DESC LIMIT 200`,
+  ).all<LeadRow>();
+  return (res.results ?? []).map(rowToLead);
+}
+
+export async function getLead(env: AppEnv, id: string): Promise<Lead | null> {
+  const row = await env.DB.prepare(`SELECT * FROM leads WHERE id=?`)
+    .bind(id)
+    .first<LeadRow>();
+  return row ? rowToLead(row) : null;
+}
+
+export async function insertLead(
+  env: AppEnv,
+  lead: LeadInput,
+  score: number,
+  priority: Priority,
+): Promise<Lead> {
+  const now = Date.now();
+  const newId = id("lead");
+  await env.DB.prepare(
+    `INSERT INTO leads
+       (id, created_at, updated_at, name, company, email, phone, service, message, score, priority, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'New')`,
   )
-    .bind(limit)
-    .all<CandidateRow>();
-  return res.results ?? [];
+    .bind(
+      newId,
+      now,
+      now,
+      lead.name,
+      lead.company ?? null,
+      lead.email,
+      lead.phone ?? null,
+      lead.service,
+      lead.message ?? null,
+      score,
+      priority,
+    )
+    .run();
+  const created = await getLead(env, newId);
+  if (!created) throw new Error("Lead insert failed");
+  return created;
+}
+
+export async function updateLead(
+  env: AppEnv,
+  id: string,
+  patch: { status?: LeadStatus; ai_draft?: string | null },
+): Promise<Lead | null> {
+  const now = Date.now();
+  if (patch.status !== undefined && patch.ai_draft !== undefined) {
+    await env.DB.prepare(
+      `UPDATE leads SET status=?, ai_draft=?, updated_at=? WHERE id=?`,
+    )
+      .bind(patch.status, patch.ai_draft, now, id)
+      .run();
+  } else if (patch.status !== undefined) {
+    await env.DB.prepare(
+      `UPDATE leads SET status=?, updated_at=? WHERE id=?`,
+    )
+      .bind(patch.status, now, id)
+      .run();
+  } else if (patch.ai_draft !== undefined) {
+    await env.DB.prepare(
+      `UPDATE leads SET ai_draft=?, updated_at=? WHERE id=?`,
+    )
+      .bind(patch.ai_draft, now, id)
+      .run();
+  }
+  return getLead(env, id);
+}
+
+export async function deleteLead(env: AppEnv, id: string): Promise<void> {
+  await env.DB.prepare(`DELETE FROM leads WHERE id=?`).bind(id).run();
+}
+
+// ─── Candidates ───────────────────────────────────────────────────────────────
+
+type CandidateRow = {
+  id: string;
+  created_at: number;
+  updated_at: number;
+  name: string;
+  role: string;
+  client: string | null;
+  email: string | null;
+  stage: string;
+  score: number;
+  notes: string | null;
+  ai_analysis: string | null;
+};
+
+function rowToCandidate(r: CandidateRow): Candidate {
+  return {
+    id: r.id,
+    created_at: r.created_at,
+    updated_at: r.updated_at,
+    name: r.name,
+    role: r.role,
+    client: r.client,
+    email: r.email,
+    stage: r.stage as Stage,
+    score: r.score,
+    notes: r.notes,
+    ai_analysis: r.ai_analysis,
+  };
+}
+
+export async function listCandidates(env: AppEnv): Promise<Candidate[]> {
+  const res = await env.DB.prepare(
+    `SELECT * FROM candidates ORDER BY created_at DESC LIMIT 200`,
+  ).all<CandidateRow>();
+  return (res.results ?? []).map(rowToCandidate);
 }
 
 export async function getCandidate(
   env: AppEnv,
   id: string,
-): Promise<CandidateDetail | null> {
-  const row = await env.DB.prepare(
-    `SELECT * FROM candidates WHERE id=?`,
-  )
+): Promise<Candidate | null> {
+  const row = await env.DB.prepare(`SELECT * FROM candidates WHERE id=?`)
     .bind(id)
-    .first<Record<string, unknown>>();
-  if (!row) return null;
+    .first<CandidateRow>();
+  return row ? rowToCandidate(row) : null;
+}
 
-  const skills = await env.DB.prepare(
-    `SELECT skill, skill_raw, years_experience FROM candidate_skills WHERE candidate_id=?`,
+export async function insertCandidate(
+  env: AppEnv,
+  c: CandidateInput,
+  score: number,
+): Promise<Candidate> {
+  const now = Date.now();
+  const newId = id("cand");
+  await env.DB.prepare(
+    `INSERT INTO candidates
+       (id, created_at, updated_at, name, role, client, email, stage, score, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   )
-    .bind(id)
-    .all<{ skill: string; skill_raw: string; years_experience: number | null }>();
+    .bind(
+      newId,
+      now,
+      now,
+      c.name,
+      c.role,
+      c.client ?? null,
+      c.email ?? null,
+      c.stage,
+      score,
+      c.notes ?? null,
+    )
+    .run();
+  const created = await getCandidate(env, newId);
+  if (!created) throw new Error("Candidate insert failed");
+  return created;
+}
 
-  const experience = await env.DB.prepare(
-    `SELECT company, title, start_date, end_date, is_current, location, description
-       FROM candidate_experience WHERE candidate_id=? ORDER BY sort_order ASC`,
+export async function updateCandidate(
+  env: AppEnv,
+  id: string,
+  patch: { stage?: Stage; notes?: string | null; ai_analysis?: string | null },
+): Promise<Candidate | null> {
+  const now = Date.now();
+  const sets: string[] = [];
+  const vals: unknown[] = [];
+  if (patch.stage !== undefined) {
+    sets.push("stage=?");
+    vals.push(patch.stage);
+  }
+  if (patch.notes !== undefined) {
+    sets.push("notes=?");
+    vals.push(patch.notes);
+  }
+  if (patch.ai_analysis !== undefined) {
+    sets.push("ai_analysis=?");
+    vals.push(patch.ai_analysis);
+  }
+  if (sets.length === 0) return getCandidate(env, id);
+  sets.push("updated_at=?");
+  vals.push(now);
+  vals.push(id);
+  await env.DB.prepare(
+    `UPDATE candidates SET ${sets.join(", ")} WHERE id=?`,
   )
-    .bind(id)
-    .all<{
-      company: string | null;
-      title: string | null;
-      start_date: string | null;
-      end_date: string | null;
-      is_current: number;
-      location: string | null;
-      description: string | null;
-    }>();
+    .bind(...vals)
+    .run();
+  return getCandidate(env, id);
+}
 
-  const education = await env.DB.prepare(
-    `SELECT institution, degree, field, start_year, end_year
-       FROM candidate_education WHERE candidate_id=?`,
-  )
-    .bind(id)
-    .all<{
-      institution: string | null;
-      degree: string | null;
-      field: string | null;
-      start_year: string | null;
-      end_year: string | null;
-    }>();
+export async function deleteCandidate(env: AppEnv, id: string): Promise<void> {
+  await env.DB.prepare(`DELETE FROM candidates WHERE id=?`).bind(id).run();
+}
 
+// ─── Content ──────────────────────────────────────────────────────────────────
+
+type ContentRow = {
+  id: string;
+  created_at: number;
+  title: string;
+  type: string;
+  tone: string | null;
+  content: string;
+  word_count: number;
+  published: number;
+};
+
+function rowToContent(r: ContentRow): ContentItem {
   return {
-    id: String(row.id),
-    created_at: Number(row.created_at),
-    updated_at: Number(row.updated_at),
-    status: String(row.status),
-    source_filename: (row.source_filename as string | null) ?? null,
-    source_r2_key: (row.source_r2_key as string | null) ?? null,
-    name: (row.name as string | null) ?? null,
-    email: (row.email as string | null) ?? null,
-    phone: (row.phone as string | null) ?? null,
-    location: (row.location as string | null) ?? null,
-    headline: (row.headline as string | null) ?? null,
-    summary: (row.summary as string | null) ?? null,
-    seniority: (row.seniority as string | null) ?? null,
-    total_years_experience: (row.total_years_experience as number | null) ?? null,
-    work_authorization: (row.work_authorization as string | null) ?? null,
-    quality_score: (row.quality_score as number | null) ?? null,
-    quality_notes: parseJsonArray<string>(row.quality_notes),
-    links: parseJsonObject(row.links),
-    skills: skills.results ?? [],
-    experience: (experience.results ?? []).map((e) => ({
-      ...e,
-      is_current: !!e.is_current,
-    })),
-    education: education.results ?? [],
-    parse_error: (row.parse_error as string | null) ?? null,
+    id: r.id,
+    created_at: r.created_at,
+    title: r.title,
+    type: r.type as ContentType,
+    tone: r.tone,
+    content: r.content,
+    word_count: r.word_count,
+    published: r.published === 1,
   };
 }
 
-export async function listJobs(env: AppEnv): Promise<Job[]> {
+export async function listContent(env: AppEnv): Promise<ContentItem[]> {
   const res = await env.DB.prepare(
-    `SELECT * FROM jobs WHERE status='open' ORDER BY created_at DESC`,
-  ).all<Record<string, unknown>>();
-  return (res.results ?? []).map(rowToJob);
+    `SELECT * FROM content_items ORDER BY created_at DESC LIMIT 200`,
+  ).all<ContentRow>();
+  return (res.results ?? []).map(rowToContent);
 }
 
-export async function getJob(env: AppEnv, id: string): Promise<Job | null> {
-  const row = await env.DB.prepare(`SELECT * FROM jobs WHERE id=?`)
-    .bind(id)
-    .first<Record<string, unknown>>();
-  return row ? rowToJob(row) : null;
-}
-
-function rowToJob(row: Record<string, unknown>): Job {
-  return JobSchema.parse({
-    id: row.id,
-    created_at: Number(row.created_at),
-    title: row.title,
-    company: row.company,
-    location: row.location,
-    sector: row.sector,
-    seniority: row.seniority,
-    min_years_experience:
-      row.min_years_experience != null ? Number(row.min_years_experience) : null,
-    description: row.description,
-    must_have_skills: parseJsonArray<string>(row.must_have_skills),
-    nice_to_have_skills: parseJsonArray<string>(row.nice_to_have_skills),
-    status: row.status,
-  });
-}
-
-export async function upsertMatches(
+export async function insertContent(
   env: AppEnv,
-  candidateId: string,
-  matches: Array<Omit<Match, "candidate_id" | "computed_at">>,
-): Promise<void> {
-  if (matches.length === 0) return;
+  args: {
+    title: string;
+    type: ContentType;
+    tone: string | null;
+    content: string;
+  },
+): Promise<ContentItem> {
   const now = Date.now();
-  const statements = matches.map((m) =>
-    env.DB.prepare(
-      `INSERT INTO matches
-        (candidate_id, job_id, score, skills_overlap, experience_fit, seniority_fit,
-         location_fit, matched_skills, missing_skills, reasoning, computed_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT(candidate_id, job_id) DO UPDATE SET
-        score=excluded.score,
-        skills_overlap=excluded.skills_overlap,
-        experience_fit=excluded.experience_fit,
-        seniority_fit=excluded.seniority_fit,
-        location_fit=excluded.location_fit,
-        matched_skills=excluded.matched_skills,
-        missing_skills=excluded.missing_skills,
-        reasoning=excluded.reasoning,
-        computed_at=excluded.computed_at`,
-    ).bind(
-      candidateId,
-      m.job_id,
-      m.score,
-      m.skills_overlap,
-      m.experience_fit,
-      m.seniority_fit,
-      m.location_fit,
-      JSON.stringify(m.matched_skills),
-      JSON.stringify(m.missing_skills),
-      m.reasoning,
-      now,
-    ),
-  );
-  await env.DB.batch(statements);
-}
-
-export async function getMatchesForCandidate(
-  env: AppEnv,
-  candidateId: string,
-): Promise<Array<Match & { job: Job }>> {
-  const res = await env.DB.prepare(
-    `SELECT m.*, j.title AS j_title, j.company AS j_company, j.location AS j_location,
-            j.sector AS j_sector, j.seniority AS j_seniority,
-            j.min_years_experience AS j_min_years, j.description AS j_description,
-            j.must_have_skills AS j_must, j.nice_to_have_skills AS j_nice,
-            j.status AS j_status, j.created_at AS j_created
-       FROM matches m JOIN jobs j ON j.id=m.job_id
-      WHERE m.candidate_id=?
-      ORDER BY m.score DESC`,
+  const newId = id("cont");
+  const wordCount = args.content.trim().split(/\s+/).filter(Boolean).length;
+  await env.DB.prepare(
+    `INSERT INTO content_items
+       (id, created_at, title, type, tone, content, word_count, published)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 0)`,
   )
-    .bind(candidateId)
-    .all<Record<string, unknown>>();
-  return (res.results ?? []).map((row) => ({
-    candidate_id: String(row.candidate_id),
-    job_id: String(row.job_id),
-    score: Number(row.score),
-    skills_overlap: Number(row.skills_overlap),
-    experience_fit: Number(row.experience_fit),
-    seniority_fit: Number(row.seniority_fit),
-    location_fit: Number(row.location_fit),
-    matched_skills: parseJsonArray<string>(row.matched_skills),
-    missing_skills: parseJsonArray<string>(row.missing_skills),
-    reasoning: String(row.reasoning ?? ""),
-    computed_at: Number(row.computed_at),
-    job: JobSchema.parse({
-      id: row.job_id,
-      created_at: Number(row.j_created),
-      title: row.j_title,
-      company: row.j_company,
-      location: row.j_location,
-      sector: row.j_sector,
-      seniority: row.j_seniority,
-      min_years_experience:
-        row.j_min_years != null ? Number(row.j_min_years) : null,
-      description: row.j_description,
-      must_have_skills: parseJsonArray<string>(row.j_must),
-      nice_to_have_skills: parseJsonArray<string>(row.j_nice),
-      status: row.j_status,
-    }),
-  }));
+    .bind(newId, now, args.title, args.type, args.tone, args.content, wordCount)
+    .run();
+  const all = await listContent(env);
+  return all.find((c) => c.id === newId) ?? all[0];
 }
 
-export async function getMatchesForJob(
+export async function deleteContent(env: AppEnv, id: string): Promise<void> {
+  await env.DB.prepare(`DELETE FROM content_items WHERE id=?`).bind(id).run();
+}
+
+// ─── Analytics ────────────────────────────────────────────────────────────────
+
+export async function recordEvent(
   env: AppEnv,
-  jobId: string,
-): Promise<
-  Array<Match & { candidate: { id: string; name: string | null; headline: string | null } }>
+  type: string,
+  page: string | null,
+  metadata: Record<string, unknown> | null,
+): Promise<void> {
+  await env.DB.prepare(
+    `INSERT INTO analytics_events (id, created_at, type, page, metadata)
+     VALUES (?, ?, ?, ?, ?)`,
+  )
+    .bind(
+      id("evt"),
+      Date.now(),
+      type,
+      page,
+      metadata ? JSON.stringify(metadata) : null,
+    )
+    .run();
+}
+
+export async function analyticsSummary(env: AppEnv): Promise<{
+  visitors: number;
+  leads: number;
+  conversionRate: number;
+  topService: string;
+  averageScore: number;
+}> {
+  const sixMonthsAgo = Date.now() - 1000 * 60 * 60 * 24 * 180;
+  const visitorsRow = await env.DB.prepare(
+    `SELECT COUNT(*) as n FROM analytics_events WHERE type='page_view' AND created_at > ?`,
+  )
+    .bind(sixMonthsAgo)
+    .first<{ n: number }>();
+  const leadsRow = await env.DB.prepare(
+    `SELECT COUNT(*) as n, AVG(score) as avg_score FROM leads WHERE created_at > ?`,
+  )
+    .bind(sixMonthsAgo)
+    .first<{ n: number; avg_score: number | null }>();
+  const topRow = await env.DB.prepare(
+    `SELECT service, COUNT(*) as n FROM leads
+     WHERE created_at > ?
+     GROUP BY service ORDER BY n DESC LIMIT 1`,
+  )
+    .bind(sixMonthsAgo)
+    .first<{ service: string; n: number }>();
+
+  const visitors = visitorsRow?.n ?? 0;
+  const leadCount = leadsRow?.n ?? 0;
+  return {
+    visitors,
+    leads: leadCount,
+    conversionRate: visitors > 0 ? (leadCount / visitors) * 100 : 0,
+    topService: topRow?.service ?? "—",
+    averageScore: Math.round(leadsRow?.avg_score ?? 0),
+  };
+}
+
+export async function leadsByMonth(
+  env: AppEnv,
+): Promise<{ month: string; count: number }[]> {
+  const res = await env.DB.prepare(
+    `SELECT strftime('%Y-%m', datetime(created_at/1000, 'unixepoch')) AS month, COUNT(*) AS count
+     FROM leads
+     GROUP BY month ORDER BY month ASC LIMIT 12`,
+  ).all<{ month: string; count: number }>();
+  return res.results ?? [];
+}
+
+export async function visitorsByMonth(
+  env: AppEnv,
+): Promise<{ month: string; count: number }[]> {
+  const res = await env.DB.prepare(
+    `SELECT strftime('%Y-%m', datetime(created_at/1000, 'unixepoch')) AS month, COUNT(*) AS count
+     FROM analytics_events
+     WHERE type='page_view'
+     GROUP BY month ORDER BY month ASC LIMIT 12`,
+  ).all<{ month: string; count: number }>();
+  return res.results ?? [];
+}
+
+export async function serviceBreakdown(
+  env: AppEnv,
+): Promise<{ name: string; value: number }[]> {
+  const res = await env.DB.prepare(
+    `SELECT service AS name, COUNT(*) AS value FROM leads
+     GROUP BY service ORDER BY value DESC`,
+  ).all<{ name: string; value: number }>();
+  return res.results ?? [];
+}
+
+export async function conversionFunnel(env: AppEnv): Promise<
+  { stage: string; n: number }[]
 > {
-  const res = await env.DB.prepare(
-    `SELECT m.*, c.name AS c_name, c.headline AS c_headline
-       FROM matches m JOIN candidates c ON c.id=m.candidate_id
-      WHERE m.job_id=?
-      ORDER BY m.score DESC
-      LIMIT 50`,
-  )
-    .bind(jobId)
-    .all<Record<string, unknown>>();
-  return (res.results ?? []).map((row) => ({
-    candidate_id: String(row.candidate_id),
-    job_id: String(row.job_id),
-    score: Number(row.score),
-    skills_overlap: Number(row.skills_overlap),
-    experience_fit: Number(row.experience_fit),
-    seniority_fit: Number(row.seniority_fit),
-    location_fit: Number(row.location_fit),
-    matched_skills: parseJsonArray<string>(row.matched_skills),
-    missing_skills: parseJsonArray<string>(row.missing_skills),
-    reasoning: String(row.reasoning ?? ""),
-    computed_at: Number(row.computed_at),
-    candidate: {
-      id: String(row.candidate_id),
-      name: (row.c_name as string | null) ?? null,
-      headline: (row.c_headline as string | null) ?? null,
-    },
-  }));
-}
-
-function parseJsonArray<T>(raw: unknown): T[] {
-  if (!raw) return [];
-  if (Array.isArray(raw)) return raw as T[];
-  try {
-    const v = JSON.parse(String(raw));
-    return Array.isArray(v) ? (v as T[]) : [];
-  } catch {
-    return [];
-  }
-}
-function parseJsonObject(raw: unknown): Record<string, string | null> {
-  if (!raw) return {};
-  try {
-    const v = JSON.parse(String(raw));
-    return v && typeof v === "object" ? (v as Record<string, string | null>) : {};
-  } catch {
-    return {};
-  }
+  const visitors = await env.DB.prepare(
+    `SELECT COUNT(*) AS n FROM analytics_events WHERE type='page_view'`,
+  ).first<{ n: number }>();
+  const formStart = await env.DB.prepare(
+    `SELECT COUNT(*) AS n FROM analytics_events WHERE type='form_start'`,
+  ).first<{ n: number }>();
+  const formSubmit = await env.DB.prepare(
+    `SELECT COUNT(*) AS n FROM analytics_events WHERE type='form_submit'`,
+  ).first<{ n: number }>();
+  const total = await env.DB.prepare(`SELECT COUNT(*) AS n FROM leads`).first<{
+    n: number;
+  }>();
+  const qualified = await env.DB.prepare(
+    `SELECT COUNT(*) AS n FROM leads WHERE status IN ('Qualified','Proposal Sent','Closed Won')`,
+  ).first<{ n: number }>();
+  const closed = await env.DB.prepare(
+    `SELECT COUNT(*) AS n FROM leads WHERE status='Closed Won'`,
+  ).first<{ n: number }>();
+  return [
+    { stage: "Visitors", n: visitors?.n ?? 0 },
+    { stage: "Form Started", n: formStart?.n ?? 0 },
+    { stage: "Submitted", n: formSubmit?.n ?? total?.n ?? 0 },
+    { stage: "Leads", n: total?.n ?? 0 },
+    { stage: "Qualified", n: qualified?.n ?? 0 },
+    { stage: "Closed", n: closed?.n ?? 0 },
+  ];
 }
