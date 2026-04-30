@@ -1,42 +1,47 @@
-// Access Cloudflare bindings at runtime.
-// `cloudflare:workers` is only resolvable inside the Workers runtime, so we
-// dynamic-import it. Non-Workers environments will throw a clear error.
+// Cloudflare bindings accessor. Returns null when bindings are unavailable
+// (e.g. Lovable preview without D1 wired) so the app can fall back to mock data.
 
 export type AppEnv = {
   DB: D1Database;
-  CV_BUCKET: R2Bucket;
-  AI: Ai;
-  PARSE_PROVIDER?: string;
-  PARSE_MODEL?: string;
   ANTHROPIC_API_KEY?: string;
+  RESEND_API_KEY?: string;
+  JWT_SECRET?: string;
+  ADMIN_PASSWORD_HASH?: string;
+  ADMIN_EMAIL?: string;
+  FROM_EMAIL?: string;
+  CLAUDE_MODEL?: string;
 };
 
-let cached: AppEnv | null = null;
+let cached: AppEnv | null | undefined;
 
-export async function getEnv(): Promise<AppEnv> {
-  if (cached) return cached;
+export async function tryGetEnv(): Promise<AppEnv | null> {
+  if (cached !== undefined) return cached;
   try {
-    // @ts-expect-error - cloudflare:workers is a virtual module provided by the Cloudflare Vite plugin at runtime
     const mod = (await import("cloudflare:workers")) as unknown as {
       env: AppEnv;
     };
-    cached = mod.env;
+    cached = mod.env ?? null;
     return cached;
   } catch {
-    const { getMockEnv } = await import("./mockEnv");
-    cached = getMockEnv();
-    return cached;
+    cached = null;
+    return null;
   }
 }
 
-// D1 types shim — avoids needing @cloudflare/workers-types as a dep for
-// consumers that only build the worker via wrangler.
+export async function requireEnv(): Promise<AppEnv> {
+  const env = await tryGetEnv();
+  if (!env) {
+    throw new Error(
+      "Cloudflare bindings unavailable. This action requires the deployed runtime.",
+    );
+  }
+  return env;
+}
+
 declare global {
   interface D1Database {
     prepare(query: string): D1PreparedStatement;
-    batch<T = unknown>(
-      statements: D1PreparedStatement[],
-    ): Promise<D1Result<T>[]>;
+    batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>;
     exec<T = unknown>(query: string): Promise<D1ExecResult>;
   }
   interface D1PreparedStatement {
@@ -54,21 +59,5 @@ declare global {
   interface D1ExecResult {
     count: number;
     duration: number;
-  }
-  interface R2Bucket {
-    put(
-      key: string,
-      value: ArrayBuffer | ReadableStream | string,
-      options?: { httpMetadata?: { contentType?: string } },
-    ): Promise<unknown>;
-    get(key: string): Promise<R2ObjectBody | null>;
-    delete(key: string): Promise<void>;
-  }
-  interface R2ObjectBody {
-    arrayBuffer(): Promise<ArrayBuffer>;
-    text(): Promise<string>;
-  }
-  interface Ai {
-    run(model: string, input: unknown): Promise<unknown>;
   }
 }
