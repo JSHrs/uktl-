@@ -199,12 +199,11 @@ export function DashboardShell({
               color: "rgba(255,255,255,0.5)",
               fontSize: 12,
               textAlign: "left",
-              display: "block",
-              marginBottom: 6,
-              textDecoration: "none",
               display: "flex",
               alignItems: "center",
               gap: 10,
+              marginBottom: 6,
+              textDecoration: "none",
             }}
           >
             <Globe size={14} strokeWidth={1.75} />
