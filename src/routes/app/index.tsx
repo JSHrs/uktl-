@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { Sparkles, ArrowUpRight, X } from "lucide-react";
 import {
   listLeadsFn,
   updateLeadFn,
@@ -322,7 +323,7 @@ function LeadsPage() {
                   border: "none",
                 }}
               >
-                ×
+                <X size={16} strokeWidth={1.5} />
               </button>
             </div>
 
@@ -493,7 +494,24 @@ function LeadsPage() {
                           textDecoration: "none",
                         }}
                       >
-                        Send Email ↗
+                        href={`mailto:${selected.email}?subject=Re: Your enquiry to UK Talent Link&body=${encodeURIComponent(selected.ai_draft ?? "")}`}
+                        style={{
+                          flex: 1,
+                          background: "var(--navy)",
+                          color: "white",
+                          padding: "10px",
+                          borderRadius: 3,
+                          fontSize: 13,
+                          fontWeight: 500,
+                          textAlign: "center",
+                          textDecoration: "none",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 6,
+                        }}
+                      >
+                        Send Email <ArrowUpRight size={14} />
                       </a>
                       <button
                         onClick={generateDraft}
