@@ -1,15 +1,29 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, type ComponentType, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import {
+  Inbox,
+  PenLine,
+  Users,
+  BarChart3,
+  Globe,
+  LogOut,
+  type LucideProps,
+} from "lucide-react";
 import { clearToken, getToken } from "@/lib/auth-client";
 import { verifyTokenFn } from "@/lib/functions";
 import { Spinner } from "@/components/dashboard/primitives";
 
-type NavItem = { to: string; icon: string; label: string; exact?: boolean };
+type NavItem = {
+  to: string;
+  icon: ComponentType<LucideProps>;
+  label: string;
+  exact?: boolean;
+};
 const NAV: NavItem[] = [
-  { to: "/app", icon: "📥", label: "Lead Intelligence", exact: true },
-  { to: "/app/content", icon: "✍️", label: "Content Workshop" },
-  { to: "/app/recruitment", icon: "👥", label: "Recruitment Tracker" },
-  { to: "/app/analytics", icon: "📊", label: "Analytics" },
+  { to: "/app", icon: Inbox, label: "Lead Intelligence", exact: true },
+  { to: "/app/content", icon: PenLine, label: "Content Workshop" },
+  { to: "/app/recruitment", icon: Users, label: "Recruitment Tracker" },
+  { to: "/app/analytics", icon: BarChart3, label: "Analytics" },
 ];
 
 export function DashboardShell({
@@ -161,7 +175,7 @@ export function DashboardShell({
                   textDecoration: "none",
                 }}
               >
-                <span style={{ fontSize: 16 }}>{n.icon}</span>
+                <n.icon size={16} strokeWidth={1.75} />
                 <span style={{ flex: 1 }}>{n.label}</span>
               </Link>
             );
@@ -188,9 +202,13 @@ export function DashboardShell({
               display: "block",
               marginBottom: 6,
               textDecoration: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
             }}
           >
-            🌐 View Public Site
+            <Globe size={14} strokeWidth={1.75} />
+            View Public Site
           </Link>
           <button
             onClick={onLogout}
@@ -204,9 +222,13 @@ export function DashboardShell({
               textAlign: "left",
               cursor: "pointer",
               fontFamily: "inherit",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
             }}
           >
-            ← Sign out
+            <LogOut size={14} strokeWidth={1.75} />
+            Sign out
           </button>
         </div>
       </aside>
@@ -232,9 +254,9 @@ export function DashboardShell({
           }}
         >
           <h1
-            style={{ fontSize: 16, fontWeight: 500, color: "var(--ink)" }}
+            style={{ fontSize: 16, fontWeight: 500, color: "var(--ink)", display: "flex", alignItems: "center", gap: 10 }}
           >
-            <span style={{ marginRight: 8 }}>{currentNav.icon}</span>
+            <currentNav.icon size={18} strokeWidth={1.75} color="var(--gold)" />
             {currentNav.label}
           </h1>
           <div
