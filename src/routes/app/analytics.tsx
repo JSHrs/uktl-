@@ -35,7 +35,7 @@ export const Route = createFileRoute("/app/analytics")({
   component: AnalyticsPage,
 });
 
-const PIE_COLORS = ["#b8975a", "#0d1b2a", "#2d9b6f", "#8a94a6", "#7c3aed"];
+const PIE_COLORS = ["#6366f1", "#ec4899", "#06b6d4", "#f59e0b", "#10b981"];
 
 function pctChange(series: { count: number }[]): number {
   if (series.length < 2) return 0;
@@ -165,12 +165,12 @@ function AnalyticsPage() {
           >
             <defs>
               <linearGradient id="gradVisitors" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#b8975a" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="#b8975a" stopOpacity={0} />
+                <stop offset="0%" stopColor="#6366f1" stopOpacity={0.45} />
+                <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="gradLeads" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#0d1b2a" stopOpacity={0.25} />
-                <stop offset="100%" stopColor="#0d1b2a" stopOpacity={0} />
+                <stop offset="0%" stopColor="#ec4899" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="#ec4899" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
@@ -188,14 +188,14 @@ function AnalyticsPage() {
             <Area
               type="monotone"
               dataKey="visitors"
-              stroke="#b8975a"
+              stroke="#6366f1"
               strokeWidth={2}
               fill="url(#gradVisitors)"
             />
             <Area
               type="monotone"
               dataKey="leads"
-              stroke="#0d1b2a"
+              stroke="#ec4899"
               strokeWidth={2}
               fill="url(#gradLeads)"
             />
@@ -203,8 +203,8 @@ function AnalyticsPage() {
         </ResponsiveContainer>
         <Legend
           items={[
-            { label: "Visitors", color: "#b8975a" },
-            { label: "Leads", color: "#0d1b2a" },
+            { label: "Visitors", color: "#6366f1" },
+            { label: "Leads", color: "#ec4899" },
           ]}
         />
       </ChartCard>
@@ -305,8 +305,8 @@ function AnalyticsPage() {
             <BarChart data={data.funnel} layout="vertical" margin={{ left: 8, right: 16 }}>
               <defs>
                 <linearGradient id="gradFunnel" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#0d1b2a" />
-                  <stop offset="100%" stopColor="#b8975a" />
+                  <stop offset="0%" stopColor="#06b6d4" />
+                  <stop offset="100%" stopColor="#ec4899" />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" horizontal={false} />
@@ -321,7 +321,7 @@ function AnalyticsPage() {
                 axisLine={false}
               />
               <Tooltip
-                cursor={{ fill: "rgba(184,151,90,0.08)" }}
+                cursor={{ fill: "rgba(99,102,241,0.1)" }}
                 contentStyle={{
                   background: "white",
                   border: "1px solid rgba(0,0,0,0.08)",
