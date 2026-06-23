@@ -4,7 +4,6 @@ import {
   listLeadsFn,
   updateLeadFn,
   draftLeadReplyFn,
-} from "@/lib/server/functions";
 } from "@/lib/functions";
 import {
   Badge,

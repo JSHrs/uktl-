@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { tryGetEnv } from "./env";
+import { tryGetEnv } from "./server/env";
 import {
   listLeads,
   getLead,
@@ -22,7 +22,7 @@ import {
   visitorsByMonth,
   serviceBreakdown,
   conversionFunnel,
-} from "./db";
+} from "./server/db";
 import {
   callClaude,
   CONTENT_SYSTEM,
@@ -31,10 +31,10 @@ import {
   leadReplyPrompt,
   CANDIDATE_ANALYSIS_SYSTEM,
   candidateAnalysisPrompt,
-} from "./claude";
-import { sendLeadNotification } from "./email";
-import { authenticate, isValidToken } from "./auth";
-import { scoreLead, priorityFromScore } from "./scoring";
+} from "./server/claude";
+import { sendLeadNotification } from "./server/email";
+import { authenticate, isValidToken } from "./server/auth";
+import { scoreLead, priorityFromScore } from "./server/scoring";
 import {
   LeadInputSchema,
   CandidateInputSchema,
@@ -43,13 +43,13 @@ import {
   AnalyticsEventInputSchema,
   STATUS_OPTIONS,
   STAGES,
-} from "../schemas";
+} from "./schemas";
 import {
   MOCK_LEADS,
   MOCK_CANDIDATES,
   MOCK_CONTENT,
   MOCK_ANALYTICS,
-} from "./mockData";
+} from "./server/mockData";
 
 // ─── LEADS ────────────────────────────────────────────────────────────────────
 

@@ -12,7 +12,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { getAnalyticsFn } from "@/lib/server/functions";
+import { getAnalyticsFn } from "@/lib/functions";
 import { StatCard, PreviewBanner } from "@/components/dashboard/primitives";
 
 export const Route = createFileRoute("/app/analytics")({
