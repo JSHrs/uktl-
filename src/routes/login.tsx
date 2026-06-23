@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { loginFn } from "@/lib/server/functions";
+import { loginFn } from "@/lib/functions";
 import { setToken } from "@/lib/auth-client";
 import { Spinner } from "@/components/dashboard/primitives";
 

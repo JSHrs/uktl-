@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { clearToken, getToken } from "@/lib/auth-client";
-import { verifyTokenFn } from "@/lib/server/functions";
+import { verifyTokenFn } from "@/lib/functions";
 import { Spinner } from "@/components/dashboard/primitives";
 
 type NavItem = { to: string; icon: string; label: string; exact?: boolean };
