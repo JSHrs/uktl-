@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
-import { submitLeadFn, trackEventFn } from "@/lib/server/functions";
+import { submitLeadFn, trackEventFn } from "@/lib/functions";
 import { SERVICE_OPTIONS } from "@/lib/schemas";
 import { Spinner } from "@/components/dashboard/primitives";
 

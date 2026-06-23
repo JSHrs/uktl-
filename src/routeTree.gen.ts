@@ -13,8 +13,8 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
-import { Route as AppContentRouteImport } from './routes/app/content'
 import { Route as AppRecruitmentRouteImport } from './routes/app/recruitment'
+import { Route as AppContentRouteImport } from './routes/app/content'
 import { Route as AppAnalyticsRouteImport } from './routes/app/analytics'
 
 const LoginRoute = LoginRouteImport.update({
@@ -37,14 +37,14 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppContentRoute = AppContentRouteImport.update({
-  id: '/content',
-  path: '/content',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppRecruitmentRoute = AppRecruitmentRouteImport.update({
   id: '/recruitment',
   path: '/recruitment',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppContentRoute = AppContentRouteImport.update({
+  id: '/content',
+  path: '/content',
   getParentRoute: () => AppRoute,
 } as any)
 const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
@@ -57,28 +57,28 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
-  '/app/': typeof AppIndexRoute
+  '/app/analytics': typeof AppAnalyticsRoute
   '/app/content': typeof AppContentRoute
   '/app/recruitment': typeof AppRecruitmentRoute
-  '/app/analytics': typeof AppAnalyticsRoute
+  '/app/': typeof AppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/app': typeof AppIndexRoute
+  '/app/analytics': typeof AppAnalyticsRoute
   '/app/content': typeof AppContentRoute
   '/app/recruitment': typeof AppRecruitmentRoute
-  '/app/analytics': typeof AppAnalyticsRoute
+  '/app': typeof AppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
-  '/app/': typeof AppIndexRoute
+  '/app/analytics': typeof AppAnalyticsRoute
   '/app/content': typeof AppContentRoute
   '/app/recruitment': typeof AppRecruitmentRoute
-  '/app/analytics': typeof AppAnalyticsRoute
+  '/app/': typeof AppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -86,27 +86,27 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/login'
-    | '/app/'
+    | '/app/analytics'
     | '/app/content'
     | '/app/recruitment'
-    | '/app/analytics'
+    | '/app/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
-    | '/app'
+    | '/app/analytics'
     | '/app/content'
     | '/app/recruitment'
-    | '/app/analytics'
+    | '/app'
   id:
     | '__root__'
     | '/'
     | '/app'
     | '/login'
-    | '/app/'
+    | '/app/analytics'
     | '/app/content'
     | '/app/recruitment'
-    | '/app/analytics'
+    | '/app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,18 +145,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/content': {
-      id: '/app/content'
-      path: '/content'
-      fullPath: '/app/content'
-      preLoaderRoute: typeof AppContentRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/app/recruitment': {
       id: '/app/recruitment'
       path: '/recruitment'
       fullPath: '/app/recruitment'
       preLoaderRoute: typeof AppRecruitmentRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/content': {
+      id: '/app/content'
+      path: '/content'
+      fullPath: '/app/content'
+      preLoaderRoute: typeof AppContentRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/analytics': {
@@ -170,17 +170,17 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
-  AppIndexRoute: typeof AppIndexRoute
+  AppAnalyticsRoute: typeof AppAnalyticsRoute
   AppContentRoute: typeof AppContentRoute
   AppRecruitmentRoute: typeof AppRecruitmentRoute
-  AppAnalyticsRoute: typeof AppAnalyticsRoute
+  AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppIndexRoute: AppIndexRoute,
+  AppAnalyticsRoute: AppAnalyticsRoute,
   AppContentRoute: AppContentRoute,
   AppRecruitmentRoute: AppRecruitmentRoute,
-  AppAnalyticsRoute: AppAnalyticsRoute,
+  AppIndexRoute: AppIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

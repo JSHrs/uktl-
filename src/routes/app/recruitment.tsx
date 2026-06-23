@@ -5,7 +5,7 @@ import {
   insertCandidateFn,
   updateCandidateFn,
   analyseCandidateFn,
-} from "@/lib/server/functions";
+} from "@/lib/functions";
 import {
   Badge,
   Spinner,

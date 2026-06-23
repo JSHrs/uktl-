@@ -4,7 +4,7 @@ import {
   listContentFn,
   generateContentFn,
   saveContentFn,
-} from "@/lib/server/functions";
+} from "@/lib/functions";
 import {
   Badge,
   Spinner,
