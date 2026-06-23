@@ -232,7 +232,12 @@ export const analyseCandidateFn = createServerFn({ method: "POST" })
       (env && (await getCandidate(env, data.id))) ||
       MOCK_CANDIDATES.find((c) => c.id === data.id) ||
       null;
-    if (!candidate) throw new Error("Candidate not found");
+    if (!candidate) {
+      return {
+        analysis:
+          "Preview analysis unavailable — this candidate record is no longer in the in-memory store (the preview backend was restarted). Re-add the candidate or refresh the list to generate a new analysis.",
+      };
+    }
     if (!env || !env.ANTHROPIC_API_KEY) {
       const analysis = `Assessment: ${candidate.name} presents a strong fit on the technical and sectoral dimensions of the ${candidate.role} role at ${candidate.client ?? "the client"}. The notes suggest meaningful depth, though there is one area worth probing before progressing.\n\nRecommendation: Advance to the next stage. The signal-to-noise ratio in the notes is high and the score reflects a candidate worth investing time in. The single risk is around tenure pattern — verify in interview.\n\nProbe in interview: Ask the candidate to walk through a specific decision they made in the last 18 months that did not go to plan, and how they recovered.\n\n[Preview analysis — connect Anthropic API key for live generation.]`;
       return { analysis };
