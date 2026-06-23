@@ -492,19 +492,6 @@ function LeadsPage() {
                           fontWeight: 500,
                           textAlign: "center",
                           textDecoration: "none",
-                        }}
-                      >
-                        href={`mailto:${selected.email}?subject=Re: Your enquiry to UK Talent Link&body=${encodeURIComponent(selected.ai_draft ?? "")}`}
-                        style={{
-                          flex: 1,
-                          background: "var(--navy)",
-                          color: "white",
-                          padding: "10px",
-                          borderRadius: 3,
-                          fontSize: 13,
-                          fontWeight: 500,
-                          textAlign: "center",
-                          textDecoration: "none",
                           display: "inline-flex",
                           alignItems: "center",
                           justifyContent: "center",
