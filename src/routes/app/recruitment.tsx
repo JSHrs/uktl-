@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { Sparkles, X } from "lucide-react";
 import {
   listCandidatesFn,
   insertCandidateFn,
@@ -444,7 +445,7 @@ function RecruitmentPage() {
                   border: "none",
                 }}
               >
-                ×
+                <X size={16} strokeWidth={1.5} />
               </button>
             </div>
             <div style={{ padding: "20px 22px" }}>
@@ -555,7 +556,7 @@ function RecruitmentPage() {
                         <Spinner size={14} /> Analysing…
                       </>
                     ) : (
-                      "✨ Generate AI Analysis"
+                      <><Sparkles size={14} /> Generate AI Analysis</>
                     )}
                   </button>
                 )}

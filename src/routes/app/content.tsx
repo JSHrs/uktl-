@@ -1,5 +1,6 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
+import { Sparkles, ArrowRight } from "lucide-react";
 import {
   listContentFn,
   generateContentFn,
@@ -212,7 +213,7 @@ function ContentPage() {
                   <Spinner size={14} /> Writing with AI…
                 </>
               ) : (
-                "✨ Generate Content"
+                <><Sparkles size={14} /> Generate Content</>
               )}
             </button>
             {error && (
@@ -265,7 +266,7 @@ function ContentPage() {
                   fontFamily: "inherit",
                 }}
               >
-                → {s}
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><ArrowRight size={12} /> {s}</span>
               </button>
             ))}
           </div>
