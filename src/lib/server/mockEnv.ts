@@ -1,5 +1,6 @@
 import type { AppEnv } from "./env";
 import { MOCK_ANALYTICS, MOCK_CANDIDATES, MOCK_CONTENT, MOCK_LEADS } from "./mockData";
+import { readFile, writeFile } from "node:fs/promises";
 
 type Row = Record<string, unknown>;
 
@@ -32,6 +33,29 @@ const state: MockState =
   });
 
 let stateLoaded = false;
+
+async function loadState(): Promise<void> {
+  if (stateLoaded) return;
+  stateLoaded = true;
+  try {
+    const saved = JSON.parse(await readFile(MOCK_STATE_PATH, "utf8")) as Partial<MockState>;
+    if (Array.isArray(saved.leads)) state.leads = saved.leads;
+    if (Array.isArray(saved.candidates)) state.candidates = saved.candidates;
+    if (Array.isArray(saved.content_items)) state.content_items = saved.content_items;
+    if (Array.isArray(saved.analytics_events)) state.analytics_events = saved.analytics_events;
+    if (Array.isArray(saved.sessions)) state.sessions = saved.sessions;
+  } catch {
+    // No saved preview state yet. Start from seeded in-memory data.
+  }
+}
+
+async function saveState(): Promise<void> {
+  try {
+    await writeFile(MOCK_STATE_PATH, JSON.stringify(state), "utf8");
+  } catch {
+    // The in-memory mock still works if filesystem persistence is unavailable.
+  }
+}
 
 export function getMockEnv(): AppEnv {
   if (!mockGlobal.__UKTL_MOCK_ENV__) {
