@@ -545,7 +545,7 @@ function LeadsPage() {
                         <Spinner size={14} /> Generating with AI…
                       </>
                     ) : (
-                      "✨ Generate AI Reply Draft"
+                      <><Sparkles size={14} /> Generate AI Reply Draft</>
                     )}
                   </button>
                 )}
