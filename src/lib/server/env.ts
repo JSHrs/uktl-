@@ -20,7 +20,8 @@ let cached: AppEnv | undefined;
 export async function tryGetEnv(): Promise<AppEnv> {
   if (cached !== undefined) return cached;
   try {
-    const mod = (await import("cloudflare:workers")) as unknown as {
+    const specifier = "cloudflare:workers";
+    const mod = (await import(/* @vite-ignore */ specifier)) as unknown as {
       env: AppEnv;
     };
     if (!mod.env?.DB) throw new Error("Runtime bindings unavailable");
