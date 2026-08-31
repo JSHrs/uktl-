@@ -392,6 +392,55 @@ export async function getMatchesForCandidate(
   }));
 }
 
+// ── FAQ Topics ───────────────────────────────────────────────────────────────
+
+export type FaqTopic = {
+  id: string;
+  title: string;
+  category: string;
+  keywords: string[];
+  sector_tag: string | null;
+  video_url: string | null;
+  thumbnail: string | null;
+  duration_s: number | null;
+  published: number;
+  view_count: number;
+  created_at: number;
+};
+
+export async function listFaqTopics(
+  env: AppEnv,
+  opts: { category?: string; sector?: string } = {},
+): Promise<FaqTopic[]> {
+  let query = `SELECT * FROM faq_topics WHERE published=1`;
+  const binds: unknown[] = [];
+  if (opts.category) { query += ` AND category=?`; binds.push(opts.category); }
+  if (opts.sector)   { query += ` AND (sector_tag IS NULL OR sector_tag=?)`; binds.push(opts.sector); }
+  query += ` ORDER BY view_count DESC, created_at DESC`;
+  const res = await env.DB.prepare(query).bind(...binds).all<Record<string, unknown>>();
+  return (res.results ?? []).map(rowToFaqTopic);
+}
+
+export async function incrementFaqView(env: AppEnv, id: string): Promise<void> {
+  await env.DB.prepare(`UPDATE faq_topics SET view_count=view_count+1 WHERE id=?`).bind(id).run();
+}
+
+function rowToFaqTopic(row: Record<string, unknown>): FaqTopic {
+  return {
+    id: String(row.id),
+    title: String(row.title),
+    category: String(row.category),
+    keywords: parseJsonArray<string>(row.keywords),
+    sector_tag: (row.sector_tag as string | null) ?? null,
+    video_url: (row.video_url as string | null) ?? null,
+    thumbnail: (row.thumbnail as string | null) ?? null,
+    duration_s: row.duration_s != null ? Number(row.duration_s) : null,
+    published: Number(row.published),
+    view_count: Number(row.view_count ?? 0),
+    created_at: Number(row.created_at),
+  };
+}
+
 export async function recordSwipe(
   env: AppEnv,
   candidateId: string,

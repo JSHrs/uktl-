@@ -23,6 +23,9 @@ import { Route as AppCandidatesIndexRouteImport } from './routes/app/candidates/
 import { Route as AppJobsIdRouteImport } from './routes/app/jobs/$id'
 import { Route as AppCandidatesIdRouteImport } from './routes/app/candidates/$id'
 import { Route as AppDiscoverRouteImport } from './routes/app/discover'
+import { Route as AppHrIndexRouteImport } from './routes/app/hr/index'
+import { Route as AppHrAnswerRouteImport } from './routes/app/hr/answer'
+import { Route as AppHrLibraryRouteImport } from './routes/app/hr/library'
 
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
@@ -69,6 +72,21 @@ const AppDiscoverRoute = AppDiscoverRouteImport.update({
   path: '/discover',
   getParentRoute: () => AppRoute,
 } as any)
+const AppHrIndexRoute = AppHrIndexRouteImport.update({
+  id: '/hr/',
+  path: '/hr/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHrAnswerRoute = AppHrAnswerRouteImport.update({
+  id: '/hr/answer',
+  path: '/hr/answer',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHrLibraryRoute = AppHrLibraryRouteImport.update({
+  id: '/hr/library',
+  path: '/hr/library',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppUploadRoute = AppUploadRouteImport.update({
   id: '/upload',
   path: '/upload',
@@ -104,6 +122,9 @@ export interface FileRoutesByFullPath {
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
   '/app/discover': typeof AppDiscoverRoute
+  '/app/hr/': typeof AppHrIndexRoute
+  '/app/hr/answer': typeof AppHrAnswerRoute
+  '/app/hr/library': typeof AppHrLibraryRoute
   '/app/upload': typeof AppUploadRoute
   '/app/': typeof AppIndexRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
@@ -119,6 +140,9 @@ export interface FileRoutesByTo {
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
   '/app/discover': typeof AppDiscoverRoute
+  '/app/hr': typeof AppHrIndexRoute
+  '/app/hr/answer': typeof AppHrAnswerRoute
+  '/app/hr/library': typeof AppHrLibraryRoute
   '/app/upload': typeof AppUploadRoute
   '/app': typeof AppIndexRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
@@ -136,6 +160,9 @@ export interface FileRoutesById {
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
   '/app/discover': typeof AppDiscoverRoute
+  '/app/hr/': typeof AppHrIndexRoute
+  '/app/hr/answer': typeof AppHrAnswerRoute
+  '/app/hr/library': typeof AppHrLibraryRoute
   '/app/upload': typeof AppUploadRoute
   '/app/': typeof AppIndexRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
@@ -154,6 +181,9 @@ export interface FileRouteTypes {
     | '/sectors'
     | '/services'
     | '/app/discover'
+    | '/app/hr/'
+    | '/app/hr/answer'
+    | '/app/hr/library'
     | '/app/upload'
     | '/app/'
     | '/app/candidates/$id'
@@ -169,6 +199,9 @@ export interface FileRouteTypes {
     | '/sectors'
     | '/services'
     | '/app/discover'
+    | '/app/hr'
+    | '/app/hr/answer'
+    | '/app/hr/library'
     | '/app/upload'
     | '/app'
     | '/app/candidates/$id'
@@ -185,6 +218,9 @@ export interface FileRouteTypes {
     | '/sectors'
     | '/services'
     | '/app/discover'
+    | '/app/hr/'
+    | '/app/hr/answer'
+    | '/app/hr/library'
     | '/app/upload'
     | '/app/'
     | '/app/candidates/$id'
@@ -303,11 +339,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDiscoverRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/hr/': {
+      id: '/app/hr/'
+      path: '/hr'
+      fullPath: '/app/hr/'
+      preLoaderRoute: typeof AppHrIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/hr/answer': {
+      id: '/app/hr/answer'
+      path: '/hr/answer'
+      fullPath: '/app/hr/answer'
+      preLoaderRoute: typeof AppHrAnswerRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/hr/library': {
+      id: '/app/hr/library'
+      path: '/hr/library'
+      fullPath: '/app/hr/library'
+      preLoaderRoute: typeof AppHrLibraryRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
   AppDiscoverRoute: typeof AppDiscoverRoute
+  AppHrIndexRoute: typeof AppHrIndexRoute
+  AppHrAnswerRoute: typeof AppHrAnswerRoute
+  AppHrLibraryRoute: typeof AppHrLibraryRoute
   AppUploadRoute: typeof AppUploadRoute
   AppIndexRoute: typeof AppIndexRoute
   AppCandidatesIdRoute: typeof AppCandidatesIdRoute
@@ -318,6 +378,9 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppDiscoverRoute: AppDiscoverRoute,
+  AppHrIndexRoute: AppHrIndexRoute,
+  AppHrAnswerRoute: AppHrAnswerRoute,
+  AppHrLibraryRoute: AppHrLibraryRoute,
   AppUploadRoute: AppUploadRoute,
   AppIndexRoute: AppIndexRoute,
   AppCandidatesIdRoute: AppCandidatesIdRoute,

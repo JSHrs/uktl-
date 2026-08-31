@@ -8,14 +8,17 @@ import {
   getMatchesForCandidate,
   getMatchesForJob,
   getSwipedJobIds,
+  incrementFaqView,
   insertCandidateShell,
   listCandidates,
+  listFaqTopics,
   listJobs,
   markCandidateFailed,
   markCandidateParsing,
   recordSwipe,
   upsertMatches,
   writeParsedProfile,
+  type FaqTopic,
 } from "./db";
 import { parseCv } from "./parse";
 import { scoreMatch } from "./match";
@@ -25,6 +28,7 @@ import { ParsedProfileSchema } from "../schemas/profile";
 import {
   MOCK_CANDIDATES,
   MOCK_CANDIDATE_DETAILS,
+  MOCK_FAQ_TOPICS,
   MOCK_JOBS,
   MOCK_MATCHES_BY_CANDIDATE,
   MOCK_MATCHES_BY_JOB,
@@ -274,6 +278,182 @@ export const recordSwipeFn = createServerFn({ method: "POST" })
     } catch {
       return { ok: false };
     }
+  });
+
+// ── HR / Employment Law functions ─────────────────────────────────────────────
+
+const STOP_WORDS = new Set([
+  "a","an","the","is","it","in","on","at","to","for","of","and","or","my","i",
+  "am","are","was","be","been","do","does","did","have","has","had","not","with",
+  "me","we","you","can","will","what","how","when","why","who","which","this",
+  "that","about","if","but","so","get","give","make",
+]);
+
+function scoreTopicMatch(question: string, topic: FaqTopic, categoryHint?: string): number {
+  const words = question
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !STOP_WORDS.has(w));
+
+  let score = 0;
+
+  // Category match bonus
+  if (categoryHint && topic.category === categoryHint) score += 20;
+
+  // Keyword overlap
+  const topicText = [
+    topic.title.toLowerCase(),
+    ...topic.keywords.map((k) => k.toLowerCase()),
+  ].join(" ");
+
+  for (const w of words) {
+    if (topicText.includes(w)) score += 10;
+  }
+
+  // Exact multi-word phrase match in keywords
+  for (const kw of topic.keywords) {
+    if (question.toLowerCase().includes(kw.toLowerCase())) score += 15;
+  }
+
+  return score;
+}
+
+export const matchFaqTopicFn = createServerFn({ method: "GET" })
+  .validator((raw: unknown) =>
+    z.object({
+      question: z.string().min(1),
+      category: z.string().optional(),
+    }).parse(raw),
+  )
+  .handler(async ({ data }) => {
+    let topics: FaqTopic[];
+    try {
+      const env = await getEnv();
+      topics = await listFaqTopics(env);
+    } catch {
+      topics = MOCK_FAQ_TOPICS;
+    }
+
+    const scored = topics
+      .map((t) => ({ topic: t, score: scoreTopicMatch(data.question, t, data.category) }))
+      .filter((x) => x.score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    const best = scored[0] ?? null;
+    const related = scored.slice(1, 3).map((x) => x.topic);
+
+    return {
+      match: best ? { topic: best.topic, confidence: best.score >= 25 ? "high" : "low" } : null,
+      related,
+    };
+  });
+
+export const listFaqTopicsFn = createServerFn({ method: "GET" })
+  .validator((raw: unknown) =>
+    z.object({
+      category: z.string().optional(),
+      sector: z.string().optional(),
+    }).parse(raw),
+  )
+  .handler(async ({ data }) => {
+    try {
+      const env = await getEnv();
+      return await listFaqTopics(env, data);
+    } catch {
+      let topics = MOCK_FAQ_TOPICS;
+      if (data.category) topics = topics.filter((t) => t.category === data.category);
+      if (data.sector) topics = topics.filter((t) => !t.sector_tag || t.sector_tag === data.sector);
+      return topics;
+    }
+  });
+
+export const recordFaqViewFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .handler(async ({ data }) => {
+    try {
+      const env = await getEnv();
+      await incrementFaqView(env, data.id);
+    } catch {
+      // best-effort
+    }
+    return { ok: true };
+  });
+
+const ACAS_SYSTEM_PROMPT = `You are a UK employment law information assistant for UK Talent Link, \
+a platform serving candidates and businesses in the Construction and Technology sectors.
+
+Provide clear, accurate information grounded in ACAS guidance and current UK employment law \
+(Employment Rights Act 1996, Equality Act 2010, Working Time Regulations 1998, and related legislation). \
+Keep responses practical, concise, and structured: use short paragraphs or brief bullet points. \
+Aim for 3–5 paragraphs maximum. Where appropriate, reference the relevant Act or ACAS code of practice.
+
+IMPORTANT: Always end your response with this exact sentence on its own line:
+"This information is for general guidance only and does not constitute legal advice. \
+For your specific situation, speaking with a qualified employment lawyer is recommended."`;
+
+export const escalateToAiFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) =>
+    z.object({
+      question: z.string(),
+      category: z.string().optional(),
+      additionalContext: z.string().optional(),
+    }).parse(raw),
+  )
+  .handler(async ({ data }) => {
+    let apiKey: string | undefined;
+    try {
+      const env = await getEnv();
+      apiKey = env.ANTHROPIC_API_KEY;
+    } catch {
+      apiKey = undefined;
+    }
+
+    if (!apiKey) {
+      return {
+        response:
+          "This is a placeholder AI response (Anthropic API key not configured in this environment).\n\n" +
+          "In production, Claude would provide detailed ACAS-grounded guidance on your question. " +
+          "The response would reference relevant UK employment legislation and explain your rights clearly.\n\n" +
+          "This information is for general guidance only and does not constitute legal advice. " +
+          "For your specific situation, speaking with a qualified employment lawyer is recommended.",
+        source: "mock",
+      };
+    }
+
+    const userMessage = [
+      `Question: ${data.question}`,
+      data.category ? `Topic category: ${data.category}` : "",
+      data.additionalContext ? `Additional context: ${data.additionalContext}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1024,
+        system: ACAS_SYSTEM_PROMPT,
+        messages: [{ role: "user", content: userMessage }],
+      }),
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Anthropic error ${res.status}: ${body.slice(0, 300)}`);
+    }
+
+    const payload = (await res.json()) as {
+      content?: Array<{ type: string; text?: string }>;
+    };
+    const text = payload.content?.find((c) => c.type === "text")?.text?.trim() ?? "";
+    return { response: text, source: "claude" };
   });
 
 export const rematchCandidateFn = createServerFn({ method: "POST" })
