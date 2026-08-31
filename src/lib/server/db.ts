@@ -392,6 +392,32 @@ export async function getMatchesForCandidate(
   }));
 }
 
+export async function recordSwipe(
+  env: AppEnv,
+  candidateId: string,
+  jobId: string,
+  action: "interested" | "dismissed",
+): Promise<void> {
+  await env.DB.prepare(
+    `INSERT OR REPLACE INTO candidate_swipes (candidate_id, job_id, action, swiped_at)
+     VALUES (?, ?, ?, ?)`,
+  )
+    .bind(candidateId, jobId, action, Date.now())
+    .run();
+}
+
+export async function getSwipedJobIds(
+  env: AppEnv,
+  candidateId: string,
+): Promise<string[]> {
+  const res = await env.DB.prepare(
+    `SELECT job_id FROM candidate_swipes WHERE candidate_id=?`,
+  )
+    .bind(candidateId)
+    .all<{ job_id: string }>();
+  return (res.results ?? []).map((r) => r.job_id);
+}
+
 export async function getMatchesForJob(
   env: AppEnv,
   jobId: string,

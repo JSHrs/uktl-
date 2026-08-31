@@ -7,11 +7,13 @@ import {
   getJob,
   getMatchesForCandidate,
   getMatchesForJob,
+  getSwipedJobIds,
   insertCandidateShell,
   listCandidates,
   listJobs,
   markCandidateFailed,
   markCandidateParsing,
+  recordSwipe,
   upsertMatches,
   writeParsedProfile,
 } from "./db";
@@ -217,6 +219,60 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
       const msg = err instanceof Error ? err.message : String(err);
       await markCandidateFailed(env, id, msg);
       return { id, status: "failed" as const, error: msg };
+    }
+  });
+
+export const getDiscoverJobsFn = createServerFn({ method: "GET" })
+  .validator((raw: unknown) =>
+    z.object({ candidateId: z.string().optional() }).parse(raw),
+  )
+  .handler(async ({ data }) => {
+    try {
+      const env = await getEnv();
+      const allJobs = await listJobs(env);
+      let unseenJobs = allJobs;
+      const matchMap: Record<string, number> = {};
+
+      if (data.candidateId) {
+        const swipedIds = new Set(await getSwipedJobIds(env, data.candidateId));
+        unseenJobs = allJobs.filter((j) => !swipedIds.has(j.id));
+        const candidateMatches = await getMatchesForCandidate(env, data.candidateId);
+        candidateMatches.forEach((m) => {
+          matchMap[m.job_id] = m.score;
+        });
+      }
+
+      return { jobs: unseenJobs, matches: matchMap };
+    } catch {
+      const deterministicScore = (id: string) => {
+        let n = 0;
+        for (let i = 0; i < id.length; i++) n = (n * 31 + id.charCodeAt(i)) & 0xffffff;
+        return 50 + (n % 40);
+      };
+      return {
+        jobs: MOCK_JOBS,
+        matches: Object.fromEntries(MOCK_JOBS.map((j) => [j.id, deterministicScore(j.id)])),
+      };
+    }
+  });
+
+export const recordSwipeFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) =>
+    z
+      .object({
+        candidateId: z.string(),
+        jobId: z.string(),
+        action: z.enum(["interested", "dismissed"]),
+      })
+      .parse(raw),
+  )
+  .handler(async ({ data }) => {
+    try {
+      const env = await getEnv();
+      await recordSwipe(env, data.candidateId, data.jobId, data.action);
+      return { ok: true };
+    } catch {
+      return { ok: false };
     }
   });
 

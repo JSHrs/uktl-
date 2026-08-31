@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 
 const nav = [
   { to: "/app", label: "Overview", exact: true },
+  { to: "/app/discover", label: "Discover" },
   { to: "/app/upload", label: "Upload CV" },
   { to: "/app/candidates", label: "Candidates" },
   { to: "/app/jobs", label: "Mandates" },
