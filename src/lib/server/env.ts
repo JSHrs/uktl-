@@ -9,6 +9,9 @@ export type AppEnv = {
   PARSE_PROVIDER?: string;
   PARSE_MODEL?: string;
   ANTHROPIC_API_KEY?: string;
+  // Admin auth — set via: wrangler secret put ADMIN_PASSWORD_HASH / JWT_SECRET
+  ADMIN_PASSWORD_HASH?: string;
+  JWT_SECRET?: string;
 };
 
 let cached: AppEnv | null = null;

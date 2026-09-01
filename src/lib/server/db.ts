@@ -502,6 +502,122 @@ export async function getMatchesForJob(
   }));
 }
 
+// ── Admin: FAQ topics ────────────────────────────────────────────────────────
+
+export async function listAllFaqTopics(env: AppEnv): Promise<FaqTopic[]> {
+  const res = await env.DB.prepare(
+    `SELECT * FROM faq_topics ORDER BY created_at DESC`,
+  ).all<Record<string, unknown>>();
+  return (res.results ?? []).map(rowToFaqTopic);
+}
+
+export async function getFaqTopic(env: AppEnv, id: string): Promise<FaqTopic | null> {
+  const row = await env.DB.prepare(`SELECT * FROM faq_topics WHERE id=?`).bind(id).first<Record<string, unknown>>();
+  return row ? rowToFaqTopic(row) : null;
+}
+
+export type FaqTopicInput = {
+  title: string;
+  category: string;
+  keywords: string[];
+  sector_tag?: string | null;
+  video_url?: string | null;
+  thumbnail?: string | null;
+  duration_s?: number | null;
+  published?: boolean;
+};
+
+export async function createFaqTopic(env: AppEnv, id: string, input: FaqTopicInput): Promise<void> {
+  const now = Date.now();
+  await env.DB.prepare(
+    `INSERT INTO faq_topics (id, title, category, keywords, sector_tag, video_url, thumbnail, duration_s, published, view_count, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+  ).bind(
+    id, input.title, input.category, JSON.stringify(input.keywords),
+    input.sector_tag ?? null, input.video_url ?? null, input.thumbnail ?? null,
+    input.duration_s ?? null, input.published ? 1 : 0, now,
+  ).run();
+}
+
+export async function updateFaqTopic(env: AppEnv, id: string, input: FaqTopicInput): Promise<void> {
+  await env.DB.prepare(
+    `UPDATE faq_topics SET title=?, category=?, keywords=?, sector_tag=?, video_url=?, thumbnail=?, duration_s=?, published=?
+     WHERE id=?`,
+  ).bind(
+    input.title, input.category, JSON.stringify(input.keywords),
+    input.sector_tag ?? null, input.video_url ?? null, input.thumbnail ?? null,
+    input.duration_s ?? null, input.published ? 1 : 0, id,
+  ).run();
+}
+
+export async function deleteFaqTopic(env: AppEnv, id: string): Promise<void> {
+  await env.DB.prepare(`DELETE FROM faq_topics WHERE id=?`).bind(id).run();
+}
+
+// ── Admin: Jobs ──────────────────────────────────────────────────────────────
+
+export async function listAllJobs(env: AppEnv): Promise<Job[]> {
+  const res = await env.DB.prepare(`SELECT * FROM jobs ORDER BY created_at DESC`).all<Record<string, unknown>>();
+  return (res.results ?? []).map(rowToJob);
+}
+
+export type JobInput = {
+  title: string;
+  company?: string | null;
+  location?: string | null;
+  sector?: string | null;
+  seniority?: string | null;
+  min_years_experience?: number | null;
+  description?: string | null;
+  must_have_skills: string[];
+  nice_to_have_skills: string[];
+  status: "open" | "closed";
+};
+
+export async function createJob(env: AppEnv, id: string, input: JobInput): Promise<void> {
+  const now = Date.now();
+  await env.DB.prepare(
+    `INSERT INTO jobs (id, created_at, title, company, location, sector, seniority, min_years_experience, description, must_have_skills, nice_to_have_skills, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).bind(
+    id, now, input.title, input.company ?? null, input.location ?? null,
+    input.sector ?? null, input.seniority ?? null, input.min_years_experience ?? null,
+    input.description ?? null,
+    JSON.stringify(input.must_have_skills), JSON.stringify(input.nice_to_have_skills),
+    input.status,
+  ).run();
+}
+
+export async function updateJob(env: AppEnv, id: string, input: JobInput): Promise<void> {
+  await env.DB.prepare(
+    `UPDATE jobs SET title=?, company=?, location=?, sector=?, seniority=?, min_years_experience=?,
+     description=?, must_have_skills=?, nice_to_have_skills=?, status=? WHERE id=?`,
+  ).bind(
+    input.title, input.company ?? null, input.location ?? null,
+    input.sector ?? null, input.seniority ?? null, input.min_years_experience ?? null,
+    input.description ?? null,
+    JSON.stringify(input.must_have_skills), JSON.stringify(input.nice_to_have_skills),
+    input.status, id,
+  ).run();
+}
+
+export async function deleteJob(env: AppEnv, id: string): Promise<void> {
+  await env.DB.prepare(`DELETE FROM jobs WHERE id=?`).bind(id).run();
+}
+
+// ── Admin: Candidates ────────────────────────────────────────────────────────
+
+export async function deleteCandidate(env: AppEnv, id: string): Promise<void> {
+  await env.DB.batch([
+    env.DB.prepare(`DELETE FROM candidate_skills WHERE candidate_id=?`).bind(id),
+    env.DB.prepare(`DELETE FROM candidate_experience WHERE candidate_id=?`).bind(id),
+    env.DB.prepare(`DELETE FROM candidate_education WHERE candidate_id=?`).bind(id),
+    env.DB.prepare(`DELETE FROM candidate_swipes WHERE candidate_id=?`).bind(id),
+    env.DB.prepare(`DELETE FROM matches WHERE candidate_id=?`).bind(id),
+    env.DB.prepare(`DELETE FROM candidates WHERE id=?`).bind(id),
+  ]);
+}
+
 function parseJsonArray<T>(raw: unknown): T[] {
   if (!raw) return [];
   if (Array.isArray(raw)) return raw as T[];

@@ -1,25 +1,45 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getCookie, setCookie, deleteCookie } from "@tanstack/start-server-core";
 import { z } from "zod";
 
 import { getEnv } from "./env";
 import {
+  createFaqTopic,
+  createJob,
+  deleteCandidate,
+  deleteFaqTopic,
+  deleteJob,
   getCandidate,
+  getFaqTopic,
   getJob,
   getMatchesForCandidate,
   getMatchesForJob,
   getSwipedJobIds,
   incrementFaqView,
   insertCandidateShell,
+  listAllFaqTopics,
+  listAllJobs,
   listCandidates,
   listFaqTopics,
   listJobs,
   markCandidateFailed,
   markCandidateParsing,
   recordSwipe,
+  updateFaqTopic,
+  updateJob,
   upsertMatches,
   writeParsedProfile,
   type FaqTopic,
+  type FaqTopicInput,
+  type JobInput,
 } from "./db";
+import {
+  DEV_JWT_SECRET,
+  SESSION_COOKIE,
+  createSessionToken,
+  verifyPassword,
+  verifySessionToken,
+} from "./auth";
 import { parseCv } from "./parse";
 import { scoreMatch } from "./match";
 import { normaliseSkillList } from "./skills";
@@ -481,3 +501,171 @@ export const rematchCandidateFn = createServerFn({ method: "POST" })
 function sanitiseFilename(name: string): string {
   return name.replace(/[^A-Za-z0-9._-]+/g, "_").slice(0, 120);
 }
+
+// ── Admin auth ───────────────────────────────────────────────────────────────
+
+function getJwtSecret(env: { JWT_SECRET?: string }): string {
+  return env.JWT_SECRET ?? DEV_JWT_SECRET;
+}
+
+export const adminLoginFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) => z.object({ password: z.string() }).parse(raw))
+  .handler(async ({ data }) => {
+    let hash: string | undefined;
+    let secret = DEV_JWT_SECRET;
+    try {
+      const env = await getEnv();
+      hash = env.ADMIN_PASSWORD_HASH;
+      secret = getJwtSecret(env);
+    } catch { /* preview mode */ }
+    const valid = await verifyPassword(data.password, hash);
+    if (!valid) return { ok: false as const, error: "Invalid password" };
+    const token = await createSessionToken(secret);
+    setCookie(SESSION_COOKIE, token, { httpOnly: true, sameSite: "strict", maxAge: 8 * 3600, path: "/" });
+    return { ok: true as const };
+  });
+
+export const adminSessionFn = createServerFn({ method: "GET" }).handler(async () => {
+  const token = getCookie(SESSION_COOKIE);
+  if (!token) return { valid: false };
+  let secret = DEV_JWT_SECRET;
+  try { const env = await getEnv(); secret = getJwtSecret(env); } catch { /* preview */ }
+  const valid = await verifySessionToken(token, secret);
+  return { valid };
+});
+
+export const adminLogoutFn = createServerFn({ method: "POST" }).handler(async () => {
+  deleteCookie(SESSION_COOKIE, { path: "/" });
+  return { ok: true };
+});
+
+// ── Admin: FAQ topics ────────────────────────────────────────────────────────
+
+export const adminListFaqFn = createServerFn({ method: "GET" }).handler(async () => {
+  try {
+    const env = await getEnv();
+    return await listAllFaqTopics(env);
+  } catch {
+    return MOCK_FAQ_TOPICS;
+  }
+});
+
+export const adminGetFaqFn = createServerFn({ method: "GET" })
+  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .handler(async ({ data }) => {
+    try {
+      const env = await getEnv();
+      return await getFaqTopic(env, data.id);
+    } catch {
+      return MOCK_FAQ_TOPICS.find((t) => t.id === data.id) ?? null;
+    }
+  });
+
+export const adminCreateFaqFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) =>
+    z.object({
+      title: z.string().min(1),
+      category: z.string().min(1),
+      keywords: z.array(z.string()),
+      sector_tag: z.string().nullable().optional(),
+      video_url: z.string().nullable().optional(),
+      thumbnail: z.string().nullable().optional(),
+      duration_s: z.number().int().nullable().optional(),
+      published: z.boolean().optional(),
+    }).parse(raw),
+  )
+  .handler(async ({ data }) => {
+    const id = "faq_" + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+    const env = await getEnv();
+    await createFaqTopic(env, id, data as FaqTopicInput);
+    return { id };
+  });
+
+export const adminUpdateFaqFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) =>
+    z.object({
+      id: z.string(),
+      title: z.string().min(1),
+      category: z.string().min(1),
+      keywords: z.array(z.string()),
+      sector_tag: z.string().nullable().optional(),
+      video_url: z.string().nullable().optional(),
+      thumbnail: z.string().nullable().optional(),
+      duration_s: z.number().int().nullable().optional(),
+      published: z.boolean().optional(),
+    }).parse(raw),
+  )
+  .handler(async ({ data }) => {
+    const { id, ...input } = data;
+    const env = await getEnv();
+    await updateFaqTopic(env, id, input as FaqTopicInput);
+    return { ok: true };
+  });
+
+export const adminDeleteFaqFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .handler(async ({ data }) => {
+    const env = await getEnv();
+    await deleteFaqTopic(env, data.id);
+    return { ok: true };
+  });
+
+// ── Admin: Jobs ──────────────────────────────────────────────────────────────
+
+export const adminListJobsFn = createServerFn({ method: "GET" }).handler(async () => {
+  try {
+    const env = await getEnv();
+    return await listAllJobs(env);
+  } catch {
+    return MOCK_JOBS;
+  }
+});
+
+const JobInputSchema = z.object({
+  title: z.string().min(1),
+  company: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  sector: z.string().nullable().optional(),
+  seniority: z.string().nullable().optional(),
+  min_years_experience: z.number().int().nullable().optional(),
+  description: z.string().nullable().optional(),
+  must_have_skills: z.array(z.string()),
+  nice_to_have_skills: z.array(z.string()),
+  status: z.enum(["open", "closed"]),
+});
+
+export const adminCreateJobFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) => JobInputSchema.parse(raw))
+  .handler(async ({ data }) => {
+    const id = "job_" + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+    const env = await getEnv();
+    await createJob(env, id, data as JobInput);
+    return { id };
+  });
+
+export const adminUpdateJobFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) => z.object({ id: z.string() }).merge(JobInputSchema).parse(raw))
+  .handler(async ({ data }) => {
+    const { id, ...input } = data;
+    const env = await getEnv();
+    await updateJob(env, id, input as JobInput);
+    return { ok: true };
+  });
+
+export const adminDeleteJobFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .handler(async ({ data }) => {
+    const env = await getEnv();
+    await deleteJob(env, data.id);
+    return { ok: true };
+  });
+
+// ── Admin: Candidates ────────────────────────────────────────────────────────
+
+export const adminDeleteCandidateFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .handler(async ({ data }) => {
+    const env = await getEnv();
+    await deleteCandidate(env, data.id);
+    return { ok: true };
+  });
