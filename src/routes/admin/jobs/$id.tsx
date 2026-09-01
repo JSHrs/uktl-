@@ -10,7 +10,7 @@ import {
 
 export const Route = createFileRoute("/admin/jobs/$id")({
   loader: async ({ params }) => {
-    const jobs = await adminListJobsFn({ data: {} });
+    const jobs = await adminListJobsFn();
     const job = jobs.find((j) => j.id === params.id);
     if (!job) throw notFound();
     return job;
@@ -32,7 +32,7 @@ export function JobForm({ mode, initial }: { mode: "create" | "edit"; initial?: 
   const [company, setCompany] = useState(initial?.company ?? "");
   const [location, setLocation] = useState(initial?.location ?? "");
   const [sector, setSector] = useState(initial?.sector ?? "");
-  const [seniority, setSeniority] = useState(initial?.seniority ?? "mid");
+  const [seniority, setSeniority] = useState<string>(initial?.seniority ?? "mid");
   const [minYears, setMinYears] = useState(initial?.min_years_experience?.toString() ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [mustHave, setMustHave] = useState((initial?.must_have_skills ?? []).join(", "));

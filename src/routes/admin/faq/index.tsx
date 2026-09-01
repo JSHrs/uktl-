@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { adminDeleteFaqFn, adminListFaqFn, adminUpdateFaqFn } from "@/lib/server/functions";
+import type { FaqTopic } from "@/lib/server/db";
 import { AdminHeader, AdminTable, AdminTr, AdminTd, AdminBtn } from "../../admin";
 
 export const Route = createFileRoute("/admin/faq/")({
-  loader: async () => adminListFaqFn({ data: {} }),
+  loader: async () => adminListFaqFn(),
   component: AdminFaqList,
 });
 
@@ -50,7 +51,7 @@ function AdminFaqList() {
     <>
       <AdminHeader
         title="FAQ Topics"
-        sub={`${topics.length} topics · ${topics.filter((t) => t.published).length} published`}
+        sub={`${topics.length} topics · ${topics.filter((t: FaqTopic) => t.published).length} published`}
         actions={
           <Link
             to="/admin/faq/new"
@@ -71,7 +72,7 @@ function AdminFaqList() {
         </div>
       ) : (
         <AdminTable head={["Title", "Category", "Sector", "Duration", "Views", "Status", ""]}>
-          {topics.map((t) => (
+          {topics.map((t: FaqTopic) => (
             <AdminTr key={t.id}>
               <AdminTd>
                 <Link

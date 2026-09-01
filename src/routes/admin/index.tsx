@@ -1,13 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { listCandidatesFn, adminListFaqFn, adminListJobsFn } from "@/lib/server/functions";
+import type { CandidateRow, FaqTopic } from "@/lib/server/db";
+import type { Job } from "@/lib/schemas/job";
 import { AdminHeader } from "../admin";
 
 export const Route = createFileRoute("/admin/")({
   loader: async () => {
     const [candidates, faq, jobs] = await Promise.all([
-      listCandidatesFn({ data: {} }),
-      adminListFaqFn({ data: {} }),
-      adminListJobsFn({ data: {} }),
+      listCandidatesFn(),
+      adminListFaqFn(),
+      adminListJobsFn(),
     ]);
     return { candidates, faq, jobs };
   },
@@ -16,9 +18,9 @@ export const Route = createFileRoute("/admin/")({
 
 function AdminDashboard() {
   const { candidates, faq, jobs } = Route.useLoaderData();
-  const parsed = candidates.filter((c) => c.status === "parsed");
-  const openJobs = jobs.filter((j) => j.status === "open");
-  const publishedFaq = faq.filter((f) => f.published);
+  const parsed = candidates.filter((c: CandidateRow) => c.status === "parsed");
+  const openJobs = jobs.filter((j: Job) => j.status === "open");
+  const publishedFaq = faq.filter((f: FaqTopic) => f.published);
 
   return (
     <>

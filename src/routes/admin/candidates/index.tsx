@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { adminDeleteCandidateFn, listCandidatesFn } from "@/lib/server/functions";
+import type { CandidateRow } from "@/lib/server/db";
 import { AdminHeader, AdminTable, AdminTr, AdminTd, AdminBtn } from "../../admin";
 import { ScoreBar, StatusPill } from "@/components/app/AppLayout";
 
 export const Route = createFileRoute("/admin/candidates/")({
-  loader: async () => listCandidatesFn({ data: {} }),
+  loader: async () => listCandidatesFn(),
   component: AdminCandidatesList,
 });
 
@@ -16,7 +17,7 @@ function AdminCandidatesList() {
   const [query, setQuery] = useState("");
 
   const filtered = query
-    ? candidates.filter((c) =>
+    ? candidates.filter((c: CandidateRow) =>
         [c.name, c.email, c.headline, c.location]
           .filter(Boolean)
           .join(" ")
@@ -40,7 +41,7 @@ function AdminCandidatesList() {
     <>
       <AdminHeader
         title="Candidates"
-        sub={`${candidates.filter((c) => c.status === "parsed").length} parsed · ${candidates.length} total`}
+        sub={`${candidates.filter((c: CandidateRow) => c.status === "parsed").length} parsed · ${candidates.length} total`}
       />
 
       <div className="mb-5">
@@ -59,7 +60,7 @@ function AdminCandidatesList() {
         </div>
       ) : (
         <AdminTable head={["Name", "Headline", "Seniority", "Quality", "Status", ""]}>
-          {filtered.map((c) => (
+          {filtered.map((c: CandidateRow) => (
             <AdminTr key={c.id}>
               <AdminTd>
                 <Link

@@ -10,7 +10,7 @@ export const Route = createFileRoute("/admin")({
   }),
   beforeLoad: async ({ location }) => {
     if (location.pathname.startsWith("/admin/login")) return;
-    const { valid } = await adminSessionFn({ data: {} });
+    const { valid } = await adminSessionFn();
     if (!valid) throw redirect({ to: "/admin/login" });
   },
   component: AdminLayout,
@@ -27,7 +27,7 @@ function AdminLayout() {
   const router = useRouter();
 
   async function logout() {
-    await adminLogoutFn({ data: {} });
+    await adminLogoutFn();
     router.navigate({ to: "/admin/login" });
   }
 
@@ -46,7 +46,7 @@ function AdminLayout() {
             <Link
               key={item.to}
               to={item.to}
-              activeOptions={item.exact ? { exact: true } : undefined}
+              activeOptions={"exact" in item && item.exact ? { exact: true } : undefined}
               className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-ink-soft hover:text-ink hover:bg-paper-deep transition-colors"
               activeProps={{ className: "flex items-center gap-2.5 px-3 py-2 rounded text-sm text-ink bg-paper border border-rule" }}
             >

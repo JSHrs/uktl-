@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { adminDeleteJobFn, adminListJobsFn } from "@/lib/server/functions";
+import type { Job } from "@/lib/schemas/job";
 import { AdminHeader, AdminTable, AdminTr, AdminTd, AdminBtn } from "../../admin";
 
 export const Route = createFileRoute("/admin/jobs/")({
-  loader: async () => adminListJobsFn({ data: {} }),
+  loader: async () => adminListJobsFn(),
   component: AdminJobsList,
 });
 
@@ -28,7 +29,7 @@ function AdminJobsList() {
     <>
       <AdminHeader
         title="Mandates"
-        sub={`${jobs.filter((j) => j.status === "open").length} open · ${jobs.length} total`}
+        sub={`${jobs.filter((j: Job) => j.status === "open").length} open · ${jobs.length} total`}
         actions={
           <Link
             to="/admin/jobs/new"
@@ -49,7 +50,7 @@ function AdminJobsList() {
         </div>
       ) : (
         <AdminTable head={["Title", "Company", "Location", "Sector", "Seniority", "Status", ""]}>
-          {jobs.map((j) => (
+          {jobs.map((j: Job) => (
             <AdminTr key={j.id}>
               <AdminTd>
                 <Link
