@@ -183,6 +183,14 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
     if (!(file instanceof File)) {
       throw new Error("No file uploaded");
     }
+    if (file.size > 10 * 1024 * 1024) {
+      throw new Error("File exceeds 10 MB limit");
+    }
+    const allowedTypes = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/msword", "text/plain", ""];
+    const ext = file.name.toLowerCase();
+    if (!allowedTypes.includes(file.type) && !ext.match(/\.(pdf|docx|doc|txt)$/)) {
+      throw new Error("Unsupported file type — upload PDF, DOCX, or TXT");
+    }
     let env: Awaited<ReturnType<typeof getEnv>>;
     try {
       env = await getEnv();

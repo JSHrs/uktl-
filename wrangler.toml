@@ -17,7 +17,7 @@ migrations_dir = "migrations"
 
 # ── R2 Object Storage (CV files) ──────────────────────────────────────────────
 [[r2_buckets]]
-binding    = "STORAGE"
+binding    = "CV_BUCKET"
 bucket_name = "talent-compass-cvs"
 
 # ── Secrets (set via `wrangler secret put`) ────────────────────────────────────
@@ -37,7 +37,7 @@ database_id   = "REPLACE_WITH_STAGING_D1_DATABASE_ID"
 migrations_dir = "migrations"
 
 [[env.staging.r2_buckets]]
-binding    = "STORAGE"
+binding    = "CV_BUCKET"
 bucket_name = "talent-compass-cvs-staging"
 
 # ── Environment: production ───────────────────────────────────────────────────
@@ -52,5 +52,5 @@ database_id   = "REPLACE_WITH_D1_DATABASE_ID"
 migrations_dir = "migrations"
 
 [[env.production.r2_buckets]]
-binding    = "STORAGE"
+binding    = "CV_BUCKET"
 bucket_name = "talent-compass-cvs"
