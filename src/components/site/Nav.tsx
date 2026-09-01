@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 const links = [
   { to: "/approach", label: "Approach" },
   { to: "/services", label: "Services" },
-  { to: "/reach", label: "Reach" },
   { to: "/sectors", label: "Sectors" },
   { to: "/contact", label: "Contact" },
 ] as const;
@@ -37,7 +36,7 @@ export function Nav() {
         UK Talent <em className="not-italic font-normal text-ink-soft italic">Link</em>
       </Link>
 
-      <ul className="hidden md:flex gap-10 items-center list-none p-0 m-0">
+      <ul className="hidden md:flex gap-8 items-center list-none p-0 m-0">
         {links.map((l) => (
           <li key={l.to}>
             <Link
@@ -53,17 +52,9 @@ export function Nav() {
         <li>
           <Link
             to="/app"
-            className="text-[13px] px-[18px] py-2.5 bg-ink text-paper rounded-full transition-all duration-250 hover:bg-ink-soft [transition-timing-function:var(--ease-publication)]"
+            className="text-[13px] px-[18px] py-2 bg-ink text-paper rounded-full transition-all duration-300 hover:opacity-80 [transition-timing-function:var(--ease-publication)]"
           >
             Talent Compass →
-          </Link>
-        </li>
-        <li>
-          <Link
-            to="/contact"
-            className="text-[13px] px-[18px] py-2.5 border border-ink text-ink rounded-full transition-all duration-250 hover:bg-ink hover:text-paper [transition-timing-function:var(--ease-publication)]"
-          >
-            Start a conversation
           </Link>
         </li>
       </ul>
@@ -95,7 +86,7 @@ export function Nav() {
             <Link
               to="/app"
               onClick={() => setOpen(false)}
-              className="text-sm font-medium text-ink"
+              className="text-sm text-ink"
             >
               Talent Compass →
             </Link>

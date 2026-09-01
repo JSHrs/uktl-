@@ -7,7 +7,7 @@ export function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr] gap-10 mb-20">
           <div
             className="font-display font-light leading-[1] tracking-[-0.03em] max-w-[10ch]"
-            style={{ fontSize: "clamp(40px, 6vw, 72px)", fontVariationSettings: '"opsz" 144, "SOFT" 60' }}
+            style={{ fontSize: "clamp(32px, 5vw, 56px)", fontVariationSettings: '"opsz" 144, "SOFT" 60' }}
           >
             UK Talent <em className="italic text-accent" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 100' }}>Link.</em>
           </div>
@@ -21,7 +21,6 @@ export function Footer() {
 
           <FooterCol title="Firm">
             <FooterLink to="/approach">Approach</FooterLink>
-            <FooterLink to="/reach">Reach</FooterLink>
             <FooterLink to="/sectors">Sectors</FooterLink>
             <FooterLink to="/contact">Contact</FooterLink>
           </FooterCol>

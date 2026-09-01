@@ -13,31 +13,26 @@ const nav = [
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-paper text-ink">
-      <header className="border-b border-rule">
+      <header className="border-b border-rule sticky top-0 z-50 bg-paper/90 backdrop-blur-md">
         <div
-          className="flex items-center justify-between py-5"
-          style={{ paddingLeft: "clamp(24px, 5vw, 72px)", paddingRight: "clamp(24px, 5vw, 72px)" }}
+          className="flex items-center justify-between py-4"
+          style={{ paddingLeft: "clamp(16px, 4vw, 56px)", paddingRight: "clamp(16px, 4vw, 56px)" }}
         >
-          <div className="flex items-center gap-12">
-            <Link
-              to="/"
-              className="font-display text-[18px] font-medium tracking-[-0.02em] text-ink"
-              style={{ fontVariationSettings: '"opsz" 144, "SOFT" 30' }}
-            >
-              UK Talent <em className="not-italic font-normal text-ink-soft italic">Link</em>
-            </Link>
-            <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute">
-              — Talent Compass
-            </div>
-          </div>
-          <nav className="flex items-center gap-8">
+          <Link
+            to="/"
+            className="font-display text-[17px] font-medium tracking-[-0.02em] text-ink shrink-0"
+            style={{ fontVariationSettings: '"opsz" 144, "SOFT" 30' }}
+          >
+            UK Talent <em className="not-italic font-normal text-ink-soft italic">Link</em>
+          </Link>
+          <nav className="flex items-center gap-1 overflow-x-auto">
             {nav.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
                 activeOptions={item.exact ? { exact: true } : undefined}
-                className="text-sm text-ink-soft hover:text-ink transition-colors"
-                activeProps={{ className: "text-ink" }}
+                className="text-[13px] text-ink-soft hover:text-ink transition-colors whitespace-nowrap px-3 py-1.5 rounded-md hover:bg-paper-deep"
+                activeProps={{ className: "text-[13px] text-ink bg-paper-deep px-3 py-1.5 rounded-md whitespace-nowrap" }}
               >
                 {item.label}
               </Link>
@@ -46,8 +41,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main
-        className="py-10"
-        style={{ paddingLeft: "clamp(24px, 5vw, 72px)", paddingRight: "clamp(24px, 5vw, 72px)" }}
+        className="py-8"
+        style={{ paddingLeft: "clamp(16px, 4vw, 56px)", paddingRight: "clamp(16px, 4vw, 56px)" }}
       >
         {children}
       </main>
