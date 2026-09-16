@@ -1,14 +1,14 @@
 import { useState, useCallback, useRef } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { PageHeader } from "@/components/app/AppLayout";
-import { uploadAndParseCvFn } from "@/lib/server/functions";
+import { uploadAndParseCvFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/app/upload")({
   component: UploadPage,
 });
 
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
-const ACCEPT = ".pdf,.docx,.doc,.txt,application/pdf";
+const ACCEPT = ".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain";
 
 type Stage = "idle" | "uploading" | "parsing" | "matching" | "done" | "failed";
 

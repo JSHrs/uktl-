@@ -5,7 +5,7 @@ import {
   getCandidateProfileFn,
   getCandidateSessionFn,
   updateCandidateProfileFn,
-} from "@/lib/server/functions";
+} from "@/lib/functions";
 import { PageHeader, Pill, ScoreBar, Section, StatCard } from "@/components/app/AppLayout";
 
 export const Route = createFileRoute("/app/profile")({

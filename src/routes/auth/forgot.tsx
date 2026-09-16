@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { candidateMagicLinkFn } from "@/lib/server/functions";
+import { candidateMagicLinkFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/auth/forgot")({
   component: ForgotPage,

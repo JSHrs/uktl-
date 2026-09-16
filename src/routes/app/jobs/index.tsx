@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader, Pill } from "@/components/app/AppLayout";
-import { listJobsFn } from "@/lib/server/functions";
+import { listJobsFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/app/jobs/")({
   loader: async () => await listJobsFn(),

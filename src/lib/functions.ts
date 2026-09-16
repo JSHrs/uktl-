@@ -2,9 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { getCookie, setCookie, deleteCookie } from "@tanstack/start-server-core";
 import { z } from "zod";
 
-import { getEnv } from "./env";
+import { getEnv } from "./server/env";
 import {
   createBooking,
+  createEnquiry,
   createFaqTopic,
   createJob,
   deleteCandidate,
@@ -12,8 +13,10 @@ import {
   deleteJob,
   getAdminAnalytics,
   getCandidate,
+  getCandidateAuthUserId,
   getFaqTopic,
   getJob,
+  getLatestCandidateIdForUser,
   getMatchesForCandidate,
   getMatchesForJob,
   getSwipedJobIds,
@@ -35,43 +38,73 @@ import {
   type FaqTopic,
   type FaqTopicInput,
   type JobInput,
-} from "./db";
+} from "./server/db";
 import {
   DEV_JWT_SECRET,
   SESSION_COOKIE,
   createSessionToken,
   verifyPassword,
   verifySessionToken,
-} from "./auth";
-import { parseCv } from "./parse";
-import { scoreMatch } from "./match";
-import { normaliseSkillList } from "./skills";
-import { anonymiseProfile } from "./anonymize";
-import { ParsedProfileSchema } from "../schemas/profile";
-
-function isPreviewEnv(): boolean {
-  try {
-    // If we're in a browser or plain Node environment, Cloudflare bindings won't exist.
-    return typeof (globalThis as Record<string, unknown>).caches === "undefined";
-  } catch {
-    return true;
-  }
-}
+} from "./server/auth";
+import { parseCv } from "./server/parse";
+import { scoreMatch } from "./server/match";
+import { normaliseSkillList } from "./server/skills";
+import { anonymiseProfile } from "./server/anonymize";
+import { extractDocxText } from "./server/docx";
+import { ParsedProfileSchema } from "./schemas/profile";
 
 const ID_PREFIX = "cand_";
 function newId(): string {
   return (
     ID_PREFIX +
-    // eslint-disable-next-line no-undef
     crypto.randomUUID().replace(/-/g, "").slice(0, 20)
   );
 }
 
+const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+// ── Request auth helpers ─────────────────────────────────────────────────────
+
+async function isAdminRequest(): Promise<boolean> {
+  const token = getCookie(SESSION_COOKIE);
+  if (!token) return false;
+  let secret = DEV_JWT_SECRET;
+  try { const env = await getEnv(); secret = getJwtSecret(env); } catch { /* preview */ }
+  return verifySessionToken(token, secret);
+}
+
+async function requireAdmin(): Promise<void> {
+  if (!(await isAdminRequest())) throw new Error("Unauthorized — admin session required");
+}
+
+type Viewer = { isAdmin: boolean; userId: string | null };
+
+async function getViewer(): Promise<Viewer> {
+  const { getCandidateSession } = await import("./supabase");
+  const [isAdmin, session] = await Promise.all([isAdminRequest(), getCandidateSession()]);
+  return { isAdmin, userId: session.userId };
+}
+
+function canAccessCandidate(viewer: Viewer, ownerId: string | null | undefined): boolean {
+  if (viewer.isAdmin) return true;
+  return !!viewer.userId && ownerId === viewer.userId;
+}
+
+function authCallbackUrl(env: { SITE_URL?: string }): string {
+  if (!env.SITE_URL) throw new Error("SITE_URL not configured");
+  return `${env.SITE_URL.replace(/\/+$/, "")}/auth/callback`;
+}
+
+export const getViewerFn = createServerFn({ method: "GET" }).handler(async () => getViewer());
+
 export const listCandidatesFn = createServerFn({ method: "GET" }).handler(
   async () => {
+    const viewer = await getViewer();
+    const scope = viewer.isAdmin ? {} : viewer.userId ? { authUserId: viewer.userId } : null;
+    if (!scope) return [];
     try {
       const env = await getEnv();
-      return await listCandidates(env);
+      return await listCandidates(env, scope);
     } catch {
       return [];
     }
@@ -81,10 +114,11 @@ export const listCandidatesFn = createServerFn({ method: "GET" }).handler(
 export const getCandidateDetailFn = createServerFn({ method: "GET" })
   .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
+    const viewer = await getViewer();
     try {
       const env = await getEnv();
       const candidate = await getCandidate(env, data.id);
-      if (!candidate) return null;
+      if (!candidate || !canAccessCandidate(viewer, candidate.auth_user_id)) return null;
       const matches = await getMatchesForCandidate(env, data.id);
       return { candidate, matches };
     } catch {
@@ -95,10 +129,11 @@ export const getCandidateDetailFn = createServerFn({ method: "GET" })
 export const getAnonymisedCandidateFn = createServerFn({ method: "GET" })
   .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
+    const viewer = await getViewer();
     try {
       const env = await getEnv();
       const row = await getCandidate(env, data.id);
-      if (!row?.source_r2_key) return null;
+      if (!row?.source_r2_key || !canAccessCandidate(viewer, row.auth_user_id)) return null;
       const rawProfile = await env.DB.prepare(
         `SELECT raw_profile FROM candidates WHERE id=?`,
       )
@@ -157,11 +192,13 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
     if (file.size > 10 * 1024 * 1024) {
       throw new Error("File exceeds 10 MB limit");
     }
-    const allowedTypes = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/msword", "text/plain", ""];
-    const ext = file.name.toLowerCase();
-    if (!allowedTypes.includes(file.type) && !ext.match(/\.(pdf|docx|doc|txt)$/)) {
+    const allowedTypes = ["application/pdf", DOCX_MIME, "text/plain", ""];
+    const lower = file.name.toLowerCase();
+    if (!allowedTypes.includes(file.type) && !lower.match(/\.(pdf|docx|txt)$/)) {
       throw new Error("Unsupported file type — upload PDF, DOCX, or TXT");
     }
+    const { getCandidateSession, getSupabaseAdmin } = await import("./supabase");
+    const session = await getCandidateSession();
     let env: Awaited<ReturnType<typeof getEnv>>;
     try {
       env = await getEnv();
@@ -186,18 +223,28 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
       filename: file.name,
       r2Key,
       sizeBytes: bytes.byteLength,
+      authUserId: session.userId,
     });
+    if (session.userId) {
+      // Mirror the link onto the Supabase profile; candidates.auth_user_id is authoritative.
+      try {
+        const admin = await getSupabaseAdmin();
+        await admin
+          .from("profiles")
+          .update({ d1_candidate_id: id, updated_at: new Date().toISOString() })
+          .eq("id", session.userId);
+      } catch { /* service role not configured */ }
+    }
     await markCandidateParsing(env, id);
 
     try {
-      const isPdf =
-        file.type === "application/pdf" ||
-        file.name.toLowerCase().endsWith(".pdf");
+      const isPdf = file.type === "application/pdf" || lower.endsWith(".pdf");
+      const isDocx = file.type === DOCX_MIME || lower.endsWith(".docx");
       const parseInput = isPdf
         ? ({ kind: "pdf", bytes, filename: file.name } as const)
         : ({
             kind: "text",
-            text: new TextDecoder().decode(bytes),
+            text: isDocx ? extractDocxText(bytes) : new TextDecoder().decode(bytes),
             filename: file.name,
           } as const);
 
@@ -236,7 +283,11 @@ export const getDiscoverJobsFn = createServerFn({ method: "GET" })
       let unseenJobs = allJobs;
       const matchMap: Record<string, number> = {};
 
-      if (data.candidateId) {
+      const owner = data.candidateId ? await getCandidateAuthUserId(env, data.candidateId) : undefined;
+      const canUseCandidate =
+        !!data.candidateId && owner !== undefined && canAccessCandidate(await getViewer(), owner);
+
+      if (data.candidateId && canUseCandidate) {
         const swipedIds = new Set(await getSwipedJobIds(env, data.candidateId));
         unseenJobs = allJobs.filter((j) => !swipedIds.has(j.id));
         const candidateMatches = await getMatchesForCandidate(env, data.candidateId);
@@ -264,6 +315,8 @@ export const recordSwipeFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     try {
       const env = await getEnv();
+      const owner = await getCandidateAuthUserId(env, data.candidateId);
+      if (owner === undefined || !canAccessCandidate(await getViewer(), owner)) return { ok: false };
       await recordSwipe(env, data.candidateId, data.jobId, data.action);
       return { ok: true };
     } catch {
@@ -449,7 +502,9 @@ export const rematchCandidateFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const env = await getEnv();
     const detail = await getCandidate(env, data.id);
-    if (!detail) throw new Error("Candidate not found");
+    if (!detail || !canAccessCandidate(await getViewer(), detail.auth_user_id)) {
+      throw new Error("Candidate not found");
+    }
     const rawRow = await env.DB.prepare(
       `SELECT raw_profile FROM candidates WHERE id=?`,
     )
@@ -493,14 +548,9 @@ export const adminLoginFn = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
-export const adminSessionFn = createServerFn({ method: "GET" }).handler(async () => {
-  const token = getCookie(SESSION_COOKIE);
-  if (!token) return { valid: false };
-  let secret = DEV_JWT_SECRET;
-  try { const env = await getEnv(); secret = getJwtSecret(env); } catch { /* preview */ }
-  const valid = await verifySessionToken(token, secret);
-  return { valid };
-});
+export const adminSessionFn = createServerFn({ method: "GET" }).handler(async () => ({
+  valid: await isAdminRequest(),
+}));
 
 export const adminLogoutFn = createServerFn({ method: "POST" }).handler(async () => {
   deleteCookie(SESSION_COOKIE, { path: "/" });
@@ -510,6 +560,7 @@ export const adminLogoutFn = createServerFn({ method: "POST" }).handler(async ()
 // ── Admin: FAQ topics ────────────────────────────────────────────────────────
 
 export const adminListFaqFn = createServerFn({ method: "GET" }).handler(async () => {
+  await requireAdmin();
   try {
     const env = await getEnv();
     return await listAllFaqTopics(env);
@@ -521,6 +572,7 @@ export const adminListFaqFn = createServerFn({ method: "GET" }).handler(async ()
 export const adminGetFaqFn = createServerFn({ method: "GET" })
   .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
+    await requireAdmin();
     try {
       const env = await getEnv();
       return await getFaqTopic(env, data.id);
@@ -543,6 +595,7 @@ export const adminCreateFaqFn = createServerFn({ method: "POST" })
     }).parse(raw),
   )
   .handler(async ({ data }) => {
+    await requireAdmin();
     const id = "faq_" + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
     const env = await getEnv();
     await createFaqTopic(env, id, data as FaqTopicInput);
@@ -564,6 +617,7 @@ export const adminUpdateFaqFn = createServerFn({ method: "POST" })
     }).parse(raw),
   )
   .handler(async ({ data }) => {
+    await requireAdmin();
     const { id, ...input } = data;
     const env = await getEnv();
     await updateFaqTopic(env, id, input as FaqTopicInput);
@@ -573,6 +627,7 @@ export const adminUpdateFaqFn = createServerFn({ method: "POST" })
 export const adminDeleteFaqFn = createServerFn({ method: "POST" })
   .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
+    await requireAdmin();
     const env = await getEnv();
     await deleteFaqTopic(env, data.id);
     return { ok: true };
@@ -581,6 +636,7 @@ export const adminDeleteFaqFn = createServerFn({ method: "POST" })
 // ── Admin: Jobs ──────────────────────────────────────────────────────────────
 
 export const adminListJobsFn = createServerFn({ method: "GET" }).handler(async () => {
+  await requireAdmin();
   try {
     const env = await getEnv();
     return await listAllJobs(env);
@@ -605,6 +661,7 @@ const JobInputSchema = z.object({
 export const adminCreateJobFn = createServerFn({ method: "POST" })
   .validator((raw: unknown) => JobInputSchema.parse(raw))
   .handler(async ({ data }) => {
+    await requireAdmin();
     const id = "job_" + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
     const env = await getEnv();
     await createJob(env, id, data as JobInput);
@@ -614,6 +671,7 @@ export const adminCreateJobFn = createServerFn({ method: "POST" })
 export const adminUpdateJobFn = createServerFn({ method: "POST" })
   .validator((raw: unknown) => z.object({ id: z.string() }).merge(JobInputSchema).parse(raw))
   .handler(async ({ data }) => {
+    await requireAdmin();
     const { id, ...input } = data;
     const env = await getEnv();
     await updateJob(env, id, input as JobInput);
@@ -623,6 +681,7 @@ export const adminUpdateJobFn = createServerFn({ method: "POST" })
 export const adminDeleteJobFn = createServerFn({ method: "POST" })
   .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
+    await requireAdmin();
     const env = await getEnv();
     await deleteJob(env, data.id);
     return { ok: true };
@@ -633,6 +692,7 @@ export const adminDeleteJobFn = createServerFn({ method: "POST" })
 export const adminDeleteCandidateFn = createServerFn({ method: "POST" })
   .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
+    await requireAdmin();
     const env = await getEnv();
     await deleteCandidate(env, data.id);
     return { ok: true };
@@ -649,7 +709,7 @@ export const candidateRegisterFn = createServerFn({ method: "POST" })
     }).parse(raw),
   )
   .handler(async ({ data }) => {
-    const { setSessionCookies } = await import("../supabase");
+    const { setSessionCookies } = await import("./supabase");
     const { createClient } = await import("@supabase/supabase-js");
     const env = await getEnv();
     if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw new Error("Supabase not configured");
@@ -657,7 +717,10 @@ export const candidateRegisterFn = createServerFn({ method: "POST" })
     const { data: authData, error } = await client.auth.signUp({
       email: data.email,
       password: data.password,
-      options: { data: { name: data.name } },
+      options: {
+        data: { name: data.name },
+        emailRedirectTo: env.SITE_URL ? authCallbackUrl(env) : undefined,
+      },
     });
     if (error) throw new Error(error.message);
     if (authData.session) {
@@ -671,7 +734,7 @@ export const candidateLoginFn = createServerFn({ method: "POST" })
     z.object({ email: z.string().email(), password: z.string() }).parse(raw),
   )
   .handler(async ({ data }) => {
-    const { setSessionCookies } = await import("../supabase");
+    const { setSessionCookies } = await import("./supabase");
     const { createClient } = await import("@supabase/supabase-js");
     const env = await getEnv();
     if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw new Error("Supabase not configured");
@@ -683,13 +746,13 @@ export const candidateLoginFn = createServerFn({ method: "POST" })
   });
 
 export const candidateLogoutFn = createServerFn({ method: "POST" }).handler(async () => {
-  const { clearSessionCookies } = await import("../supabase");
+  const { clearSessionCookies } = await import("./supabase");
   await clearSessionCookies();
   return { ok: true };
 });
 
 export const getCandidateSessionFn = createServerFn({ method: "GET" }).handler(async () => {
-  const { getCandidateSession } = await import("../supabase");
+  const { getCandidateSession } = await import("./supabase");
   return await getCandidateSession();
 });
 
@@ -700,22 +763,84 @@ export const candidateMagicLinkFn = createServerFn({ method: "POST" })
     const env = await getEnv();
     if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw new Error("Supabase not configured");
     const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
-    const { error } = await client.auth.signInWithOtp({ email: data.email, options: { shouldCreateUser: false } });
+    const { error } = await client.auth.signInWithOtp({
+      email: data.email,
+      options: { shouldCreateUser: false, emailRedirectTo: authCallbackUrl(env) },
+    });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
 
+export const candidateSessionFromTokensFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) =>
+    z.object({
+      access_token: z.string().min(1),
+      refresh_token: z.string().min(1),
+      expires_in: z.number().int().positive().optional(),
+    }).parse(raw),
+  )
+  .handler(async ({ data }) => {
+    const { setSessionCookies } = await import("./supabase");
+    const { createClient } = await import("@supabase/supabase-js");
+    const env = await getEnv();
+    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw new Error("Supabase not configured");
+    const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+    const { data: authData, error } = await client.auth.setSession({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+    });
+    if (error || !authData.session || !authData.user) {
+      throw new Error(error?.message ?? "This sign-in link is invalid or has expired");
+    }
+    await setSessionCookies(
+      authData.session.access_token,
+      authData.session.refresh_token,
+      authData.session.expires_in ?? data.expires_in ?? 3600,
+    );
+    return { userId: authData.user.id, email: authData.user.email ?? null };
+  });
+
+type ProfileRow = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  location: string | null;
+  sector_preference: string | null;
+  d1_candidate_id: string | null;
+};
+
 export const getCandidateProfileFn = createServerFn({ method: "GET" }).handler(async () => {
-  const { getCandidateSession, getSupabaseAdmin } = await import("../supabase");
+  const { getCandidateSession, getSupabaseAdmin } = await import("./supabase");
   const session = await getCandidateSession();
   if (!session.userId) return { profile: null, session: null };
+
+  let profile: ProfileRow | null = null;
   try {
     const admin = await getSupabaseAdmin();
     const { data } = await admin.from("profiles").select("*").eq("id", session.userId).single();
-    return { profile: data, session };
-  } catch {
-    return { profile: null, session };
+    profile = (data as ProfileRow | null) ?? null;
+  } catch { /* service role not configured */ }
+
+  // candidates.auth_user_id is authoritative for the CV link; profiles.d1_candidate_id is a mirror.
+  let d1CandidateId = profile?.d1_candidate_id ?? null;
+  if (!d1CandidateId) {
+    try {
+      const env = await getEnv();
+      d1CandidateId = await getLatestCandidateIdForUser(env, session.userId);
+    } catch { /* preview */ }
   }
+
+  const base: ProfileRow = profile ?? {
+    id: session.userId,
+    name: null,
+    email: session.email,
+    phone: null,
+    location: null,
+    sector_preference: null,
+    d1_candidate_id: null,
+  };
+  return { profile: { ...base, d1_candidate_id: d1CandidateId }, session };
 });
 
 export const updateCandidateProfileFn = createServerFn({ method: "POST" })
@@ -728,7 +853,7 @@ export const updateCandidateProfileFn = createServerFn({ method: "POST" })
     }).parse(raw),
   )
   .handler(async ({ data }) => {
-    const { getCandidateSession, getSupabaseAdmin } = await import("../supabase");
+    const { getCandidateSession, getSupabaseAdmin } = await import("./supabase");
     const session = await getCandidateSession();
     if (!session.userId) throw new Error("Not authenticated");
     const admin = await getSupabaseAdmin();
@@ -752,7 +877,7 @@ export const createBookingFn = createServerFn({ method: "POST" })
     }).parse(raw),
   )
   .handler(async ({ data }) => {
-    const { getCandidateSession } = await import("../supabase");
+    const { getCandidateSession } = await import("./supabase");
     const session = await getCandidateSession();
     const env = await getEnv();
     const id = "booking_" + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
@@ -784,7 +909,55 @@ async function sendBookingNotification(
   });
 }
 
+// ── Contact enquiries ────────────────────────────────────────────────────────
+
+export const submitEnquiryFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) =>
+    z.object({
+      name: z.string().trim().min(1).max(200),
+      email: z.string().trim().email().max(320),
+      company: z.string().trim().max(200).optional(),
+      enquiry_type: z.string().trim().max(100).optional(),
+      message: z.string().trim().min(1).max(5000),
+    }).parse(raw),
+  )
+  .handler(async ({ data }) => {
+    const env = await getEnv();
+    const id = "enq_" + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+    await createEnquiry(env, id, {
+      name: data.name,
+      email: data.email,
+      company: data.company || null,
+      enquiry_type: data.enquiry_type || null,
+      message: data.message,
+    });
+    if (env.RESEND_API_KEY) {
+      await sendEnquiryNotification(env.RESEND_API_KEY, data).catch(() => {});
+    }
+    return { id };
+  });
+
+async function sendEnquiryNotification(
+  resendKey: string,
+  e: { name: string; email: string; company?: string; enquiry_type?: string; message: string },
+): Promise<void> {
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "noreply@uktalentlink.co.uk",
+      to: ["info@uktalentlink.co.uk"],
+      reply_to: e.email,
+      subject: `New enquiry — ${e.name}${e.enquiry_type ? ` (${e.enquiry_type})` : ""}`,
+      text:
+        `Name: ${e.name}\nEmail: ${e.email}\nCompany: ${e.company || "—"}\n` +
+        `Type: ${e.enquiry_type || "—"}\n\n${e.message}\n`,
+    }),
+  });
+}
+
 export const adminListBookingsFn = createServerFn({ method: "GET" }).handler(async () => {
+  await requireAdmin();
   try {
     const env = await getEnv();
     return await listBookings(env);
@@ -796,6 +969,7 @@ export const adminListBookingsFn = createServerFn({ method: "GET" }).handler(asy
 // ── Admin: Analytics ─────────────────────────────────────────────────────────
 
 export const adminGetAnalyticsFn = createServerFn({ method: "GET" }).handler(async () => {
+  await requireAdmin();
   try {
     const env = await getEnv();
     return await getAdminAnalytics(env);
@@ -819,6 +993,7 @@ export const syncReedJobsFn = createServerFn({ method: "POST" })
     }).parse(raw),
   )
   .handler(async ({ data }) => {
+    await requireAdmin();
     const env = await getEnv();
     if (!env.REED_API_KEY) throw new Error("REED_API_KEY not configured");
 

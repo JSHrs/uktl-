@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { adminLoginFn } from "@/lib/server/functions";
+import { adminLoginFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/admin/login")({
   head: () => ({ meta: [{ name: "robots", content: "noindex, nofollow" }] }),
@@ -24,7 +24,7 @@ function LoginPage() {
         setBusy(false);
         return;
       }
-      await navigate({ to: "/admin/" });
+      await navigate({ to: "/admin" });
     } catch {
       setError("Login failed. Please try again.");
       setBusy(false);

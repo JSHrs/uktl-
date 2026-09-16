@@ -8,7 +8,7 @@ import {
   StatCard,
   StatusPill,
 } from "@/components/app/AppLayout";
-import { listCandidatesFn, listJobsFn } from "@/lib/server/functions";
+import { listCandidatesFn, listJobsFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/app/")({
   loader: async () => {

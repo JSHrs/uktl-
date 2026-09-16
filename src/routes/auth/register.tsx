@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { candidateRegisterFn } from "@/lib/server/functions";
+import { candidateRegisterFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/auth/register")({
   component: RegisterPage,

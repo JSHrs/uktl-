@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/app/AppLayout";
-import { listFaqTopicsFn } from "@/lib/server/functions";
+import { listFaqTopicsFn } from "@/lib/functions";
 import type { FaqTopic } from "@/lib/server/db";
 
 export const Route = createFileRoute("/app/hr/library")({

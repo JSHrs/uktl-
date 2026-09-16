@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { candidateLoginFn } from "@/lib/server/functions";
+import { candidateLoginFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/auth/login")({
   component: LoginPage,

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
-import { getDiscoverJobsFn, recordSwipeFn } from "@/lib/server/functions";
+import { getDiscoverJobsFn, recordSwipeFn } from "@/lib/functions";
 import type { Job } from "@/lib/schemas/job";
 
 export const Route = createFileRoute("/app/discover")({

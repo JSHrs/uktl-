@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { listCandidatesFn, adminListFaqFn, adminListJobsFn } from "@/lib/server/functions";
+import { listCandidatesFn, adminListFaqFn, adminListJobsFn } from "@/lib/functions";
 import type { CandidateRow, FaqTopic } from "@/lib/server/db";
 import type { Job } from "@/lib/schemas/job";
 import { AdminHeader } from "../admin";

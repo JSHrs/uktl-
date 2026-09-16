@@ -5,7 +5,7 @@ import {
   AdminTd,
   AdminTr,
 } from "@/routes/admin";
-import { adminListBookingsFn } from "@/lib/server/functions";
+import { adminListBookingsFn } from "@/lib/functions";
 import type { BookingRow } from "@/lib/server/db";
 
 export const Route = createFileRoute("/admin/bookings")({

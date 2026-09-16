@@ -13,29 +13,37 @@ import { Route as ServicesRouteImport } from './routes/services'
 import { Route as SectorsRouteImport } from './routes/sectors'
 import { Route as ReachRouteImport } from './routes/reach'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ApproachRouteImport } from './routes/approach'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
-import { Route as AppUploadRouteImport } from './routes/app/upload'
-import { Route as AppJobsIndexRouteImport } from './routes/app/jobs/index'
-import { Route as AppCandidatesIndexRouteImport } from './routes/app/candidates/index'
-import { Route as AppJobsIdRouteImport } from './routes/app/jobs/$id'
-import { Route as AppCandidatesIdRouteImport } from './routes/app/candidates/$id'
-import { Route as AppDiscoverRouteImport } from './routes/app/discover'
-import { Route as AppHrIndexRouteImport } from './routes/app/hr/index'
-import { Route as AppHrAnswerRouteImport } from './routes/app/hr/answer'
-import { Route as AppHrLibraryRouteImport } from './routes/app/hr/library'
-import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as AdminFaqIndexRouteImport } from './routes/admin/faq/index'
-import { Route as AdminFaqNewRouteImport } from './routes/admin/faq/new'
-import { Route as AdminFaqIdRouteImport } from './routes/admin/faq/$id'
+import { Route as AuthRegisterRouteImport } from './routes/auth/register'
+import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as AuthForgotRouteImport } from './routes/auth/forgot'
+import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as AppUploadRouteImport } from './routes/app/upload'
+import { Route as AppProfileRouteImport } from './routes/app/profile'
+import { Route as AppDiscoverRouteImport } from './routes/app/discover'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
+import { Route as AppJobsIndexRouteImport } from './routes/app/jobs/index'
+import { Route as AppHrIndexRouteImport } from './routes/app/hr/index'
+import { Route as AppCandidatesIndexRouteImport } from './routes/app/candidates/index'
 import { Route as AdminJobsIndexRouteImport } from './routes/admin/jobs/index'
+import { Route as AdminFaqIndexRouteImport } from './routes/admin/faq/index'
+import { Route as AdminCandidatesIndexRouteImport } from './routes/admin/candidates/index'
+import { Route as AppJobsIdRouteImport } from './routes/app/jobs/$id'
+import { Route as AppHrLibraryRouteImport } from './routes/app/hr/library'
+import { Route as AppHrAnswerRouteImport } from './routes/app/hr/answer'
+import { Route as AppCandidatesIdRouteImport } from './routes/app/candidates/$id'
 import { Route as AdminJobsNewRouteImport } from './routes/admin/jobs/new'
 import { Route as AdminJobsIdRouteImport } from './routes/admin/jobs/$id'
-import { Route as AdminCandidatesIndexRouteImport } from './routes/admin/candidates/index'
+import { Route as AdminFaqNewRouteImport } from './routes/admin/faq/new'
+import { Route as AdminFaqIdRouteImport } from './routes/admin/faq/$id'
 
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
@@ -57,6 +65,11 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApproachRoute = ApproachRouteImport.update({
   id: '/approach',
   path: '/approach',
@@ -72,51 +85,6 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminLoginRoute = AdminLoginRouteImport.update({
-  id: '/admin/login',
-  path: '/login',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminIndexRoute = AdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFaqIndexRoute = AdminFaqIndexRouteImport.update({
-  id: '/admin/faq/',
-  path: '/faq/',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFaqNewRoute = AdminFaqNewRouteImport.update({
-  id: '/admin/faq/new',
-  path: '/faq/new',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFaqIdRoute = AdminFaqIdRouteImport.update({
-  id: '/admin/faq/$id',
-  path: '/faq/$id',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminJobsIndexRoute = AdminJobsIndexRouteImport.update({
-  id: '/admin/jobs/',
-  path: '/jobs/',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminJobsNewRoute = AdminJobsNewRouteImport.update({
-  id: '/admin/jobs/new',
-  path: '/jobs/new',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminJobsIdRoute = AdminJobsIdRouteImport.update({
-  id: '/admin/jobs/$id',
-  path: '/jobs/$id',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCandidatesIndexRoute = AdminCandidatesIndexRouteImport.update({
-  id: '/admin/candidates/',
-  path: '/candidates/',
-  getParentRoute: () => AdminRoute,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -127,9 +95,64 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AuthRegisterRoute = AuthRegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthForgotRoute = AuthForgotRouteImport.update({
+  id: '/forgot',
+  path: '/forgot',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AppUploadRoute = AppUploadRouteImport.update({
+  id: '/upload',
+  path: '/upload',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfileRoute = AppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDiscoverRoute = AppDiscoverRouteImport.update({
   id: '/discover',
   path: '/discover',
+  getParentRoute: () => AppRoute,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBookingsRoute = AdminBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AppJobsIndexRoute = AppJobsIndexRouteImport.update({
+  id: '/jobs/',
+  path: '/jobs/',
   getParentRoute: () => AppRoute,
 } as any)
 const AppHrIndexRoute = AppHrIndexRouteImport.update({
@@ -137,9 +160,29 @@ const AppHrIndexRoute = AppHrIndexRouteImport.update({
   path: '/hr/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppHrAnswerRoute = AppHrAnswerRouteImport.update({
-  id: '/hr/answer',
-  path: '/hr/answer',
+const AppCandidatesIndexRoute = AppCandidatesIndexRouteImport.update({
+  id: '/candidates/',
+  path: '/candidates/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AdminJobsIndexRoute = AdminJobsIndexRouteImport.update({
+  id: '/jobs/',
+  path: '/jobs/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFaqIndexRoute = AdminFaqIndexRouteImport.update({
+  id: '/faq/',
+  path: '/faq/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCandidatesIndexRoute = AdminCandidatesIndexRouteImport.update({
+  id: '/candidates/',
+  path: '/candidates/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AppJobsIdRoute = AppJobsIdRouteImport.update({
+  id: '/jobs/$id',
+  path: '/jobs/$id',
   getParentRoute: () => AppRoute,
 } as any)
 const AppHrLibraryRoute = AppHrLibraryRouteImport.update({
@@ -147,24 +190,9 @@ const AppHrLibraryRoute = AppHrLibraryRouteImport.update({
   path: '/hr/library',
   getParentRoute: () => AppRoute,
 } as any)
-const AppUploadRoute = AppUploadRouteImport.update({
-  id: '/upload',
-  path: '/upload',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppJobsIndexRoute = AppJobsIndexRouteImport.update({
-  id: '/jobs/',
-  path: '/jobs/',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppCandidatesIndexRoute = AppCandidatesIndexRouteImport.update({
-  id: '/candidates/',
-  path: '/candidates/',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppJobsIdRoute = AppJobsIdRouteImport.update({
-  id: '/jobs/$id',
-  path: '/jobs/$id',
+const AppHrAnswerRoute = AppHrAnswerRouteImport.update({
+  id: '/hr/answer',
+  path: '/hr/answer',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCandidatesIdRoute = AppCandidatesIdRouteImport.update({
@@ -172,291 +200,259 @@ const AppCandidatesIdRoute = AppCandidatesIdRouteImport.update({
   path: '/candidates/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AdminJobsNewRoute = AdminJobsNewRouteImport.update({
+  id: '/jobs/new',
+  path: '/jobs/new',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminJobsIdRoute = AdminJobsIdRouteImport.update({
+  id: '/jobs/$id',
+  path: '/jobs/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFaqNewRoute = AdminFaqNewRouteImport.update({
+  id: '/faq/new',
+  path: '/faq/new',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFaqIdRoute = AdminFaqIdRouteImport.update({
+  id: '/faq/$id',
+  path: '/faq/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
+  '/app': typeof AppRouteWithChildren
   '/approach': typeof ApproachRoute
+  '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/login': typeof AdminLoginRoute
   '/app/discover': typeof AppDiscoverRoute
-  '/app/hr/': typeof AppHrIndexRoute
+  '/app/profile': typeof AppProfileRoute
+  '/app/upload': typeof AppUploadRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/forgot': typeof AuthForgotRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/admin/': typeof AdminIndexRoute
+  '/app/': typeof AppIndexRoute
+  '/admin/faq/$id': typeof AdminFaqIdRoute
+  '/admin/faq/new': typeof AdminFaqNewRoute
+  '/admin/jobs/$id': typeof AdminJobsIdRoute
+  '/admin/jobs/new': typeof AdminJobsNewRoute
+  '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/hr/answer': typeof AppHrAnswerRoute
   '/app/hr/library': typeof AppHrLibraryRoute
-  '/app/upload': typeof AppUploadRoute
-  '/app/': typeof AppIndexRoute
-  '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/jobs/$id': typeof AppJobsIdRoute
-  '/app/candidates/': typeof AppCandidatesIndexRoute
-  '/app/jobs/': typeof AppJobsIndexRoute
-  '/admin/login': typeof AdminLoginRoute
-  '/admin/': typeof AdminIndexRoute
-  '/admin/faq/': typeof AdminFaqIndexRoute
-  '/admin/faq/new': typeof AdminFaqNewRoute
-  '/admin/faq/$id': typeof AdminFaqIdRoute
-  '/admin/jobs/': typeof AdminJobsIndexRoute
-  '/admin/jobs/new': typeof AdminJobsNewRoute
-  '/admin/jobs/$id': typeof AdminJobsIdRoute
   '/admin/candidates/': typeof AdminCandidatesIndexRoute
+  '/admin/faq/': typeof AdminFaqIndexRoute
+  '/admin/jobs/': typeof AdminJobsIndexRoute
+  '/app/candidates/': typeof AppCandidatesIndexRoute
+  '/app/hr/': typeof AppHrIndexRoute
+  '/app/jobs/': typeof AppJobsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/approach': typeof ApproachRoute
+  '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/login': typeof AdminLoginRoute
   '/app/discover': typeof AppDiscoverRoute
-  '/app/hr': typeof AppHrIndexRoute
+  '/app/profile': typeof AppProfileRoute
+  '/app/upload': typeof AppUploadRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/forgot': typeof AuthForgotRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/admin': typeof AdminIndexRoute
+  '/app': typeof AppIndexRoute
+  '/admin/faq/$id': typeof AdminFaqIdRoute
+  '/admin/faq/new': typeof AdminFaqNewRoute
+  '/admin/jobs/$id': typeof AdminJobsIdRoute
+  '/admin/jobs/new': typeof AdminJobsNewRoute
+  '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/hr/answer': typeof AppHrAnswerRoute
   '/app/hr/library': typeof AppHrLibraryRoute
-  '/app/upload': typeof AppUploadRoute
-  '/app': typeof AppIndexRoute
-  '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/jobs/$id': typeof AppJobsIdRoute
-  '/app/candidates': typeof AppCandidatesIndexRoute
-  '/app/jobs': typeof AppJobsIndexRoute
-  '/admin/login': typeof AdminLoginRoute
-  '/admin': typeof AdminIndexRoute
-  '/admin/faq': typeof AdminFaqIndexRoute
-  '/admin/faq/new': typeof AdminFaqNewRoute
-  '/admin/faq/$id': typeof AdminFaqIdRoute
-  '/admin/jobs': typeof AdminJobsIndexRoute
-  '/admin/jobs/new': typeof AdminJobsNewRoute
-  '/admin/jobs/$id': typeof AdminJobsIdRoute
   '/admin/candidates': typeof AdminCandidatesIndexRoute
+  '/admin/faq': typeof AdminFaqIndexRoute
+  '/admin/jobs': typeof AdminJobsIndexRoute
+  '/app/candidates': typeof AppCandidatesIndexRoute
+  '/app/hr': typeof AppHrIndexRoute
+  '/app/jobs': typeof AppJobsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
+  '/app': typeof AppRouteWithChildren
   '/approach': typeof ApproachRoute
+  '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/login': typeof AdminLoginRoute
   '/app/discover': typeof AppDiscoverRoute
-  '/app/hr/': typeof AppHrIndexRoute
+  '/app/profile': typeof AppProfileRoute
+  '/app/upload': typeof AppUploadRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/forgot': typeof AuthForgotRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/register': typeof AuthRegisterRoute
+  '/admin/': typeof AdminIndexRoute
+  '/app/': typeof AppIndexRoute
+  '/admin/faq/$id': typeof AdminFaqIdRoute
+  '/admin/faq/new': typeof AdminFaqNewRoute
+  '/admin/jobs/$id': typeof AdminJobsIdRoute
+  '/admin/jobs/new': typeof AdminJobsNewRoute
+  '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/hr/answer': typeof AppHrAnswerRoute
   '/app/hr/library': typeof AppHrLibraryRoute
-  '/app/upload': typeof AppUploadRoute
-  '/app/': typeof AppIndexRoute
-  '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/jobs/$id': typeof AppJobsIdRoute
-  '/app/candidates/': typeof AppCandidatesIndexRoute
-  '/app/jobs/': typeof AppJobsIndexRoute
-  '/admin/login': typeof AdminLoginRoute
-  '/admin/': typeof AdminIndexRoute
-  '/admin/faq/': typeof AdminFaqIndexRoute
-  '/admin/faq/new': typeof AdminFaqNewRoute
-  '/admin/faq/$id': typeof AdminFaqIdRoute
-  '/admin/jobs/': typeof AdminJobsIndexRoute
-  '/admin/jobs/new': typeof AdminJobsNewRoute
-  '/admin/jobs/$id': typeof AdminJobsIdRoute
   '/admin/candidates/': typeof AdminCandidatesIndexRoute
+  '/admin/faq/': typeof AdminFaqIndexRoute
+  '/admin/jobs/': typeof AdminJobsIndexRoute
+  '/app/candidates/': typeof AppCandidatesIndexRoute
+  '/app/hr/': typeof AppHrIndexRoute
+  '/app/jobs/': typeof AppJobsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/app'
     | '/admin'
+    | '/app'
     | '/approach'
+    | '/auth'
     | '/contact'
     | '/reach'
     | '/sectors'
     | '/services'
+    | '/admin/analytics'
+    | '/admin/bookings'
+    | '/admin/login'
     | '/app/discover'
-    | '/app/hr/'
+    | '/app/profile'
+    | '/app/upload'
+    | '/auth/callback'
+    | '/auth/forgot'
+    | '/auth/login'
+    | '/auth/register'
+    | '/admin/'
+    | '/app/'
+    | '/admin/faq/$id'
+    | '/admin/faq/new'
+    | '/admin/jobs/$id'
+    | '/admin/jobs/new'
+    | '/app/candidates/$id'
     | '/app/hr/answer'
     | '/app/hr/library'
-    | '/app/upload'
-    | '/app/'
-    | '/app/candidates/$id'
     | '/app/jobs/$id'
-    | '/app/candidates/'
-    | '/app/jobs/'
-    | '/admin/login'
-    | '/admin/'
-    | '/admin/faq/'
-    | '/admin/faq/new'
-    | '/admin/faq/$id'
-    | '/admin/jobs/'
-    | '/admin/jobs/new'
-    | '/admin/jobs/$id'
     | '/admin/candidates/'
+    | '/admin/faq/'
+    | '/admin/jobs/'
+    | '/app/candidates/'
+    | '/app/hr/'
+    | '/app/jobs/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/approach'
+    | '/auth'
     | '/contact'
     | '/reach'
     | '/sectors'
     | '/services'
+    | '/admin/analytics'
+    | '/admin/bookings'
+    | '/admin/login'
     | '/app/discover'
-    | '/app/hr'
+    | '/app/profile'
+    | '/app/upload'
+    | '/auth/callback'
+    | '/auth/forgot'
+    | '/auth/login'
+    | '/auth/register'
+    | '/admin'
+    | '/app'
+    | '/admin/faq/$id'
+    | '/admin/faq/new'
+    | '/admin/jobs/$id'
+    | '/admin/jobs/new'
+    | '/app/candidates/$id'
     | '/app/hr/answer'
     | '/app/hr/library'
-    | '/app/upload'
-    | '/app'
-    | '/app/candidates/$id'
     | '/app/jobs/$id'
-    | '/app/candidates'
-    | '/app/jobs'
-    | '/admin/login'
-    | '/admin'
-    | '/admin/faq'
-    | '/admin/faq/new'
-    | '/admin/faq/$id'
-    | '/admin/jobs'
-    | '/admin/jobs/new'
-    | '/admin/jobs/$id'
     | '/admin/candidates'
+    | '/admin/faq'
+    | '/admin/jobs'
+    | '/app/candidates'
+    | '/app/hr'
+    | '/app/jobs'
   id:
     | '__root__'
     | '/'
-    | '/app'
     | '/admin'
+    | '/app'
     | '/approach'
+    | '/auth'
     | '/contact'
     | '/reach'
     | '/sectors'
     | '/services'
+    | '/admin/analytics'
+    | '/admin/bookings'
+    | '/admin/login'
     | '/app/discover'
-    | '/app/hr/'
+    | '/app/profile'
+    | '/app/upload'
+    | '/auth/callback'
+    | '/auth/forgot'
+    | '/auth/login'
+    | '/auth/register'
+    | '/admin/'
+    | '/app/'
+    | '/admin/faq/$id'
+    | '/admin/faq/new'
+    | '/admin/jobs/$id'
+    | '/admin/jobs/new'
+    | '/app/candidates/$id'
     | '/app/hr/answer'
     | '/app/hr/library'
-    | '/app/upload'
-    | '/app/'
-    | '/app/candidates/$id'
     | '/app/jobs/$id'
-    | '/app/candidates/'
-    | '/app/jobs/'
-    | '/admin/login'
-    | '/admin/'
-    | '/admin/faq/'
-    | '/admin/faq/new'
-    | '/admin/faq/$id'
-    | '/admin/jobs/'
-    | '/admin/jobs/new'
-    | '/admin/jobs/$id'
     | '/admin/candidates/'
+    | '/admin/faq/'
+    | '/admin/jobs/'
+    | '/app/candidates/'
+    | '/app/hr/'
+    | '/app/jobs/'
   fileRoutesById: FileRoutesById
 }
-interface AdminRouteChildren {
-  AdminLoginRoute: typeof AdminLoginRoute
-  AdminIndexRoute: typeof AdminIndexRoute
-  AdminFaqIndexRoute: typeof AdminFaqIndexRoute
-  AdminFaqNewRoute: typeof AdminFaqNewRoute
-  AdminFaqIdRoute: typeof AdminFaqIdRoute
-  AdminJobsIndexRoute: typeof AdminJobsIndexRoute
-  AdminJobsNewRoute: typeof AdminJobsNewRoute
-  AdminJobsIdRoute: typeof AdminJobsIdRoute
-  AdminCandidatesIndexRoute: typeof AdminCandidatesIndexRoute
-}
-
-const AdminRouteChildren: AdminRouteChildren = {
-  AdminLoginRoute,
-  AdminIndexRoute,
-  AdminFaqIndexRoute,
-  AdminFaqNewRoute,
-  AdminFaqIdRoute,
-  AdminJobsIndexRoute,
-  AdminJobsNewRoute,
-  AdminJobsIdRoute,
-  AdminCandidatesIndexRoute,
-}
-
-const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
-
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AppRoute: typeof AppRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
+  AppRoute: typeof AppRouteWithChildren
   ApproachRoute: typeof ApproachRoute
+  AuthRoute: typeof AuthRouteWithChildren
   ContactRoute: typeof ContactRoute
   ReachRoute: typeof ReachRoute
   SectorsRoute: typeof SectorsRoute
   ServicesRoute: typeof ServicesRoute
-}
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/login': {
-      id: '/admin/login'
-      path: '/login'
-      fullPath: '/admin/login'
-      preLoaderRoute: typeof AdminLoginRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/': {
-      id: '/admin/'
-      path: '/'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/faq/': {
-      id: '/admin/faq/'
-      path: '/faq'
-      fullPath: '/admin/faq/'
-      preLoaderRoute: typeof AdminFaqIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/faq/new': {
-      id: '/admin/faq/new'
-      path: '/faq/new'
-      fullPath: '/admin/faq/new'
-      preLoaderRoute: typeof AdminFaqNewRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/faq/$id': {
-      id: '/admin/faq/$id'
-      path: '/faq/$id'
-      fullPath: '/admin/faq/$id'
-      preLoaderRoute: typeof AdminFaqIdRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/jobs/': {
-      id: '/admin/jobs/'
-      path: '/jobs'
-      fullPath: '/admin/jobs/'
-      preLoaderRoute: typeof AdminJobsIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/jobs/new': {
-      id: '/admin/jobs/new'
-      path: '/jobs/new'
-      fullPath: '/admin/jobs/new'
-      preLoaderRoute: typeof AdminJobsNewRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/jobs/$id': {
-      id: '/admin/jobs/$id'
-      path: '/jobs/$id'
-      fullPath: '/admin/jobs/$id'
-      preLoaderRoute: typeof AdminJobsIdRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/candidates/': {
-      id: '/admin/candidates/'
-      path: '/candidates'
-      fullPath: '/admin/candidates/'
-      preLoaderRoute: typeof AdminCandidatesIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-  }
 }
 
 declare module '@tanstack/react-router' {
@@ -489,6 +485,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/approach': {
       id: '/approach'
       path: '/approach'
@@ -501,6 +504,13 @@ declare module '@tanstack/react-router' {
       path: '/app'
       fullPath: '/app'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -517,6 +527,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/auth/register': {
+      id: '/auth/register'
+      path: '/register'
+      fullPath: '/auth/register'
+      preLoaderRoute: typeof AuthRegisterRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/forgot': {
+      id: '/auth/forgot'
+      path: '/forgot'
+      fullPath: '/auth/forgot'
+      preLoaderRoute: typeof AuthForgotRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/app/upload': {
       id: '/app/upload'
       path: '/upload'
@@ -524,32 +569,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppUploadRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/jobs/': {
-      id: '/app/jobs/'
-      path: '/jobs'
-      fullPath: '/app/jobs/'
-      preLoaderRoute: typeof AppJobsIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/candidates/': {
-      id: '/app/candidates/'
-      path: '/candidates'
-      fullPath: '/app/candidates/'
-      preLoaderRoute: typeof AppCandidatesIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/jobs/$id': {
-      id: '/app/jobs/$id'
-      path: '/jobs/$id'
-      fullPath: '/app/jobs/$id'
-      preLoaderRoute: typeof AppJobsIdRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/candidates/$id': {
-      id: '/app/candidates/$id'
-      path: '/candidates/$id'
-      fullPath: '/app/candidates/$id'
-      preLoaderRoute: typeof AppCandidatesIdRouteImport
+    '/app/profile': {
+      id: '/app/profile'
+      path: '/profile'
+      fullPath: '/app/profile'
+      preLoaderRoute: typeof AppProfileRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/discover': {
@@ -559,6 +583,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDiscoverRouteImport
       parentRoute: typeof AppRoute
     }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bookings': {
+      id: '/admin/bookings'
+      path: '/bookings'
+      fullPath: '/admin/bookings'
+      preLoaderRoute: typeof AdminBookingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/app/jobs/': {
+      id: '/app/jobs/'
+      path: '/jobs'
+      fullPath: '/app/jobs/'
+      preLoaderRoute: typeof AppJobsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/hr/': {
       id: '/app/hr/'
       path: '/hr'
@@ -566,11 +618,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHrIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/hr/answer': {
-      id: '/app/hr/answer'
-      path: '/hr/answer'
-      fullPath: '/app/hr/answer'
-      preLoaderRoute: typeof AppHrAnswerRouteImport
+    '/app/candidates/': {
+      id: '/app/candidates/'
+      path: '/candidates'
+      fullPath: '/app/candidates/'
+      preLoaderRoute: typeof AppCandidatesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/admin/jobs/': {
+      id: '/admin/jobs/'
+      path: '/jobs'
+      fullPath: '/admin/jobs/'
+      preLoaderRoute: typeof AdminJobsIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/faq/': {
+      id: '/admin/faq/'
+      path: '/faq'
+      fullPath: '/admin/faq/'
+      preLoaderRoute: typeof AdminFaqIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/candidates/': {
+      id: '/admin/candidates/'
+      path: '/candidates'
+      fullPath: '/admin/candidates/'
+      preLoaderRoute: typeof AdminCandidatesIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/app/jobs/$id': {
+      id: '/app/jobs/$id'
+      path: '/jobs/$id'
+      fullPath: '/app/jobs/$id'
+      preLoaderRoute: typeof AppJobsIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/hr/library': {
@@ -580,42 +660,133 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHrLibraryRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/hr/answer': {
+      id: '/app/hr/answer'
+      path: '/hr/answer'
+      fullPath: '/app/hr/answer'
+      preLoaderRoute: typeof AppHrAnswerRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/candidates/$id': {
+      id: '/app/candidates/$id'
+      path: '/candidates/$id'
+      fullPath: '/app/candidates/$id'
+      preLoaderRoute: typeof AppCandidatesIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/admin/jobs/new': {
+      id: '/admin/jobs/new'
+      path: '/jobs/new'
+      fullPath: '/admin/jobs/new'
+      preLoaderRoute: typeof AdminJobsNewRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/jobs/$id': {
+      id: '/admin/jobs/$id'
+      path: '/jobs/$id'
+      fullPath: '/admin/jobs/$id'
+      preLoaderRoute: typeof AdminJobsIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/faq/new': {
+      id: '/admin/faq/new'
+      path: '/faq/new'
+      fullPath: '/admin/faq/new'
+      preLoaderRoute: typeof AdminFaqNewRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/faq/$id': {
+      id: '/admin/faq/$id'
+      path: '/faq/$id'
+      fullPath: '/admin/faq/$id'
+      preLoaderRoute: typeof AdminFaqIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminBookingsRoute: typeof AdminBookingsRoute
+  AdminLoginRoute: typeof AdminLoginRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminFaqIdRoute: typeof AdminFaqIdRoute
+  AdminFaqNewRoute: typeof AdminFaqNewRoute
+  AdminJobsIdRoute: typeof AdminJobsIdRoute
+  AdminJobsNewRoute: typeof AdminJobsNewRoute
+  AdminCandidatesIndexRoute: typeof AdminCandidatesIndexRoute
+  AdminFaqIndexRoute: typeof AdminFaqIndexRoute
+  AdminJobsIndexRoute: typeof AdminJobsIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminBookingsRoute: AdminBookingsRoute,
+  AdminLoginRoute: AdminLoginRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AdminFaqIdRoute: AdminFaqIdRoute,
+  AdminFaqNewRoute: AdminFaqNewRoute,
+  AdminJobsIdRoute: AdminJobsIdRoute,
+  AdminJobsNewRoute: AdminJobsNewRoute,
+  AdminCandidatesIndexRoute: AdminCandidatesIndexRoute,
+  AdminFaqIndexRoute: AdminFaqIndexRoute,
+  AdminJobsIndexRoute: AdminJobsIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 interface AppRouteChildren {
   AppDiscoverRoute: typeof AppDiscoverRoute
-  AppHrIndexRoute: typeof AppHrIndexRoute
-  AppHrAnswerRoute: typeof AppHrAnswerRoute
-  AppHrLibraryRoute: typeof AppHrLibraryRoute
+  AppProfileRoute: typeof AppProfileRoute
   AppUploadRoute: typeof AppUploadRoute
   AppIndexRoute: typeof AppIndexRoute
   AppCandidatesIdRoute: typeof AppCandidatesIdRoute
+  AppHrAnswerRoute: typeof AppHrAnswerRoute
+  AppHrLibraryRoute: typeof AppHrLibraryRoute
   AppJobsIdRoute: typeof AppJobsIdRoute
   AppCandidatesIndexRoute: typeof AppCandidatesIndexRoute
+  AppHrIndexRoute: typeof AppHrIndexRoute
   AppJobsIndexRoute: typeof AppJobsIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppDiscoverRoute: AppDiscoverRoute,
-  AppHrIndexRoute: AppHrIndexRoute,
-  AppHrAnswerRoute: AppHrAnswerRoute,
-  AppHrLibraryRoute: AppHrLibraryRoute,
+  AppProfileRoute: AppProfileRoute,
   AppUploadRoute: AppUploadRoute,
   AppIndexRoute: AppIndexRoute,
   AppCandidatesIdRoute: AppCandidatesIdRoute,
+  AppHrAnswerRoute: AppHrAnswerRoute,
+  AppHrLibraryRoute: AppHrLibraryRoute,
   AppJobsIdRoute: AppJobsIdRoute,
   AppCandidatesIndexRoute: AppCandidatesIndexRoute,
+  AppHrIndexRoute: AppHrIndexRoute,
   AppJobsIndexRoute: AppJobsIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface AuthRouteChildren {
+  AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthForgotRoute: typeof AuthForgotRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthRegisterRoute: typeof AuthRegisterRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthCallbackRoute: AuthCallbackRoute,
+  AuthForgotRoute: AuthForgotRoute,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthRegisterRoute: AuthRegisterRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AppRoute: AppRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
+  AppRoute: AppRouteWithChildren,
   ApproachRoute: ApproachRoute,
+  AuthRoute: AuthRouteWithChildren,
   ContactRoute: ContactRoute,
   ReachRoute: ReachRoute,
   SectorsRoute: SectorsRoute,
@@ -624,3 +795,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

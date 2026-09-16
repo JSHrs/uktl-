@@ -16,6 +16,7 @@ export type CandidateRow = {
   seniority: string | null;
   total_years_experience: number | null;
   quality_score: number | null;
+  auth_user_id: string | null;
 };
 
 export type CandidateDetail = CandidateRow & {
@@ -48,15 +49,15 @@ export type CandidateDetail = CandidateRow & {
 
 export async function insertCandidateShell(
   env: AppEnv,
-  args: { id: string; filename: string; r2Key: string; sizeBytes: number },
+  args: { id: string; filename: string; r2Key: string; sizeBytes: number; authUserId?: string | null },
 ): Promise<void> {
   const now = Date.now();
   await env.DB.prepare(
     `INSERT INTO candidates
-      (id, created_at, updated_at, status, source_filename, source_r2_key, source_bytes)
-     VALUES (?, ?, ?, 'uploaded', ?, ?, ?)`,
+      (id, created_at, updated_at, status, source_filename, source_r2_key, source_bytes, auth_user_id)
+     VALUES (?, ?, ?, 'uploaded', ?, ?, ?, ?)`,
   )
-    .bind(args.id, now, now, args.filename, args.r2Key, args.sizeBytes)
+    .bind(args.id, now, now, args.filename, args.r2Key, args.sizeBytes, args.authUserId ?? null)
     .run();
 }
 
@@ -191,18 +192,47 @@ export async function writeParsedProfile(
   await env.DB.batch(statements);
 }
 
-export async function listCandidates(env: AppEnv, limit = 50): Promise<CandidateRow[]> {
+export async function listCandidates(
+  env: AppEnv,
+  opts: { authUserId?: string; limit?: number } = {},
+): Promise<CandidateRow[]> {
+  const binds: unknown[] = opts.authUserId ? [opts.authUserId] : [];
+  binds.push(opts.limit ?? 50);
   const res = await env.DB.prepare(
     `SELECT id, created_at, updated_at, status, source_filename, source_r2_key,
             name, email, location, headline, seniority, total_years_experience,
-            quality_score
+            quality_score, auth_user_id
        FROM candidates
+      ${opts.authUserId ? "WHERE auth_user_id=?" : ""}
       ORDER BY created_at DESC
       LIMIT ?`,
   )
-    .bind(limit)
+    .bind(...binds)
     .all<CandidateRow>();
   return res.results ?? [];
+}
+
+// undefined = no such candidate; null = candidate exists but is unlinked
+export async function getCandidateAuthUserId(
+  env: AppEnv,
+  id: string,
+): Promise<string | null | undefined> {
+  const row = await env.DB.prepare(`SELECT auth_user_id FROM candidates WHERE id=?`)
+    .bind(id)
+    .first<{ auth_user_id: string | null }>();
+  return row ? row.auth_user_id : undefined;
+}
+
+export async function getLatestCandidateIdForUser(
+  env: AppEnv,
+  authUserId: string,
+): Promise<string | null> {
+  const row = await env.DB.prepare(
+    `SELECT id FROM candidates WHERE auth_user_id=? ORDER BY created_at DESC LIMIT 1`,
+  )
+    .bind(authUserId)
+    .first<{ id: string }>();
+  return row?.id ?? null;
 }
 
 export async function getCandidate(
@@ -267,6 +297,7 @@ export async function getCandidate(
     total_years_experience: (row.total_years_experience as number | null) ?? null,
     work_authorization: (row.work_authorization as string | null) ?? null,
     quality_score: (row.quality_score as number | null) ?? null,
+    auth_user_id: (row.auth_user_id as string | null) ?? null,
     quality_notes: parseJsonArray<string>(row.quality_notes),
     score_breakdown: parseJsonNullable(row.score_breakdown),
     improvement_report: parseJsonNullable(row.improvement_report),
@@ -660,6 +691,26 @@ export async function listBookings(env: AppEnv, limit = 100): Promise<BookingRow
   return res.results ?? [];
 }
 
+// ── Enquiries (public contact form) ──────────────────────────────────────────
+
+export type EnquiryInput = {
+  name: string;
+  email: string;
+  company?: string | null;
+  enquiry_type?: string | null;
+  message: string;
+};
+
+export async function createEnquiry(env: AppEnv, id: string, input: EnquiryInput): Promise<void> {
+  await env.DB.prepare(
+    `INSERT INTO enquiries (id, created_at, name, email, company, enquiry_type, message, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'new')`,
+  ).bind(
+    id, Date.now(), input.name, input.email,
+    input.company ?? null, input.enquiry_type ?? null, input.message,
+  ).run();
+}
+
 // ── HR Queries ───────────────────────────────────────────────────────────────
 
 export async function recordHrQuery(
@@ -669,7 +720,7 @@ export async function recordHrQuery(
     auth_user_id?: string;
     question: string;
     category?: string;
-    faq_topic_id?: number;
+    faq_topic_id?: string;
   },
 ): Promise<void> {
   const now = Date.now();

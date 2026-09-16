@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
-import { adminCreateJobFn, adminUpdateJobFn } from "@/lib/server/functions";
-import { adminListJobsFn } from "@/lib/server/functions";
+import { adminCreateJobFn, adminUpdateJobFn } from "@/lib/functions";
+import { adminListJobsFn } from "@/lib/functions";
 import type { Job } from "@/lib/schemas/job";
 import {
   AdminHeader, AdminField, AdminBtn,

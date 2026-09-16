@@ -1,14 +1,18 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import {
   PageHeader,
   Pill,
   ScoreBar,
   StatusPill,
 } from "@/components/app/AppLayout";
-import { listCandidatesFn } from "@/lib/server/functions";
+import { getViewerFn, listCandidatesFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/app/candidates/")({
+  beforeLoad: async () => {
+    const viewer = await getViewerFn();
+    if (!viewer.isAdmin && !viewer.userId) throw redirect({ to: "/auth/login" });
+  },
   loader: async () => await listCandidatesFn(),
   component: CandidatesListPage,
 });
