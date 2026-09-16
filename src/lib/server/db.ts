@@ -662,11 +662,11 @@ export type BookingRow = {
 export type BookingInput = {
   contact_name: string;
   contact_email: string;
-  contact_phone?: string;
-  topic_area?: string;
-  auth_user_id?: string;
-  user_email?: string;
-  notes?: string;
+  contact_phone?: string | null;
+  topic_area?: string | null;
+  auth_user_id?: string | null;
+  user_email?: string | null;
+  notes?: string | null;
 };
 
 export async function createBooking(env: AppEnv, id: string, input: BookingInput): Promise<void> {

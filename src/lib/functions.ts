@@ -112,7 +112,7 @@ export const listCandidatesFn = createServerFn({ method: "GET" }).handler(
 );
 
 export const getCandidateDetailFn = createServerFn({ method: "GET" })
-  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
     const viewer = await getViewer();
     try {
@@ -127,7 +127,7 @@ export const getCandidateDetailFn = createServerFn({ method: "GET" })
   });
 
 export const getAnonymisedCandidateFn = createServerFn({ method: "GET" })
-  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
     const viewer = await getViewer();
     try {
@@ -159,7 +159,7 @@ export const listJobsFn = createServerFn({ method: "GET" }).handler(async () => 
 });
 
 export const getJobDetailFn = createServerFn({ method: "GET" })
-  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
     try {
       const env = await getEnv();
@@ -178,7 +178,7 @@ export const getJobDetailFn = createServerFn({ method: "GET" })
 // job → persist matches. Client-facing effect: after one upload the candidate
 // is searchable, ranked, and shortlistable with zero consultant effort.
 export const uploadAndParseCvFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown): FormData => {
+  .inputValidator((raw: unknown): FormData => {
     if (!(raw instanceof FormData)) {
       throw new Error("Expected multipart form data");
     }
@@ -203,13 +203,7 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
     try {
       env = await getEnv();
     } catch {
-      // Preview mode: simulate a successful parse with mock data
-      return {
-        id: "cand_preview_001",
-        status: "parsed" as const,
-        quality: { score: 87, notes: ["Preview mode — connect Cloudflare D1 + R2 to parse real CVs."] },
-        preview: true,
-      };
+      throw new Error("CV processing is unavailable here — Cloudflare D1 and R2 bindings are not configured");
     }
     const bytes = await file.arrayBuffer();
     const id = newId();
@@ -273,7 +267,7 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
   });
 
 export const getDiscoverJobsFn = createServerFn({ method: "GET" })
-  .validator((raw: unknown) =>
+  .inputValidator((raw: unknown) =>
     z.object({ candidateId: z.string().optional() }).parse(raw),
   )
   .handler(async ({ data }) => {
@@ -303,7 +297,7 @@ export const getDiscoverJobsFn = createServerFn({ method: "GET" })
   });
 
 export const recordSwipeFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) =>
+  .inputValidator((raw: unknown) =>
     z
       .object({
         candidateId: z.string(),
@@ -364,7 +358,7 @@ function scoreTopicMatch(question: string, topic: FaqTopic, categoryHint?: strin
 }
 
 export const matchFaqTopicFn = createServerFn({ method: "GET" })
-  .validator((raw: unknown) =>
+  .inputValidator((raw: unknown) =>
     z.object({
       question: z.string().min(1),
       category: z.string().optional(),
@@ -394,7 +388,7 @@ export const matchFaqTopicFn = createServerFn({ method: "GET" })
   });
 
 export const listFaqTopicsFn = createServerFn({ method: "GET" })
-  .validator((raw: unknown) =>
+  .inputValidator((raw: unknown) =>
     z.object({
       category: z.string().optional(),
       sector: z.string().optional(),
@@ -410,7 +404,7 @@ export const listFaqTopicsFn = createServerFn({ method: "GET" })
   });
 
 export const recordFaqViewFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
     try {
       const env = await getEnv();
@@ -434,7 +428,7 @@ IMPORTANT: Always end your response with this exact sentence on its own line:
 For your specific situation, speaking with a qualified employment lawyer is recommended."`;
 
 export const escalateToAiFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) =>
+  .inputValidator((raw: unknown) =>
     z.object({
       question: z.string(),
       category: z.string().optional(),
@@ -498,7 +492,7 @@ export const escalateToAiFn = createServerFn({ method: "POST" })
   });
 
 export const rematchCandidateFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
     const env = await getEnv();
     const detail = await getCandidate(env, data.id);
@@ -532,7 +526,7 @@ function getJwtSecret(env: { JWT_SECRET?: string }): string {
 }
 
 export const adminLoginFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) => z.object({ password: z.string() }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ password: z.string() }).parse(raw))
   .handler(async ({ data }) => {
     let hash: string | undefined;
     let secret = DEV_JWT_SECRET;
@@ -570,7 +564,7 @@ export const adminListFaqFn = createServerFn({ method: "GET" }).handler(async ()
 });
 
 export const adminGetFaqFn = createServerFn({ method: "GET" })
-  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
     await requireAdmin();
     try {
@@ -582,7 +576,7 @@ export const adminGetFaqFn = createServerFn({ method: "GET" })
   });
 
 export const adminCreateFaqFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) =>
+  .inputValidator((raw: unknown) =>
     z.object({
       title: z.string().min(1),
       category: z.string().min(1),
@@ -603,7 +597,7 @@ export const adminCreateFaqFn = createServerFn({ method: "POST" })
   });
 
 export const adminUpdateFaqFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) =>
+  .inputValidator((raw: unknown) =>
     z.object({
       id: z.string(),
       title: z.string().min(1),
@@ -625,7 +619,7 @@ export const adminUpdateFaqFn = createServerFn({ method: "POST" })
   });
 
 export const adminDeleteFaqFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
     await requireAdmin();
     const env = await getEnv();
@@ -659,7 +653,7 @@ const JobInputSchema = z.object({
 });
 
 export const adminCreateJobFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) => JobInputSchema.parse(raw))
+  .inputValidator((raw: unknown) => JobInputSchema.parse(raw))
   .handler(async ({ data }) => {
     await requireAdmin();
     const id = "job_" + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
@@ -669,7 +663,7 @@ export const adminCreateJobFn = createServerFn({ method: "POST" })
   });
 
 export const adminUpdateJobFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) => z.object({ id: z.string() }).merge(JobInputSchema).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ id: z.string() }).merge(JobInputSchema).parse(raw))
   .handler(async ({ data }) => {
     await requireAdmin();
     const { id, ...input } = data;
@@ -679,7 +673,7 @@ export const adminUpdateJobFn = createServerFn({ method: "POST" })
   });
 
 export const adminDeleteJobFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
     await requireAdmin();
     const env = await getEnv();
@@ -690,7 +684,7 @@ export const adminDeleteJobFn = createServerFn({ method: "POST" })
 // ── Admin: Candidates ────────────────────────────────────────────────────────
 
 export const adminDeleteCandidateFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
     await requireAdmin();
     const env = await getEnv();
@@ -701,7 +695,7 @@ export const adminDeleteCandidateFn = createServerFn({ method: "POST" })
 // ── Candidate Auth (Supabase) ─────────────────────────────────────────────────
 
 export const candidateRegisterFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) =>
+  .inputValidator((raw: unknown) =>
     z.object({
       email: z.string().email(),
       password: z.string().min(8),
@@ -730,7 +724,7 @@ export const candidateRegisterFn = createServerFn({ method: "POST" })
   });
 
 export const candidateLoginFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) =>
+  .inputValidator((raw: unknown) =>
     z.object({ email: z.string().email(), password: z.string() }).parse(raw),
   )
   .handler(async ({ data }) => {
@@ -757,7 +751,7 @@ export const getCandidateSessionFn = createServerFn({ method: "GET" }).handler(a
 });
 
 export const candidateMagicLinkFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) => z.object({ email: z.string().email() }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ email: z.string().email() }).parse(raw))
   .handler(async ({ data }) => {
     const { createClient } = await import("@supabase/supabase-js");
     const env = await getEnv();
@@ -772,7 +766,7 @@ export const candidateMagicLinkFn = createServerFn({ method: "POST" })
   });
 
 export const candidateSessionFromTokensFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) =>
+  .inputValidator((raw: unknown) =>
     z.object({
       access_token: z.string().min(1),
       refresh_token: z.string().min(1),
@@ -844,7 +838,7 @@ export const getCandidateProfileFn = createServerFn({ method: "GET" }).handler(a
 });
 
 export const updateCandidateProfileFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) =>
+  .inputValidator((raw: unknown) =>
     z.object({
       name: z.string().min(1),
       phone: z.string().nullable().optional(),
@@ -867,7 +861,7 @@ export const updateCandidateProfileFn = createServerFn({ method: "POST" })
 // ── Consultation Bookings ─────────────────────────────────────────────────────
 
 export const createBookingFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) =>
+  .inputValidator((raw: unknown) =>
     z.object({
       contact_name: z.string().min(1),
       contact_email: z.string().email(),
@@ -912,7 +906,7 @@ async function sendBookingNotification(
 // ── Contact enquiries ────────────────────────────────────────────────────────
 
 export const submitEnquiryFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) =>
+  .inputValidator((raw: unknown) =>
     z.object({
       name: z.string().trim().min(1).max(200),
       email: z.string().trim().email().max(320),
@@ -985,7 +979,7 @@ export const adminGetAnalyticsFn = createServerFn({ method: "GET" }).handler(asy
 // ── Reed.co.uk Job Board Sync ─────────────────────────────────────────────────
 
 export const syncReedJobsFn = createServerFn({ method: "POST" })
-  .validator((raw: unknown) =>
+  .inputValidator((raw: unknown) =>
     z.object({
       keywords: z.string().default(""),
       sector: z.enum(["construction", "technology"]).default("construction"),
