@@ -48,14 +48,6 @@ import { scoreMatch } from "./match";
 import { normaliseSkillList } from "./skills";
 import { anonymiseProfile } from "./anonymize";
 import { ParsedProfileSchema } from "../schemas/profile";
-import {
-  MOCK_CANDIDATES,
-  MOCK_CANDIDATE_DETAILS,
-  MOCK_FAQ_TOPICS,
-  MOCK_JOBS,
-  MOCK_MATCHES_BY_CANDIDATE,
-  MOCK_MATCHES_BY_JOB,
-} from "./mockData";
 
 function isPreviewEnv(): boolean {
   try {
@@ -81,7 +73,7 @@ export const listCandidatesFn = createServerFn({ method: "GET" }).handler(
       const env = await getEnv();
       return await listCandidates(env);
     } catch {
-      return MOCK_CANDIDATES;
+      return [];
     }
   },
 );
@@ -96,10 +88,7 @@ export const getCandidateDetailFn = createServerFn({ method: "GET" })
       const matches = await getMatchesForCandidate(env, data.id);
       return { candidate, matches };
     } catch {
-      const candidate = MOCK_CANDIDATE_DETAILS[data.id] ?? null;
-      if (!candidate) return null;
-      const matches = MOCK_MATCHES_BY_CANDIDATE[data.id] ?? [];
-      return { candidate, matches };
+      return null;
     }
   });
 
@@ -121,25 +110,7 @@ export const getAnonymisedCandidateFn = createServerFn({ method: "GET" })
       );
       return anonymiseProfile(profile);
     } catch {
-      const detail = MOCK_CANDIDATE_DETAILS[data.id];
-      if (!detail) return null;
-      // Build a minimal ParsedProfile from mock detail for anonymisation preview
-      const profile = ParsedProfileSchema.parse({
-        name: detail.name,
-        email: detail.email,
-        phone: detail.phone,
-        location: detail.location,
-        headline: detail.headline,
-        summary: detail.summary,
-        seniority: detail.seniority,
-        total_years_experience: detail.total_years_experience,
-        work_authorization: detail.work_authorization,
-        skills: detail.skills.map((s) => ({ skill: s.skill })),
-        experience: detail.experience,
-        education: detail.education,
-        links: detail.links,
-      });
-      return anonymiseProfile(profile);
+      return null;
     }
   });
 
@@ -148,7 +119,7 @@ export const listJobsFn = createServerFn({ method: "GET" }).handler(async () => 
     const env = await getEnv();
     return await listJobs(env);
   } catch {
-    return MOCK_JOBS;
+    return [];
   }
 });
 
@@ -162,10 +133,7 @@ export const getJobDetailFn = createServerFn({ method: "GET" })
       const matches = await getMatchesForJob(env, data.id);
       return { job, matches };
     } catch {
-      const job = MOCK_JOBS.find((j) => j.id === data.id) ?? null;
-      if (!job) return null;
-      const matches = MOCK_MATCHES_BY_JOB[data.id] ?? [];
-      return { job, matches };
+      return null;
     }
   });
 
@@ -279,15 +247,7 @@ export const getDiscoverJobsFn = createServerFn({ method: "GET" })
 
       return { jobs: unseenJobs, matches: matchMap };
     } catch {
-      const deterministicScore = (id: string) => {
-        let n = 0;
-        for (let i = 0; i < id.length; i++) n = (n * 31 + id.charCodeAt(i)) & 0xffffff;
-        return 50 + (n % 40);
-      };
-      return {
-        jobs: MOCK_JOBS,
-        matches: Object.fromEntries(MOCK_JOBS.map((j) => [j.id, deterministicScore(j.id)])),
-      };
+      return { jobs: [], matches: {} };
     }
   });
 
@@ -363,7 +323,7 @@ export const matchFaqTopicFn = createServerFn({ method: "GET" })
       const env = await getEnv();
       topics = await listFaqTopics(env);
     } catch {
-      topics = MOCK_FAQ_TOPICS;
+      topics = [];
     }
 
     const scored = topics
@@ -392,10 +352,7 @@ export const listFaqTopicsFn = createServerFn({ method: "GET" })
       const env = await getEnv();
       return await listFaqTopics(env, data);
     } catch {
-      let topics = MOCK_FAQ_TOPICS;
-      if (data.category) topics = topics.filter((t) => t.category === data.category);
-      if (data.sector) topics = topics.filter((t) => !t.sector_tag || t.sector_tag === data.sector);
-      return topics;
+      return [];
     }
   });
 
@@ -557,7 +514,7 @@ export const adminListFaqFn = createServerFn({ method: "GET" }).handler(async ()
     const env = await getEnv();
     return await listAllFaqTopics(env);
   } catch {
-    return MOCK_FAQ_TOPICS;
+    return [];
   }
 });
 
@@ -568,7 +525,7 @@ export const adminGetFaqFn = createServerFn({ method: "GET" })
       const env = await getEnv();
       return await getFaqTopic(env, data.id);
     } catch {
-      return MOCK_FAQ_TOPICS.find((t) => t.id === data.id) ?? null;
+      return null;
     }
   });
 
@@ -628,7 +585,7 @@ export const adminListJobsFn = createServerFn({ method: "GET" }).handler(async (
     const env = await getEnv();
     return await listAllJobs(env);
   } catch {
-    return MOCK_JOBS;
+    return [];
   }
 });
 
