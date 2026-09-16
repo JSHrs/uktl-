@@ -1,7 +1,7 @@
 # Talent Compass — Deployment Runbook
 
-**Project:** UK Talent Link / Talent Compass  
-**Stack:** TanStack Start · Cloudflare Workers · D1 (SQLite) · R2 (object storage) · Anthropic API  
+**Project:** UK Talent Link / Talent Compass
+**Stack:** TanStack Start · Cloudflare Workers · D1 (SQLite) · R2 · Supabase Auth · Anthropic API · Resend · Reed.co.uk
 **Target:** `talent-compass.cranbrooklegal.com`
 
 ---
@@ -13,6 +13,7 @@
 | Node 20+ | `nvm install 20` |
 | Wrangler CLI | `npm install -g wrangler` |
 | Cloudflare account | `wrangler login` |
+| Supabase project | https://supabase.com (one per environment is recommended) |
 
 ---
 
@@ -21,33 +22,32 @@
 ### 1.1 Create D1 databases
 
 ```bash
-# Production
-wrangler d1 create talent-compass-db
-# Staging
-wrangler d1 create talent-compass-staging-db
+wrangler d1 create talent-compass-db            # production
+wrangler d1 create talent-compass-staging-db    # staging
 ```
 
-Copy the `database_id` values returned and paste them into `wrangler.toml`:
-
-```toml
-[[d1_databases]]
-database_id = "<paste production id here>"
-
-[[env.staging.d1_databases]]
-database_id = "<paste staging id here>"
-```
+Paste the returned `database_id` values into `wrangler.toml` (`[[d1_databases]]`, `[[env.staging.d1_databases]]`, `[[env.production.d1_databases]]`).
 
 ### 1.2 Run database migrations
 
 ```bash
-# Staging
 wrangler d1 migrations apply talent-compass-staging-db --env staging
-
-# Production
 wrangler d1 migrations apply talent-compass-db --env production
 ```
 
-Migrations live in `./migrations/` and are numbered `0001_` → `0004_` in order.
+Migrations live in `./migrations/`, numbered `0001_` → `0007_`, and are applied in order:
+
+| File | Adds |
+|---|---|
+| 0001_init | candidates, skills, experience, education, jobs, matches |
+| 0002_seed_jobs | sample mandates |
+| 0003_hr_module | faq_topics, hr_queries |
+| 0004_swipes | candidate_swipes |
+| 0005_score_breakdown | score_breakdown / improvement_report / auth_user_id on candidates; bookings; rebuilds hr_queries |
+| 0006_jobs_source | source / source_id / source_url / posted_date / expiry_date on jobs (Reed dedup) |
+| 0007_enquiries | enquiries (contact form) |
+
+Never edit an applied migration; add a new numbered file.
 
 ### 1.3 Create R2 buckets
 
@@ -56,96 +56,82 @@ wrangler r2 bucket create talent-compass-cvs          # production
 wrangler r2 bucket create talent-compass-cvs-staging  # staging
 ```
 
-### 1.4 Configure CORS on R2 buckets
+CV files are written and read server-side only; no CORS policy is required.
 
-CV files are written server-side only, so no explicit CORS policy is required.  
-If a signed-URL client-side flow is added later, apply CORS via the Cloudflare dashboard or:
+### 1.4 Supabase (candidate auth)
 
-```bash
-wrangler r2 bucket cors put talent-compass-cvs --rules-json '[{"allowedOrigins":["https://talent-compass.cranbrooklegal.com"],"allowedMethods":["GET","PUT"],"maxAgeSeconds":3600}]'
-```
+1. Create the project and apply `supabase/migrations/20260915000001_initial.sql` (SQL editor or `supabase db push`). It creates `profiles`, `bookings`, `hr_queries` with RLS and the `handle_new_user` trigger.
+2. Authentication → URL configuration: set **Site URL** to the deployment origin and add `<SITE_URL>/auth/callback` to **Redirect URLs** for every environment.
+3. Authentication → Email: keep "Confirm email" on; sign-up confirmations and magic links both land on `/auth/callback`.
+4. Copy the project URL and anon key into `wrangler.toml` vars (below) and the service-role key into a secret.
 
 ---
 
-## 2 — Secrets management
+## 2 — Configuration
 
-All secrets are injected as Cloudflare Worker secrets — never stored in source code or wrangler.toml.
+### 2.1 Vars (non-secret, in `wrangler.toml`)
+
+Wrangler does **not** inherit `[vars]` into named environments — each of `[vars]`, `[env.staging.vars]` and `[env.production.vars]` must be filled in.
+
+| Var | Purpose |
+|---|---|
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_ANON_KEY` | Supabase anon/publishable key |
+| `SITE_URL` | Public origin of this deployment; used to build auth email redirect URLs |
+| `CALENDLY_URL` | Calendly embed URL for consultation booking (optional) |
+| `PARSE_MODEL` | Override the Anthropic model used for CV extraction (optional) |
+
+### 2.2 Secrets (`wrangler secret put <NAME> --env <staging|production>`)
+
+| Secret | Purpose |
+|---|---|
+| `ANTHROPIC_API_KEY` | Claude — CV extraction, grading, HR escalation |
+| `RESEND_API_KEY` | Booking and enquiry notification emails to info@ |
+| `JWT_SECRET` | HMAC key for the admin session cookie |
+| `ADMIN_PASSWORD_HASH` | PBKDF2-SHA256 hash of the admin password |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-side Supabase client (bypasses RLS) |
+| `REED_API_KEY` | Reed.co.uk job search API |
+
+Locally, put secrets in `.dev.vars` (gitignored) for `wrangler dev`.
+
+### 2.3 Admin password hash
 
 ```bash
-# Anthropic API key (used for CV parsing and FAQ AI)
-wrangler secret put ANTHROPIC_API_KEY --env production
-wrangler secret put ANTHROPIC_API_KEY --env staging
-
-# Resend API key (transactional email — future feature)
-wrangler secret put RESEND_API_KEY --env production
-wrangler secret put RESEND_API_KEY --env staging
-
-# Admin session signing key (generate a strong random string)
-wrangler secret put JWT_SECRET --env production
-wrangler secret put JWT_SECRET --env staging
-
-# Admin password hash (PBKDF2-SHA256, generated below)
-wrangler secret put ADMIN_PASSWORD_HASH --env production
-wrangler secret put ADMIN_PASSWORD_HASH --env staging
+node scripts/hash-password.mjs
 ```
 
-### Generating an admin password hash
+Paste the hex output into `wrangler secret put ADMIN_PASSWORD_HASH`.
 
-Run this in the browser console or Node to produce the hash:
-
-```javascript
-// Node script: node scripts/hash-password.mjs
-import { subtle } from "node:crypto";
-
-const password  = "YOUR_PRODUCTION_PASSWORD";
-const salt      = new TextEncoder().encode("uktl-admin-salt-v1");
-const keyMat    = await subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
-const bits      = await subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations: 100_000 }, keyMat, 256);
-const hex       = Buffer.from(bits).toString("hex");
-console.log(hex);
-```
-
-Paste the hex output when `wrangler secret put ADMIN_PASSWORD_HASH` prompts for the value.
+> The demo password `admin123` is accepted **only** while `ADMIN_PASSWORD_HASH` is unset, and the login page currently prints it. This is intentional for now so the dashboard can be exercised without secrets. **Before go-live:** remove the fallback in `src/lib/server/auth.ts` (`verifyPassword`) and the hint in `src/routes/admin/login.tsx`.
 
 ---
 
 ## 3 — Build and deploy
 
-### 3.1 Install dependencies
+### 3.1 Build
 
 ```bash
 npm ci
-```
-
-### 3.2 Build for production
-
-```bash
+npx tsc --noEmit     # must be 0
 npm run build
 ```
 
-Output: `.output/server/index.mjs` (Worker entry) + `.output/public/` (static assets).
+`npm run build` uses `@lovable.dev/vite-tanstack-config`. Its Cloudflare output (Nitro `cloudflare-module` preset, emitted to `dist/`) is only produced **inside a Lovable sandbox** or when `nitro: true` is passed in `vite.config.ts` with the `nitro` package installed. Outside that, the build is a plain Node SSR bundle for verification only.
 
-### 3.3 Deploy to staging
+**Open item:** `wrangler.toml` still declares `main = ".output/server/index.mjs"` from an earlier toolchain. Before the first Workers deploy, produce the Nitro build and point `main`/`[site] bucket` at its actual output (`dist/server`, `dist/client`), or let Nitro's `deployConfig` generate the Wrangler config.
+
+### 3.2 Deploy
 
 ```bash
 wrangler deploy --env staging
-```
-
-Verify at the staging Worker URL shown in the deploy output.
-
-### 3.4 Promote to production
-
-```bash
 wrangler deploy --env production
 ```
 
-The production route `talent-compass.cranbrooklegal.com/*` is configured in `wrangler.toml`. Ensure the DNS CNAME for that hostname points to `talent-compass-production.cranbrooklegal.com.cdn.cloudflare.net` (Cloudflare proxied).
+The production route `talent-compass.cranbrooklegal.com/*` is set in `wrangler.toml`; the DNS record for that hostname must be Cloudflare-proxied.
 
 ---
 
 ## 4 — Post-deploy verification
-
-Run the E2E suite against the live URL:
 
 ```bash
 E2E_BASE_URL=https://talent-compass.cranbrooklegal.com npm run test:e2e
@@ -153,55 +139,42 @@ E2E_BASE_URL=https://talent-compass.cranbrooklegal.com npm run test:e2e
 
 Manual checklist:
 
-- [ ] `/admin/login` loads and accepts the production admin password
-- [ ] Admin → Mandates: create and delete a test mandate
-- [ ] Upload page: drag a CV; confirm it navigates to the parsed candidate profile
-- [ ] Candidate profile shows quality score, skills, and job matches
-- [ ] `curl -I https://talent-compass.cranbrooklegal.com/admin | grep -i robots` returns `noindex, nofollow`
+- [ ] `/` renders; `/approach`, `/services`, `/sectors`, `/contact` render
+- [ ] Contact form: submit → row in `enquiries` and email at info@
+- [ ] `/admin/login` accepts the production password and **rejects** `admin123`
+- [ ] Admin → Mandates: create and delete a test mandate; "Sync from Reed" inserts and dedups
+- [ ] `/auth/register` → confirmation email → `/auth/callback` signs in → `/app/profile`
+- [ ] `/auth/forgot` magic link signs in
+- [ ] Upload a CV while signed in → candidate detail shows score breakdown and matches; `/app/profile` shows the CV
+- [ ] Signed out, `/app/candidates` redirects to `/auth/login`; a second candidate cannot open the first candidate's record
+- [ ] `curl -I .../admin | grep -i robots` → `noindex, nofollow`
 
 ---
 
 ## 5 — Rollback
 
 ```bash
-# List recent deployments
 wrangler deployments list --env production
-
-# Roll back to a previous deployment
 wrangler rollback <deployment-id> --env production
 ```
 
-D1 schema changes are irreversible without a manual migration. Keep migration SQL idempotent (`CREATE TABLE IF NOT EXISTS`, `CREATE INDEX IF NOT EXISTS`) so re-running is safe.
+D1 schema changes are not rolled back by a Worker rollback; write a forward migration instead.
 
 ---
 
 ## 6 — Observability
 
-- **Logs:** `wrangler tail --env production` streams real-time Worker logs
-- **Errors:** Cloudflare dashboard → Workers & Pages → your Worker → Logs
-- **D1 metrics:** Cloudflare dashboard → D1 → talent-compass-db → Metrics tab
-- **R2 storage:** Cloudflare dashboard → R2 → talent-compass-cvs
+- **Logs:** `wrangler tail --env production`
+- **Errors:** Cloudflare dashboard → Workers & Pages → Worker → Logs
+- **D1 / R2:** Cloudflare dashboard → D1 / R2
+- **Auth:** Supabase dashboard → Authentication → Logs
 
 ---
 
-## 7 — Environment variable reference
+## 7 — Handover notes
 
-| Variable | Where set | Purpose |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | `wrangler secret put` | Claude API key for CV parsing |
-| `RESEND_API_KEY` | `wrangler secret put` | Transactional email (future) |
-| `JWT_SECRET` | `wrangler secret put` | HMAC key for admin session tokens |
-| `ADMIN_PASSWORD_HASH` | `wrangler secret put` | PBKDF2-SHA256 hash of admin password |
-| `PARSE_MODEL` | `wrangler.toml` vars (optional) | Override Anthropic model used for parsing |
-| `DB` | D1 binding in `wrangler.toml` | Cloudflare D1 database |
-| `CV_BUCKET` | R2 binding in `wrangler.toml` | Cloudflare R2 bucket for CV files |
-
----
-
-## 8 — Handover notes
-
-- The demo password `admin123` is accepted only when `ADMIN_PASSWORD_HASH` is **not** set. In production it must be set to a proper hash.
-- All CV file bytes are stored in R2 under the key `cvs/<candidate_id>/<filename>`. Files are never publicly accessible.
-- The `raw_profile` JSON column in D1's `candidates` table stores the full Anthropic extraction output; it is used for re-matching when a new mandate is added.
-- Matching scores are stored in the `matches` table and can be recalculated by calling `rematchCandidateFn` from the server.
-- The `candidate_swipes` table (migration 0004) tracks candidate interest in mandates — used for the discovery "stack" UX.
+- All CV bytes live in R2 at `cvs/<candidate_id>/<filename>`; never publicly accessible.
+- `candidates.raw_profile` keeps the full Claude extraction for re-matching (`rematchCandidateFn`).
+- `candidates.auth_user_id` links a CV to a Supabase user; `profiles.d1_candidate_id` is a mirror.
+- `enquiries` and `bookings` are persisted even when Resend is not configured; the email is a notification, not the record.
+- There is no CI. `CLAUDE.md` lists the checks to run by hand before pushing.
