@@ -15,9 +15,10 @@ UK Talent Link's public website plus **Talent Compass**, a recruitment platform:
 | `npm ci` | Node 20+. |
 | `npm run dev` | Vite dev server on `:5173`. No Cloudflare bindings, so data functions return empty states and CV parsing throws a clear error. Admin login works with the demo password (see Auth). |
 | `npx tsc --noEmit` | **Must report 0 errors.** It was at 87 for a long time and hid a total runtime failure (`.validator` → `.inputValidator`). Treat any new error as a blocker. |
-| `npm run build` | Client + SSR build into `dist/`. Must pass. Outside a Lovable sandbox this is a Node SSR bundle, not a Workers bundle — see DEPLOYMENT.md. |
+| `npm run build` | Workers bundle via Nitro (`dist/server` + `dist/client`). Must pass. `wrangler.toml` already points at it — see DEPLOYMENT.md §3. |
 | `npm run lint` | ESLint with `prettier/prettier` as an error. The repo has never been prettier-formatted, so this fails on ~250 formatting lines. Use `npx eslint --rule 'prettier/prettier: off' <files>` for real findings until the repo is formatted in one dedicated commit. |
-| `npm run test:e2e` | Playwright, specs in `e2e/`. Needs a running server: `E2E_BASE_URL=http://127.0.0.1:5173 npm run test:e2e`. Chromium is at `/opt/pw-browsers/chromium` in the hosted sandbox; `playwright.config.ts` pins that path. |
+| `npm run test:e2e` | Playwright, specs in `e2e/`. Starts the dev server itself (or set `E2E_BASE_URL` to test a deployment). In the hosted sandbox add `PW_EXECUTABLE_PATH=/opt/pw-browsers/chromium`. Tests that write to D1 are skipped unless `E2E_HAS_DB=1`. Specs import `test` from `./fixtures`, whose `goto` waits for `<html data-hydrated>` — never interact before that. |
+| CI | `.github/workflows/ci.yml` runs `tsc`, `build` and the e2e suite on every PR and push to `main`. |
 
 ## Where things live
 
@@ -38,7 +39,9 @@ src/styles.css         design tokens (OKLCH paper/ink/accent), fonts, animations
 migrations/            D1 migrations 0001–0007, applied in order by wrangler
 supabase/migrations/   Postgres schema for profiles/bookings/hr_queries (RLS) — Supabase project only
 e2e/                   Playwright specs
-wrangler.toml          bindings, vars per environment (vars are NOT inherited by named envs)
+wrangler.toml          the ONLY Wrangler config (never add wrangler.json/jsonc — Wrangler prefers it silently);
+                       bindings, vars per environment (vars are NOT inherited by named envs)
+.github/workflows/     CI
 ```
 
 ## Hard rules
@@ -76,4 +79,4 @@ wrangler.toml          bindings, vars per environment (vars are NOT inherited by
 
 ## Known gaps (not bugs — unbuilt)
 
-Toast notifications (Sonner is installed, unused) · charts on the analytics page (Recharts installed, unused) · Calendly embed on the HR answer page · admin view of `enquiries` · scheduled Reed sync (manual button only) · CV download from R2 on the candidate page · pipeline stages beyond parsed/failed · candidate email outreach · CSV export · dark palette (`@custom-variant dark` exists, no tokens) · CI (nothing runs on push).
+Charts on the analytics page (Recharts installed, unused) · Calendly embed on the HR answer page · scheduled Reed sync (manual button only) · candidate email outreach · CSV export · dark palette (`@custom-variant dark` exists, no tokens) · client portal · GDPR delete/export tooling · named admin users with audit trail.
