@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 test.describe("App navigation", () => {
   test("/ redirects to app", async ({ page }) => {
@@ -33,9 +33,11 @@ test.describe("App navigation", () => {
     await expect(page.getByText(/drag a cv here/i)).toBeVisible();
   });
 
-  test("sidebar navigation links are present", async ({ page }) => {
+  test("app navigation links are present", async ({ page }) => {
     await page.goto("/app");
-    await expect(page.getByRole("link", { name: /discover/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /upload/i })).toBeVisible();
+    const nav = page.getByRole("navigation");
+    await expect(nav.getByRole("link", { name: "Discover" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "Upload CV" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "Candidates" })).toBeVisible();
   });
 });

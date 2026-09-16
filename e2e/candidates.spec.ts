@@ -1,41 +1,47 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "./fixtures";
+
+async function signInAsAdmin(page: Page) {
+  await page.goto("/admin/login");
+  await page.getByPlaceholder(/password/i).fill("admin123");
+  await page.getByRole("button", { name: /sign in/i }).click();
+  await expect(page).toHaveURL(/\/admin\/?$/);
+}
 
 test.describe("Candidate list and detail", () => {
-  test("candidates page loads", async ({ page }) => {
+  test("signed-out visitors are sent to sign in", async ({ page }) => {
     await page.goto("/app/candidates");
-    await expect(page.locator("body")).toBeVisible();
-    await expect(page).not.toHaveURL(/404/);
+    await expect(page).toHaveURL(/\/auth\/login/);
+  });
+
+  test("admin session can open the candidate pool", async ({ page }) => {
+    await signInAsAdmin(page);
+    await page.goto("/app/candidates");
+    await expect(page).toHaveURL(/\/app\/candidates\/?$/);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(/talent/i);
   });
 
   test("clicking a candidate navigates to detail", async ({ page }) => {
+    await signInAsAdmin(page);
     await page.goto("/app/candidates");
-    const links = page.getByRole("link").filter({ hasText: /./ });
-    const count = await links.count();
-    if (count === 0) {
-      // No candidates yet (preview mode) — skip
-      test.skip();
+    const rows = page.locator("table tbody tr");
+    if ((await rows.count()) === 0) {
+      test.skip(true, "no candidates in this environment");
       return;
     }
-    await links.first().click();
+    await rows.first().getByRole("link").first().click();
     await expect(page).toHaveURL(/\/app\/candidates\/.+/);
   });
 
   test("admin candidate list is accessible after login", async ({ page }) => {
-    await page.goto("/admin/login");
-    await page.getByPlaceholder(/password/i).fill("admin123");
-    await page.getByRole("button", { name: /sign in/i }).click();
-
-    await page.getByRole("link", { name: "Candidates" }).click();
+    await signInAsAdmin(page);
+    await page.getByRole("navigation").getByRole("link", { name: "Candidates", exact: true }).click();
     await expect(page).toHaveURL(/\/admin\/candidates/);
     await expect(page.getByRole("heading", { name: /candidate/i })).toBeVisible();
   });
 
   test("candidate search filters results", async ({ page }) => {
-    await page.goto("/admin/login");
-    await page.getByPlaceholder(/password/i).fill("admin123");
-    await page.getByRole("button", { name: /sign in/i }).click();
-
-    await page.getByRole("link", { name: "Candidates" }).click();
+    await signInAsAdmin(page);
+    await page.getByRole("navigation").getByRole("link", { name: "Candidates", exact: true }).click();
     const search = page.getByPlaceholder(/search/i);
     await search.fill("zzzunlikelytomatch");
     await expect(page.getByText(/no candidates match/i)).toBeVisible();
