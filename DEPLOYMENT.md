@@ -35,7 +35,7 @@ wrangler d1 migrations apply talent-compass-staging-db --env staging
 wrangler d1 migrations apply talent-compass-db --env production
 ```
 
-Migrations live in `./migrations/`, numbered `0001_` → `0007_`, and are applied in order:
+Migrations live in `./migrations/`, numbered `0001_` → `0008_`, and are applied in order:
 
 | File | Adds |
 |---|---|
@@ -46,6 +46,7 @@ Migrations live in `./migrations/`, numbered `0001_` → `0007_`, and are applie
 | 0005_score_breakdown | score_breakdown / improvement_report / auth_user_id on candidates; bookings; rebuilds hr_queries |
 | 0006_jobs_source | source / source_id / source_url / posted_date / expiry_date on jobs (Reed dedup) |
 | 0007_enquiries | enquiries (contact form) |
+| 0008_match_stages | stage / stage_updated_at on matches (pipeline) |
 
 Never edit an applied migration; add a new numbered file.
 

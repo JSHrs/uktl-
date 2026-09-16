@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound, redirect, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   PageHeader,
   Pill,
@@ -13,6 +14,7 @@ import {
   getViewerFn,
   rematchCandidateFn,
 } from "@/lib/functions";
+import { STAGE_LABELS, stageTone } from "@/lib/stages";
 
 export const Route = createFileRoute("/app/candidates/$id")({
   beforeLoad: async () => {
@@ -43,8 +45,11 @@ function CandidateDetailPage() {
   async function onRematch() {
     setRematching(true);
     try {
-      await rematchCandidateFn({ data: { id: c.id } });
+      const { count } = await rematchCandidateFn({ data: { id: c.id } });
+      toast.success(`Re-matched against ${count} open mandate${count === 1 ? "" : "s"}`);
       await router.invalidate();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Re-match failed");
     } finally {
       setRematching(false);
     }
@@ -89,6 +94,15 @@ function CandidateDetailPage() {
         lede={c.headline ?? undefined}
         actions={
           <>
+            {c.source_r2_key && (
+              <a
+                href={`/api/cv/${c.id}`}
+                download
+                className="text-[13px] px-[16px] py-2 border border-rule rounded-full hover:border-ink"
+              >
+                Download CV
+              </a>
+            )}
             <button
               onClick={onAnonymise}
               className="text-[13px] px-[16px] py-2 border border-rule rounded-full hover:border-ink"
@@ -334,8 +348,11 @@ function CandidateDetailPage() {
                       >
                         {m.job.title}
                       </Link>
-                      <div className="font-mono text-sm tabular-nums">
-                        {m.score}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {m.stage !== "matched" && (
+                          <Pill tone={stageTone(m.stage)}>{STAGE_LABELS[m.stage]}</Pill>
+                        )}
+                        <div className="font-mono text-sm tabular-nums">{m.score}</div>
                       </div>
                     </div>
                     <div className="text-xs text-ink-soft mb-1.5">

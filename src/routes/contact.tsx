@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { SiteLayout, Wrap } from "@/components/site/Layout";
 import { Reveal } from "@/components/site/Reveal";
+import { toast } from "sonner";
 import { submitEnquiryFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/contact")({
@@ -141,6 +142,7 @@ function ContactForm() {
         },
       });
       setSent(true);
+      toast.success("Enquiry sent — we'll reply within one working day");
     } catch {
       setError("We couldn't send your message just now. Please email us directly and we'll pick it up.");
     } finally {

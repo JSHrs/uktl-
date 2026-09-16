@@ -1,6 +1,6 @@
 import type { AppEnv } from "./env";
 import type { ParsedProfile, QualityAssessment } from "../schemas/profile";
-import { JobSchema, type Job, type Match } from "../schemas/job";
+import { JobSchema, type Job, type Match, type MatchScore, type MatchStage } from "../schemas/job";
 
 export type CandidateRow = {
   id: string;
@@ -347,7 +347,7 @@ function rowToJob(row: Record<string, unknown>): Job {
 export async function upsertMatches(
   env: AppEnv,
   candidateId: string,
-  matches: Array<Omit<Match, "candidate_id" | "computed_at">>,
+  matches: MatchScore[],
 ): Promise<void> {
   if (matches.length === 0) return;
   const now = Date.now();
@@ -384,6 +384,27 @@ export async function upsertMatches(
   await env.DB.batch(statements);
 }
 
+export async function setMatchStage(
+  env: AppEnv,
+  candidateId: string,
+  jobId: string,
+  stage: MatchStage,
+): Promise<boolean> {
+  const res = await env.DB.prepare(
+    `UPDATE matches SET stage=?, stage_updated_at=? WHERE candidate_id=? AND job_id=?`,
+  )
+    .bind(stage, Date.now(), candidateId, jobId)
+    .run();
+  return Number(res.meta?.changes ?? 0) > 0;
+}
+
+function rowStage(row: Record<string, unknown>): Pick<Match, "stage" | "stage_updated_at"> {
+  return {
+    stage: (row.stage as MatchStage | null) ?? "matched",
+    stage_updated_at: row.stage_updated_at != null ? Number(row.stage_updated_at) : null,
+  };
+}
+
 export async function getMatchesForCandidate(
   env: AppEnv,
   candidateId: string,
@@ -412,6 +433,7 @@ export async function getMatchesForCandidate(
     missing_skills: parseJsonArray<string>(row.missing_skills),
     reasoning: String(row.reasoning ?? ""),
     computed_at: Number(row.computed_at),
+    ...rowStage(row),
     job: JobSchema.parse({
       id: row.job_id,
       created_at: Number(row.j_created),
@@ -532,6 +554,7 @@ export async function getMatchesForJob(
     missing_skills: parseJsonArray<string>(row.missing_skills),
     reasoning: String(row.reasoning ?? ""),
     computed_at: Number(row.computed_at),
+    ...rowStage(row),
     candidate: {
       id: String(row.candidate_id),
       name: (row.c_name as string | null) ?? null,
@@ -709,6 +732,29 @@ export async function createEnquiry(env: AppEnv, id: string, input: EnquiryInput
     id, Date.now(), input.name, input.email,
     input.company ?? null, input.enquiry_type ?? null, input.message,
   ).run();
+}
+
+export type EnquiryRow = {
+  id: string;
+  created_at: number;
+  name: string;
+  email: string;
+  company: string | null;
+  enquiry_type: string | null;
+  message: string;
+  status: string;
+};
+
+export async function listEnquiries(env: AppEnv, limit = 200): Promise<EnquiryRow[]> {
+  const res = await env.DB.prepare(`SELECT * FROM enquiries ORDER BY created_at DESC LIMIT ?`)
+    .bind(limit)
+    .all<EnquiryRow>();
+  return res.results ?? [];
+}
+
+export async function setEnquiryStatus(env: AppEnv, id: string, status: string): Promise<boolean> {
+  const res = await env.DB.prepare(`UPDATE enquiries SET status=? WHERE id=?`).bind(status, id).run();
+  return Number(res.meta?.changes ?? 0) > 0;
 }
 
 // ── HR Queries ───────────────────────────────────────────────────────────────

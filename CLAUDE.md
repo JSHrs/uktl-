@@ -28,15 +28,18 @@ src/routes/            file-based routes (routeTree.gen.ts is GENERATED — rege
   app/                 Talent Compass (overview, upload, candidates, jobs, discover, hr, profile)
   auth/                candidate login / register / forgot / callback
   admin/               admin dashboard (guarded by beforeLoad in admin.tsx)
+  api/                 server routes (createFileRoute + server.handlers), e.g. api/cv/$id streams a CV from R2
 src/lib/functions.ts   ALL server functions (createServerFn). Deliberately NOT under server/ — see rule 1.
 src/lib/server/        server-only code: env (bindings), db (D1), auth (admin PBKDF2 + HMAC cookie),
+                       viewer (isAdminRequest / requireAdmin / getViewer / canAccessCandidate),
                        parse (Claude extraction + grading), match, skills, anonymize, docx
+src/lib/stages.ts      pipeline stage labels/tones (client-safe)
 src/lib/supabase.ts    candidate session cookies + Supabase clients (server-side only)
 src/lib/schemas/       zod schemas (profile, job)
 src/components/site/   Nav, Footer, Layout, Reveal (public site)
 src/components/app/    AppLayout primitives (app shell, stat cards, pills, empty states)
 src/styles.css         design tokens (OKLCH paper/ink/accent), fonts, animations
-migrations/            D1 migrations 0001–0007, applied in order by wrangler
+migrations/            D1 migrations 0001–0008, applied in order by wrangler
 supabase/migrations/   Postgres schema for profiles/bookings/hr_queries (RLS) — Supabase project only
 e2e/                   Playwright specs
 wrangler.toml          the ONLY Wrangler config (never add wrangler.json/jsonc — Wrangler prefers it silently);
@@ -48,7 +51,7 @@ wrangler.toml          the ONLY Wrangler config (never add wrangler.json/jsonc �
 
 1. **Server functions live in `src/lib/functions.ts`, never under `src/lib/server/`.** The Lovable wrapper enables TanStack import-protection with `client.files: ["**/server/**"]`; a route importing anything under `server/` fails the client build. Server-only modules stay under `server/` and are only imported from `functions.ts` (top-level imports are dead-code-eliminated from the client bundle).
 2. **Use `.inputValidator()`**, not `.validator()`. The old name is a runtime `TypeError` that breaks every page.
-3. **Every privileged handler authenticates itself.** Route guards only protect navigation. Admin handlers call `await requireAdmin()` first. Candidate-data handlers use `getViewer()` + `canAccessCandidate()`: admin sees everything, a signed-in candidate sees only rows whose `auth_user_id` is theirs, anonymous callers get `[]`/`null`. Keep it that way for anything new that reads or writes candidate data.
+3. **Every privileged handler authenticates itself.** Route guards only protect navigation. Admin handlers call `await requireAdmin()` first. Candidate-data handlers use `getViewer()` + `canAccessCandidate()` (both in `src/lib/server/viewer.ts`, usable from server functions and server routes alike): admin sees everything, a signed-in candidate sees only rows whose `auth_user_id` is theirs, anonymous callers get `[]`/`null`/404. Keep it that way for anything new that reads or writes candidate data.
 4. **`getEnv()` throws outside the Workers runtime.** Wrap it and return an honest empty state (`[]`, `null`, a thrown "not configured" error). Never return fabricated records — the old `mockData.ts` fallback was removed for that reason.
 5. **Migrations are append-only.** Add `migrations/000N_name.sql`; never edit an applied file. A migration must be correct against the schema the previous files actually produce (0005 once redefined a table 0003 had already created and aborted). Prove new migrations by replaying 0001→N on SQLite (`node:sqlite` works in Node 22).
 6. **`routeTree.gen.ts` is generated.** After adding or renaming a route, run dev or build and commit the regenerated file; a stale one silently drops routes from the type map.
@@ -65,7 +68,7 @@ wrangler.toml          the ONLY Wrangler config (never add wrangler.json/jsonc �
 
 ## Data model (D1)
 
-`candidates` (+ `candidate_skills`, `candidate_experience`, `candidate_education`, `candidate_swipes`) · `jobs` (with `source`/`source_id` for Reed dedup) · `matches` · `faq_topics` · `hr_queries` · `bookings` · `enquiries`.
+`candidates` (+ `candidate_skills`, `candidate_experience`, `candidate_education`, `candidate_swipes`) · `jobs` (with `source`/`source_id` for Reed dedup) · `matches` (score fields owned by the matcher; `stage` owned by consultants and never reset by re-scoring) · `faq_topics` · `hr_queries` · `bookings` · `enquiries`.
 `candidates.auth_user_id` is the authoritative link to a Supabase user; `profiles.d1_candidate_id` in Supabase is a best-effort mirror. CV bytes live in R2 at `cvs/<candidate_id>/<filename>`; the full Claude extraction is kept in `candidates.raw_profile` for re-matching.
 
 ## Verification checklist (before every push)

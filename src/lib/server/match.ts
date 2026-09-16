@@ -1,4 +1,4 @@
-import type { Job, Match } from "../schemas/job";
+import type { Job, Match, MatchScore } from "../schemas/job";
 import type { ParsedProfile, Seniority } from "../schemas/profile";
 import { normaliseSkill } from "./skills";
 
@@ -24,7 +24,7 @@ export function scoreMatch(
   candidate: ParsedProfile,
   candidateSkills: string[], // already normalised
   job: Job,
-): Omit<Match, "candidate_id" | "computed_at"> & {
+): MatchScore & {
   matched_skills: string[];
   missing_skills: string[];
 } {

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { candidateLoginFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/auth/login")({
@@ -18,7 +19,8 @@ function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      await candidateLoginFn({ data: { email, password } });
+      const { email: signedInAs } = await candidateLoginFn({ data: { email, password } });
+      toast.success(`Signed in as ${signedInAs ?? email}`);
       router.navigate({ to: "/app/profile" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed. Please try again.");
