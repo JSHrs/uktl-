@@ -187,10 +187,13 @@
 /* Hero gradient overlay */
 .hero-mesh {
   background:
-    radial-gradient(ellipse 55% 45% at 80% 15%, oklch(0.285 0.075 263 / 0.06), transparent 70%),
-    radial-gradient(ellipse 40% 35% at 20% 85%, oklch(0.285 0.075 263 / 0.04), transparent 70%);
-  animation: meshDrift 26s ease-in-out infinite alternate;
+    radial-gradient(ellipse 55% 45% at 78% 18%, oklch(0.285 0.075 263 / 0.055), transparent 70%),
+    radial-gradient(ellipse 40% 35% at 18% 82%, oklch(0.285 0.075 263 / 0.035), transparent 70%);
+  animation: meshDrift 28s ease-in-out infinite alternate;
 }
+
+/* Scrollbar hide utility */
+.scrollbar-none::-webkit-scrollbar { display: none; }
 
 /* Title line reveal */
 .title-line {
