@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { adminDeleteFaqFn, adminListFaqFn, adminUpdateFaqFn } from "@/lib/server/functions";
+import { adminDeleteFaqFn, adminListFaqFn, adminUpdateFaqFn } from "@/lib/functions";
 import type { FaqTopic } from "@/lib/server/db";
 import { AdminHeader, AdminTable, AdminTr, AdminTd, AdminBtn } from "../../admin";
 

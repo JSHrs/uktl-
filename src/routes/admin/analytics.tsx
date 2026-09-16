@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AdminHeader } from "@/routes/admin";
-import { adminGetAnalyticsFn } from "@/lib/server/functions";
+import { adminGetAnalyticsFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/admin/analytics")({
   loader: () => adminGetAnalyticsFn(),

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { SiteLayout, Wrap } from "@/components/site/Layout";
 import { Reveal } from "@/components/site/Reveal";
+import { submitEnquiryFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -121,11 +122,30 @@ function Detail({ label, value, href }: { label: string; value: string; href?: s
 function ContactForm() {
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const field = (key: string) => String(fd.get(key) ?? "").trim();
+    setError(null);
     setSending(true);
-    setTimeout(() => { setSent(true); setSending(false); }, 1200);
+    try {
+      await submitEnquiryFn({
+        data: {
+          name: field("name"),
+          email: field("email"),
+          company: field("company") || undefined,
+          enquiry_type: field("type") || undefined,
+          message: field("msg"),
+        },
+      });
+      setSent(true);
+    } catch {
+      setError("We couldn't send your message just now. Please email us directly and we'll pick it up.");
+    } finally {
+      setSending(false);
+    }
   }
 
   if (sent) {
@@ -178,6 +198,7 @@ function ContactForm() {
             </label>
             <input
               id={f.id}
+              name={f.id}
               type={f.type}
               required={f.required}
               className="w-full bg-transparent border-0 border-b border-paper/15 py-3 text-[15px] text-paper placeholder:text-paper/20 outline-none focus:border-paper/40 transition-colors"
@@ -191,6 +212,7 @@ function ContactForm() {
           </label>
           <select
             id="type"
+            name="type"
             className="w-full bg-transparent border-0 border-b border-paper/15 py-3 text-[15px] text-paper outline-none focus:border-paper/40 transition-colors appearance-none"
             style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.25)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 4px center" }}
           >
@@ -207,6 +229,7 @@ function ContactForm() {
           </label>
           <textarea
             id="msg"
+            name="msg"
             required
             rows={4}
             placeholder="Tell us about the role, the situation, or the problem you're trying to solve. A couple of sentences is enough to get started."
@@ -223,9 +246,18 @@ function ContactForm() {
         {sending ? "Sending…" : "Send enquiry"}
       </button>
 
-      <p className="text-paper/25 text-[12px] text-center mt-4 m-0">
-        We'll reply to your email within one working day.
-      </p>
+      {error ? (
+        <p role="alert" className="text-[13px] text-center mt-4 m-0 text-paper/70">
+          {error}{" "}
+          <a href="mailto:info@uktalentlink.co.uk" className="underline text-paper">
+            info@uktalentlink.co.uk
+          </a>
+        </p>
+      ) : (
+        <p className="text-paper/25 text-[12px] text-center mt-4 m-0">
+          We'll reply to your email within one working day.
+        </p>
+      )}
     </form>
   );
 }

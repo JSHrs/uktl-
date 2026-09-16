@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { adminDeleteJobFn, adminListJobsFn, syncReedJobsFn } from "@/lib/server/functions";
+import { adminDeleteJobFn, adminListJobsFn, syncReedJobsFn } from "@/lib/functions";
 import type { Job } from "@/lib/schemas/job";
 import { AdminHeader, AdminTable, AdminTr, AdminTd, AdminBtn } from "../../admin";
 

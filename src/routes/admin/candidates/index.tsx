@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { adminDeleteCandidateFn, listCandidatesFn } from "@/lib/server/functions";
+import { adminDeleteCandidateFn, listCandidatesFn } from "@/lib/functions";
 import type { CandidateRow } from "@/lib/server/db";
 import { AdminHeader, AdminTable, AdminTr, AdminTd, AdminBtn } from "../../admin";
 import { ScoreBar, StatusPill } from "@/components/app/AppLayout";

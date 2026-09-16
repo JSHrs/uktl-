@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, redirect, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   PageHeader,
@@ -10,10 +10,15 @@ import {
 import {
   getAnonymisedCandidateFn,
   getCandidateDetailFn,
+  getViewerFn,
   rematchCandidateFn,
-} from "@/lib/server/functions";
+} from "@/lib/functions";
 
 export const Route = createFileRoute("/app/candidates/$id")({
+  beforeLoad: async () => {
+    const viewer = await getViewerFn();
+    if (!viewer.isAdmin && !viewer.userId) throw redirect({ to: "/auth/login" });
+  },
   loader: async ({ params }) => {
     const detail = await getCandidateDetailFn({ data: { id: params.id } });
     if (!detail) throw notFound();

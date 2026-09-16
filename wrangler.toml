@@ -25,6 +25,7 @@ bucket_name = "talent-compass-cvs"
 SUPABASE_URL      = "https://REPLACE_WITH_SUPABASE_PROJECT_REF.supabase.co"
 SUPABASE_ANON_KEY = "REPLACE_WITH_SUPABASE_ANON_KEY"
 CALENDLY_URL      = ""   # Set to client's Calendly embed URL once provided
+SITE_URL          = "http://localhost:5173"   # Public origin; must also be in Supabase Auth > Redirect URLs
 
 # ── Secrets (set via `wrangler secret put`) ────────────────────────────────────
 # ANTHROPIC_API_KEY          — Claude API key for CV parsing and AI features
@@ -48,6 +49,13 @@ migrations_dir = "migrations"
 binding    = "CV_BUCKET"
 bucket_name = "talent-compass-cvs-staging"
 
+# `vars` are not inherited by named environments — redeclare per environment.
+[env.staging.vars]
+SUPABASE_URL      = "https://REPLACE_WITH_SUPABASE_PROJECT_REF.supabase.co"
+SUPABASE_ANON_KEY = "REPLACE_WITH_SUPABASE_ANON_KEY"
+CALENDLY_URL      = ""
+SITE_URL          = "https://talent-compass-staging.REPLACE_WITH_WORKERS_SUBDOMAIN.workers.dev"
+
 # ── Environment: production ───────────────────────────────────────────────────
 [env.production]
 name = "talent-compass-production"
@@ -62,3 +70,9 @@ migrations_dir = "migrations"
 [[env.production.r2_buckets]]
 binding    = "CV_BUCKET"
 bucket_name = "talent-compass-cvs"
+
+[env.production.vars]
+SUPABASE_URL      = "https://REPLACE_WITH_SUPABASE_PROJECT_REF.supabase.co"
+SUPABASE_ANON_KEY = "REPLACE_WITH_SUPABASE_ANON_KEY"
+CALENDLY_URL      = ""
+SITE_URL          = "https://talent-compass.cranbrooklegal.com"

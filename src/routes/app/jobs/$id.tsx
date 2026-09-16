@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { PageHeader, Pill, ScoreBar, Section } from "@/components/app/AppLayout";
-import { getJobDetailFn } from "@/lib/server/functions";
+import { getJobDetailFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/app/jobs/$id")({
   loader: async ({ params }) => {

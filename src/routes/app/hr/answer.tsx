@@ -5,7 +5,7 @@ import {
   escalateToAiFn,
   matchFaqTopicFn,
   recordFaqViewFn,
-} from "@/lib/server/functions";
+} from "@/lib/functions";
 import type { FaqTopic } from "@/lib/server/db";
 
 export const Route = createFileRoute("/app/hr/answer")({

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { createFileRoute, Link, Outlet, redirect, useRouter } from "@tanstack/react-router";
-import { adminLogoutFn, adminSessionFn } from "@/lib/server/functions";
+import { adminLogoutFn, adminSessionFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/admin")({
 });
 
 const NAV = [
-  { to: "/admin/", label: "Overview", exact: true },
+  { to: "/admin", label: "Overview", exact: true },
   { to: "/admin/faq", label: "FAQ Topics" },
   { to: "/admin/jobs", label: "Mandates" },
   { to: "/admin/candidates", label: "Candidates" },
