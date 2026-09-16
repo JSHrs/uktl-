@@ -1,4 +1,6 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 
@@ -60,5 +62,29 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
-  return <Outlet />;
+  // Marks the document once React has taken over; e2e tests wait for it before interacting.
+  useEffect(() => {
+    document.documentElement.dataset.hydrated = "true";
+  }, []);
+
+  return (
+    <>
+      <Outlet />
+      <Toaster
+        position="bottom-right"
+        offset={20}
+        toastOptions={{
+          style: {
+            background: "var(--paper)",
+            color: "var(--ink)",
+            border: "1px solid var(--rule)",
+            borderRadius: "8px",
+            fontFamily: "var(--font-body)",
+            fontSize: "13px",
+            boxShadow: "0 8px 24px oklch(0.095 0.003 60 / 0.08)",
+          },
+        }}
+      />
+    </>
+  );
 }

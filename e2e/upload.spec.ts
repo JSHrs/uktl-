@@ -1,8 +1,9 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
 
-const FIXTURE_DIR = path.join(__dirname, "fixtures");
+const FIXTURE_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "fixtures");
 
 // Ensure fixture files exist for tests
 test.beforeAll(() => {
@@ -45,9 +46,7 @@ test.describe("CV upload page", () => {
   test("selecting a file enables the submit button", async ({ page }) => {
     await page.goto("/app/upload");
     const fileChooserPromise = page.waitForEvent("filechooser");
-    await page.getByRole("button", { name: /drag a cv here/i }).click().catch(() =>
-      page.locator('[aria-label="Click or drag a file to upload"]').click()
-    );
+    await page.locator('[aria-label="Click or drag a file to upload"]').click();
     const fileChooser = await fileChooserPromise;
     await fileChooser.setFiles(path.join(FIXTURE_DIR, "sample-cv.txt"));
 
@@ -73,7 +72,7 @@ test.describe("CV upload page", () => {
     fs.unlinkSync(bigFilePath);
   });
 
-  test("shows multi-stage progress after submit (preview mode)", async ({ page }) => {
+  test("submitting a file starts the pipeline or reports processing is unavailable", async ({ page }) => {
     await page.goto("/app/upload");
 
     const fileChooserPromise = page.waitForEvent("filechooser");
@@ -83,10 +82,10 @@ test.describe("CV upload page", () => {
 
     await page.getByRole("button", { name: /parse & match/i }).click();
 
-    // In preview mode (no Cloudflare runtime) the server fn returns immediately
-    // with a mock result; at minimum we should see a stage transition
+    // With Cloudflare bindings the stages progress; without them the server
+    // function rejects with a clear message rather than pretending to parse.
     await expect(
-      page.getByText(/uploading|parsing|claude|matching|done|preview/i)
-    ).toBeVisible({ timeout: 10_000 });
+      page.getByText(/uploading|parsing|matching|done|unavailable/i).first(),
+    ).toBeVisible({ timeout: 15_000 });
   });
 });

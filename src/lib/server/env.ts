@@ -81,6 +81,9 @@ declare global {
     delete(key: string): Promise<void>;
   }
   interface R2ObjectBody {
+    body: ReadableStream;
+    size: number;
+    httpMetadata?: { contentType?: string };
     arrayBuffer(): Promise<ArrayBuffer>;
     text(): Promise<string>;
   }

@@ -35,7 +35,7 @@ wrangler d1 migrations apply talent-compass-staging-db --env staging
 wrangler d1 migrations apply talent-compass-db --env production
 ```
 
-Migrations live in `./migrations/`, numbered `0001_` → `0007_`, and are applied in order:
+Migrations live in `./migrations/`, numbered `0001_` → `0008_`, and are applied in order:
 
 | File | Adds |
 |---|---|
@@ -46,6 +46,7 @@ Migrations live in `./migrations/`, numbered `0001_` → `0007_`, and are applie
 | 0005_score_breakdown | score_breakdown / improvement_report / auth_user_id on candidates; bookings; rebuilds hr_queries |
 | 0006_jobs_source | source / source_id / source_url / posted_date / expiry_date on jobs (Reed dedup) |
 | 0007_enquiries | enquiries (contact form) |
+| 0008_match_stages | stage / stage_updated_at on matches (pipeline) |
 
 Never edit an applied migration; add a new numbered file.
 
@@ -116,9 +117,17 @@ npx tsc --noEmit     # must be 0
 npm run build
 ```
 
-`npm run build` uses `@lovable.dev/vite-tanstack-config`. Its Cloudflare output (Nitro `cloudflare-module` preset, emitted to `dist/`) is only produced **inside a Lovable sandbox** or when `nitro: true` is passed in `vite.config.ts` with the `nitro` package installed. Outside that, the build is a plain Node SSR bundle for verification only.
+`npm run build` always produces the Workers bundle: `vite.config.ts` enables Nitro's `cloudflare-module` preset (the `nitro` devDependency), emitting a prebuilt ES-module Worker in `dist/server/` and static assets in `dist/client/`. `wrangler.toml` points at both (`main = "dist/server/index.mjs"`, `no_bundle = true` with ES-module rules, `[assets] directory = "dist/client"`).
 
-**Open item:** `wrangler.toml` still declares `main = ".output/server/index.mjs"` from an earlier toolchain. Before the first Workers deploy, produce the Nitro build and point `main`/`[site] bucket` at its actual output (`dist/server`, `dist/client`), or let Nitro's `deployConfig` generate the Wrangler config.
+Nitro's own `deployConfig` generation is switched off on purpose: Wrangler refuses tool-generated configs that contain named environments, and staging/production live in `wrangler.toml`. Do not add a `wrangler.json`/`wrangler.jsonc` next to the toml — Wrangler would silently prefer it.
+
+Verify without deploying:
+
+```bash
+npx wrangler deploy --dry-run --outdir /tmp/wr --env production
+```
+
+The dry-run should list `env.DB (talent-compass-db)`, `env.CV_BUCKET`, `env.ASSETS` and the four vars.
 
 ### 3.2 Deploy
 

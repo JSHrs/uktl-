@@ -28,6 +28,7 @@ import { Route as AppUploadRouteImport } from './routes/app/upload'
 import { Route as AppProfileRouteImport } from './routes/app/profile'
 import { Route as AppDiscoverRouteImport } from './routes/app/discover'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminEnquiriesRouteImport } from './routes/admin/enquiries'
 import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
 import { Route as AppJobsIndexRouteImport } from './routes/app/jobs/index'
@@ -40,6 +41,7 @@ import { Route as AppJobsIdRouteImport } from './routes/app/jobs/$id'
 import { Route as AppHrLibraryRouteImport } from './routes/app/hr/library'
 import { Route as AppHrAnswerRouteImport } from './routes/app/hr/answer'
 import { Route as AppCandidatesIdRouteImport } from './routes/app/candidates/$id'
+import { Route as ApiCvIdRouteImport } from './routes/api/cv/$id'
 import { Route as AdminJobsNewRouteImport } from './routes/admin/jobs/new'
 import { Route as AdminJobsIdRouteImport } from './routes/admin/jobs/$id'
 import { Route as AdminFaqNewRouteImport } from './routes/admin/faq/new'
@@ -140,6 +142,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminEnquiriesRoute = AdminEnquiriesRouteImport.update({
+  id: '/enquiries',
+  path: '/enquiries',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBookingsRoute = AdminBookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
@@ -200,6 +207,11 @@ const AppCandidatesIdRoute = AppCandidatesIdRouteImport.update({
   path: '/candidates/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiCvIdRoute = ApiCvIdRouteImport.update({
+  id: '/api/cv/$id',
+  path: '/api/cv/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminJobsNewRoute = AdminJobsNewRouteImport.update({
   id: '/jobs/new',
   path: '/jobs/new',
@@ -233,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/services': typeof ServicesRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/login': typeof AdminLoginRoute
   '/app/discover': typeof AppDiscoverRoute
   '/app/profile': typeof AppProfileRoute
@@ -247,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/admin/faq/new': typeof AdminFaqNewRoute
   '/admin/jobs/$id': typeof AdminJobsIdRoute
   '/admin/jobs/new': typeof AdminJobsNewRoute
+  '/api/cv/$id': typeof ApiCvIdRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/hr/answer': typeof AppHrAnswerRoute
   '/app/hr/library': typeof AppHrLibraryRoute
@@ -268,6 +282,7 @@ export interface FileRoutesByTo {
   '/services': typeof ServicesRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/login': typeof AdminLoginRoute
   '/app/discover': typeof AppDiscoverRoute
   '/app/profile': typeof AppProfileRoute
@@ -282,6 +297,7 @@ export interface FileRoutesByTo {
   '/admin/faq/new': typeof AdminFaqNewRoute
   '/admin/jobs/$id': typeof AdminJobsIdRoute
   '/admin/jobs/new': typeof AdminJobsNewRoute
+  '/api/cv/$id': typeof ApiCvIdRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/hr/answer': typeof AppHrAnswerRoute
   '/app/hr/library': typeof AppHrLibraryRoute
@@ -306,6 +322,7 @@ export interface FileRoutesById {
   '/services': typeof ServicesRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/login': typeof AdminLoginRoute
   '/app/discover': typeof AppDiscoverRoute
   '/app/profile': typeof AppProfileRoute
@@ -320,6 +337,7 @@ export interface FileRoutesById {
   '/admin/faq/new': typeof AdminFaqNewRoute
   '/admin/jobs/$id': typeof AdminJobsIdRoute
   '/admin/jobs/new': typeof AdminJobsNewRoute
+  '/api/cv/$id': typeof ApiCvIdRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/hr/answer': typeof AppHrAnswerRoute
   '/app/hr/library': typeof AppHrLibraryRoute
@@ -345,6 +363,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/admin/analytics'
     | '/admin/bookings'
+    | '/admin/enquiries'
     | '/admin/login'
     | '/app/discover'
     | '/app/profile'
@@ -359,6 +378,7 @@ export interface FileRouteTypes {
     | '/admin/faq/new'
     | '/admin/jobs/$id'
     | '/admin/jobs/new'
+    | '/api/cv/$id'
     | '/app/candidates/$id'
     | '/app/hr/answer'
     | '/app/hr/library'
@@ -380,6 +400,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/admin/analytics'
     | '/admin/bookings'
+    | '/admin/enquiries'
     | '/admin/login'
     | '/app/discover'
     | '/app/profile'
@@ -394,6 +415,7 @@ export interface FileRouteTypes {
     | '/admin/faq/new'
     | '/admin/jobs/$id'
     | '/admin/jobs/new'
+    | '/api/cv/$id'
     | '/app/candidates/$id'
     | '/app/hr/answer'
     | '/app/hr/library'
@@ -417,6 +439,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/admin/analytics'
     | '/admin/bookings'
+    | '/admin/enquiries'
     | '/admin/login'
     | '/app/discover'
     | '/app/profile'
@@ -431,6 +454,7 @@ export interface FileRouteTypes {
     | '/admin/faq/new'
     | '/admin/jobs/$id'
     | '/admin/jobs/new'
+    | '/api/cv/$id'
     | '/app/candidates/$id'
     | '/app/hr/answer'
     | '/app/hr/library'
@@ -453,6 +477,7 @@ export interface RootRouteChildren {
   ReachRoute: typeof ReachRoute
   SectorsRoute: typeof SectorsRoute
   ServicesRoute: typeof ServicesRoute
+  ApiCvIdRoute: typeof ApiCvIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -590,6 +615,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/enquiries': {
+      id: '/admin/enquiries'
+      path: '/enquiries'
+      fullPath: '/admin/enquiries'
+      preLoaderRoute: typeof AdminEnquiriesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/bookings': {
       id: '/admin/bookings'
       path: '/bookings'
@@ -674,6 +706,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCandidatesIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/cv/$id': {
+      id: '/api/cv/$id'
+      path: '/api/cv/$id'
+      fullPath: '/api/cv/$id'
+      preLoaderRoute: typeof ApiCvIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/jobs/new': {
       id: '/admin/jobs/new'
       path: '/jobs/new'
@@ -708,6 +747,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminBookingsRoute: typeof AdminBookingsRoute
+  AdminEnquiriesRoute: typeof AdminEnquiriesRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminFaqIdRoute: typeof AdminFaqIdRoute
@@ -722,6 +762,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminBookingsRoute: AdminBookingsRoute,
+  AdminEnquiriesRoute: AdminEnquiriesRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminFaqIdRoute: AdminFaqIdRoute,
@@ -791,6 +832,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReachRoute: ReachRoute,
   SectorsRoute: SectorsRoute,
   ServicesRoute: ServicesRoute,
+  ApiCvIdRoute: ApiCvIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

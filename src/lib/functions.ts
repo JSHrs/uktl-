@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getCookie, setCookie, deleteCookie } from "@tanstack/start-server-core";
+import { setCookie, deleteCookie } from "@tanstack/start-server-core";
 import { z } from "zod";
 
 import { getEnv } from "./server/env";
@@ -26,11 +26,14 @@ import {
   listAllJobs,
   listBookings,
   listCandidates,
+  listEnquiries,
+  setEnquiryStatus,
   listFaqTopics,
   listJobs,
   markCandidateFailed,
   markCandidateParsing,
   recordSwipe,
+  setMatchStage,
   updateFaqTopic,
   updateJob,
   upsertMatches,
@@ -39,19 +42,21 @@ import {
   type FaqTopicInput,
   type JobInput,
 } from "./server/db";
+import { DEV_JWT_SECRET, SESSION_COOKIE, createSessionToken, verifyPassword } from "./server/auth";
 import {
-  DEV_JWT_SECRET,
-  SESSION_COOKIE,
-  createSessionToken,
-  verifyPassword,
-  verifySessionToken,
-} from "./server/auth";
+  canAccessCandidate,
+  getJwtSecret,
+  getViewer,
+  isAdminRequest,
+  requireAdmin,
+} from "./server/viewer";
 import { parseCv } from "./server/parse";
 import { scoreMatch } from "./server/match";
 import { normaliseSkillList } from "./server/skills";
 import { anonymiseProfile } from "./server/anonymize";
 import { extractDocxText } from "./server/docx";
 import { ParsedProfileSchema } from "./schemas/profile";
+import { MatchStageEnum } from "./schemas/job";
 
 const ID_PREFIX = "cand_";
 function newId(): string {
@@ -62,33 +67,6 @@ function newId(): string {
 }
 
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-
-// ── Request auth helpers ─────────────────────────────────────────────────────
-
-async function isAdminRequest(): Promise<boolean> {
-  const token = getCookie(SESSION_COOKIE);
-  if (!token) return false;
-  let secret = DEV_JWT_SECRET;
-  try { const env = await getEnv(); secret = getJwtSecret(env); } catch { /* preview */ }
-  return verifySessionToken(token, secret);
-}
-
-async function requireAdmin(): Promise<void> {
-  if (!(await isAdminRequest())) throw new Error("Unauthorized — admin session required");
-}
-
-type Viewer = { isAdmin: boolean; userId: string | null };
-
-async function getViewer(): Promise<Viewer> {
-  const { getCandidateSession } = await import("./supabase");
-  const [isAdmin, session] = await Promise.all([isAdminRequest(), getCandidateSession()]);
-  return { isAdmin, userId: session.userId };
-}
-
-function canAccessCandidate(viewer: Viewer, ownerId: string | null | undefined): boolean {
-  if (viewer.isAdmin) return true;
-  return !!viewer.userId && ownerId === viewer.userId;
-}
 
 function authCallbackUrl(env: { SITE_URL?: string }): string {
   if (!env.SITE_URL) throw new Error("SITE_URL not configured");
@@ -161,15 +139,29 @@ export const listJobsFn = createServerFn({ method: "GET" }).handler(async () => 
 export const getJobDetailFn = createServerFn({ method: "GET" })
   .inputValidator((raw: unknown) => z.object({ id: z.string() }).parse(raw))
   .handler(async ({ data }) => {
+    const viewer = await getViewer();
     try {
       const env = await getEnv();
       const job = await getJob(env, data.id);
       if (!job) return null;
-      const matches = await getMatchesForJob(env, data.id);
-      return { job, matches };
+      // Pipeline rows carry candidate names — consultants only.
+      const matches = viewer.isAdmin ? await getMatchesForJob(env, data.id) : [];
+      return { job, matches, canManage: viewer.isAdmin };
     } catch {
       return null;
     }
+  });
+
+export const setMatchStageFn = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) =>
+    z.object({ candidateId: z.string(), jobId: z.string(), stage: MatchStageEnum }).parse(raw),
+  )
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const env = await getEnv();
+    const changed = await setMatchStage(env, data.candidateId, data.jobId, data.stage);
+    if (!changed) throw new Error("Match not found");
+    return { ok: true as const };
   });
 
 // Core automation entry-point.
@@ -520,10 +512,6 @@ function sanitiseFilename(name: string): string {
 }
 
 // ── Admin auth ───────────────────────────────────────────────────────────────
-
-function getJwtSecret(env: { JWT_SECRET?: string }): string {
-  return env.JWT_SECRET ?? DEV_JWT_SECRET;
-}
 
 export const adminLoginFn = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => z.object({ password: z.string() }).parse(raw))
@@ -949,6 +937,27 @@ async function sendEnquiryNotification(
     }),
   });
 }
+
+export const adminListEnquiriesFn = createServerFn({ method: "GET" }).handler(async () => {
+  await requireAdmin();
+  try {
+    const env = await getEnv();
+    return await listEnquiries(env);
+  } catch {
+    return [];
+  }
+});
+
+export const adminSetEnquiryStatusFn = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) =>
+    z.object({ id: z.string(), status: z.enum(["new", "replied", "closed"]) }).parse(raw),
+  )
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const env = await getEnv();
+    if (!(await setEnquiryStatus(env, data.id, data.status))) throw new Error("Enquiry not found");
+    return { ok: true as const };
+  });
 
 export const adminListBookingsFn = createServerFn({ method: "GET" }).handler(async () => {
   await requireAdmin();

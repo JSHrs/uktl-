@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 test.describe("Admin authentication", () => {
   test("redirects unauthenticated requests to login", async ({ page }) => {
@@ -31,7 +31,7 @@ test.describe("Admin authentication", () => {
     await page.getByPlaceholder(/password/i).fill("admin123");
     await page.getByRole("button", { name: /sign in/i }).click();
     await expect(page).toHaveURL(/\/admin\/?$/);
-    await expect(page.getByText("Overview")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
   });
 
   test("sign out returns to login page", async ({ page }) => {

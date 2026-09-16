@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/app/AppLayout";
 import { uploadAndParseCvFn } from "@/lib/functions";
 
@@ -76,18 +77,23 @@ function UploadPage() {
       clearTimeout(matchTimer);
 
       if (result.status === "failed") {
-        setError(result.error ?? "CV parsing failed — check the file and try again.");
+        const message = result.error ?? "CV parsing failed — check the file and try again.";
+        setError(message);
         setStage("failed");
+        toast.error(message);
         return;
       }
 
       setStage("done");
+      toast.success(`CV parsed — quality ${result.quality.score}/100`);
       await navigate({ to: "/app/candidates/$id", params: { id: result.id } });
     } catch (err) {
       clearTimeout(parseTimer);
       clearTimeout(matchTimer);
-      setError(err instanceof Error ? err.message : String(err));
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message);
       setStage("failed");
+      toast.error(message);
     }
   }
 

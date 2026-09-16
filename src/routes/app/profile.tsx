@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { toast } from "sonner";
 import {
   candidateLogoutFn,
   getCandidateProfileFn,
@@ -77,6 +78,7 @@ function ProfilePage() {
         },
       });
       setEditing(false);
+      toast.success("Profile saved");
       router.invalidate();
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Save failed");
@@ -87,6 +89,7 @@ function ProfilePage() {
 
   async function handleLogout() {
     await candidateLogoutFn();
+    toast("Signed out");
     router.navigate({ to: "/" });
   }
 

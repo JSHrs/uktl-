@@ -1,6 +1,10 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { PageHeader, Pill, ScoreBar, Section } from "@/components/app/AppLayout";
-import { getJobDetailFn } from "@/lib/functions";
+import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
+import { useState } from "react";
+import { toast } from "sonner";
+import { EmptyState, PageHeader, Pill, ScoreBar, Section } from "@/components/app/AppLayout";
+import { getJobDetailFn, setMatchStageFn } from "@/lib/functions";
+import { MATCH_STAGES, type MatchStage } from "@/lib/schemas/job";
+import { STAGE_LABELS, stageTone } from "@/lib/stages";
 
 export const Route = createFileRoute("/app/jobs/$id")({
   loader: async ({ params }) => {
@@ -11,8 +15,37 @@ export const Route = createFileRoute("/app/jobs/$id")({
   component: JobDetailPage,
 });
 
+type Filter = MatchStage | "all";
+
 function JobDetailPage() {
-  const { job, matches } = Route.useLoaderData();
+  const { job, matches, canManage } = Route.useLoaderData();
+  const router = useRouter();
+  const [filter, setFilter] = useState<Filter>("all");
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const counts = Object.fromEntries(
+    MATCH_STAGES.map((s) => [s, matches.filter((m) => m.stage === s).length]),
+  ) as Record<MatchStage, number>;
+
+  const visible = (filter === "all" ? matches : matches.filter((m) => m.stage === filter))
+    .slice()
+    .sort(
+      (a, b) =>
+        MATCH_STAGES.indexOf(a.stage) - MATCH_STAGES.indexOf(b.stage) || b.score - a.score,
+    );
+
+  async function move(candidateId: string, name: string | null, stage: MatchStage) {
+    setBusy(candidateId);
+    try {
+      await setMatchStageFn({ data: { candidateId, jobId: job.id, stage } });
+      toast.success(`${name ?? "Candidate"} moved to ${STAGE_LABELS[stage]}`);
+      await router.invalidate();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not update the stage");
+    } finally {
+      setBusy(null);
+    }
+  }
 
   return (
     <>
@@ -63,59 +96,109 @@ function JobDetailPage() {
             </Section>
           )}
 
-          <Section title={`Shortlist (${matches.length})`}>
-            {matches.length === 0 ? (
-              <div className="border border-rule border-dashed rounded-md p-10 text-center text-ink-soft">
-                No scored candidates yet. Upload a CV and this mandate will be
-                ranked automatically.
-              </div>
-            ) : (
-              <div className="border border-rule rounded-md overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-paper-deep text-ink-mute">
-                      <Th>Candidate</Th>
-                      <Th className="w-48">Score</Th>
-                      <Th>Matched</Th>
-                      <Th>Gaps</Th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {matches.map((m) => (
-                      <tr
-                        key={m.candidate_id}
-                        className="border-t border-rule hover:bg-paper-deep/40"
-                      >
-                        <Td>
-                          <Link
-                            to="/app/candidates/$id"
-                            params={{ id: m.candidate_id }}
-                            className="text-ink hover:underline font-medium"
-                          >
-                            {m.candidate.name ?? "(unnamed)"}
-                          </Link>
-                          {m.candidate.headline && (
-                            <div className="text-xs text-ink-mute mt-0.5">
-                              {m.candidate.headline}
-                            </div>
-                          )}
-                        </Td>
-                        <Td>
-                          <ScoreBar value={m.score} />
-                        </Td>
-                        <Td className="text-xs text-ink-soft">
-                          {m.matched_skills.slice(0, 4).join(", ") || "—"}
-                        </Td>
-                        <Td className="text-xs text-ink-mute">
-                          {m.missing_skills.slice(0, 3).join(", ") || "—"}
-                        </Td>
-                      </tr>
+          {canManage && (
+            <Section title={`Pipeline (${matches.length})`}>
+              {matches.length === 0 ? (
+                <EmptyState
+                  title="No scored candidates yet"
+                  body="Upload a CV and this mandate will be ranked automatically."
+                />
+              ) : (
+                <>
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    <StageChip
+                      active={filter === "all"}
+                      onClick={() => setFilter("all")}
+                      label="All"
+                      count={matches.length}
+                    />
+                    {MATCH_STAGES.map((s) => (
+                      <StageChip
+                        key={s}
+                        active={filter === s}
+                        onClick={() => setFilter(s)}
+                        label={STAGE_LABELS[s]}
+                        count={counts[s]}
+                      />
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </Section>
+                  </div>
+
+                  <div className="border border-rule rounded-md overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-paper-deep text-ink-mute">
+                          <Th>Candidate</Th>
+                          <Th className="w-44">Stage</Th>
+                          <Th className="w-40">Score</Th>
+                          <Th>Matched</Th>
+                          <Th>Gaps</Th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {visible.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="px-4 py-8 text-center text-ink-mute text-[13px]">
+                              Nobody at this stage.
+                            </td>
+                          </tr>
+                        ) : (
+                          visible.map((m) => (
+                            <tr
+                              key={m.candidate_id}
+                              className={`border-t border-rule hover:bg-paper-deep/40 transition-opacity ${
+                                m.stage === "rejected" ? "opacity-55" : ""
+                              }`}
+                            >
+                              <Td>
+                                <Link
+                                  to="/app/candidates/$id"
+                                  params={{ id: m.candidate_id }}
+                                  className="text-ink hover:underline font-medium"
+                                >
+                                  {m.candidate.name ?? "(unnamed)"}
+                                </Link>
+                                {m.candidate.headline && (
+                                  <div className="text-xs text-ink-mute mt-0.5">
+                                    {m.candidate.headline}
+                                  </div>
+                                )}
+                              </Td>
+                              <Td>
+                                <select
+                                  aria-label={`Stage for ${m.candidate.name ?? "candidate"}`}
+                                  value={m.stage}
+                                  disabled={busy === m.candidate_id}
+                                  onChange={(e) =>
+                                    move(m.candidate_id, m.candidate.name, e.target.value as MatchStage)
+                                  }
+                                  className="w-full border border-rule rounded-md px-2 py-1.5 text-[12px] bg-paper text-ink focus:outline-none focus:border-ink disabled:opacity-50 transition-colors"
+                                >
+                                  {MATCH_STAGES.map((s) => (
+                                    <option key={s} value={s}>
+                                      {STAGE_LABELS[s]}
+                                    </option>
+                                  ))}
+                                </select>
+                              </Td>
+                              <Td>
+                                <ScoreBar value={m.score} />
+                              </Td>
+                              <Td className="text-xs text-ink-soft">
+                                {m.matched_skills.slice(0, 4).join(", ") || "—"}
+                              </Td>
+                              <Td className="text-xs text-ink-mute">
+                                {m.missing_skills.slice(0, 3).join(", ") || "—"}
+                              </Td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </Section>
+          )}
         </div>
 
         <aside className="space-y-6">
@@ -133,9 +216,69 @@ function JobDetailPage() {
             <Detail label="Sector" value={job.sector} />
             <Detail label="Status" value={<Pill tone="good">{job.status}</Pill>} />
           </div>
+
+          {canManage && matches.length > 0 && (
+            <div className="border border-rule rounded-md p-6 bg-paper">
+              <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute mb-4">
+                Funnel
+              </div>
+              <ul className="space-y-2">
+                {MATCH_STAGES.filter((s) => s !== "rejected").map((s) => (
+                  <li key={s} className="flex items-center justify-between gap-3 text-[13px]">
+                    <span className="text-ink-soft">{STAGE_LABELS[s]}</span>
+                    <span className="flex items-center gap-2">
+                      <span className="w-24 h-1 rounded-full bg-paper-deep overflow-hidden">
+                        <span
+                          className="block h-full bg-accent rounded-full"
+                          style={{ width: `${(counts[s] / matches.length) * 100}%` }}
+                        />
+                      </span>
+                      <span className="font-mono text-[11px] tabular-nums text-ink-mute w-5 text-right">
+                        {counts[s]}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {counts.rejected > 0 && (
+                <div className="mt-3 pt-3 border-t border-rule text-[12px] text-ink-mute">
+                  {counts.rejected} rejected
+                </div>
+              )}
+            </div>
+          )}
         </aside>
       </div>
     </>
+  );
+}
+
+function StageChip({
+  active,
+  onClick,
+  label,
+  count,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  count: number;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-1.5 text-[12px] px-3 py-1 rounded-full border transition-colors ${
+        active
+          ? "bg-ink text-paper border-ink"
+          : "border-rule text-ink-soft hover:border-ink hover:text-ink"
+      }`}
+    >
+      {label}
+      <span className={`font-mono text-[10px] tabular-nums ${active ? "text-paper/60" : "text-ink-mute"}`}>
+        {count}
+      </span>
+    </button>
   );
 }
 
