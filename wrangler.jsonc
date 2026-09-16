@@ -1,25 +1,37 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "uk-talent-link",
+  "name": "tanstack-start-app",
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
 
-  // D1: leads, candidates, content, analytics, sessions
+  // D1: structured candidate & job data
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "uk-talent-link",
+      "database_name": "talent-compass",
       "database_id": "REPLACE_WITH_D1_DATABASE_ID",
       "migrations_dir": "migrations"
     }
   ],
 
-  // Non-secret runtime variables. Secrets set via `wrangler secret put`:
-  //   ANTHROPIC_API_KEY, RESEND_API_KEY, JWT_SECRET, ADMIN_PASSWORD_HASH
+  // R2: raw CV file storage
+  "r2_buckets": [
+    {
+      "binding": "CV_BUCKET",
+      "bucket_name": "talent-compass-cvs"
+    }
+  ],
+
+  // Workers AI: fallback embedding / extraction if Anthropic key absent
+  "ai": {
+    "binding": "AI"
+  },
+
+  // Runtime variables (non-secret). ANTHROPIC_API_KEY must be set as a
+  // secret via `wrangler secret put ANTHROPIC_API_KEY`.
   "vars": {
-    "ADMIN_EMAIL": "info@uktalentlink.co.uk",
-    "FROM_EMAIL": "leads@uktalentlink.co.uk",
-    "CLAUDE_MODEL": "claude-sonnet-4-5"
+    "PARSE_PROVIDER": "anthropic",
+    "PARSE_MODEL": "claude-sonnet-4-6"
   }
 }

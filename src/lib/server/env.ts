@@ -1,47 +1,56 @@
-// Runtime bindings accessor. In the hosted preview there are no production
-// bindings, so we return a local in-memory mock instead of letting server
-// functions crash.
+// Access Cloudflare bindings at runtime.
+// `cloudflare:workers` is only resolvable inside the Workers runtime, so we
+// dynamic-import it. Non-Workers environments will throw a clear error.
 
 export type AppEnv = {
   DB: D1Database;
-  CV_BUCKET?: R2Bucket;
-  R2?: R2Bucket;
+  CV_BUCKET: R2Bucket;
+  AI: Ai;
+  PARSE_PROVIDER?: string;
+  PARSE_MODEL?: string;
   ANTHROPIC_API_KEY?: string;
-  RESEND_API_KEY?: string;
-  JWT_SECRET?: string;
+  // Admin auth — set via: wrangler secret put ADMIN_PASSWORD_HASH / JWT_SECRET
   ADMIN_PASSWORD_HASH?: string;
-  ADMIN_EMAIL?: string;
-  FROM_EMAIL?: string;
-  CLAUDE_MODEL?: string;
+  JWT_SECRET?: string;
+  // Supabase — set SUPABASE_URL + SUPABASE_ANON_KEY as wrangler vars,
+  //            SUPABASE_SERVICE_ROLE_KEY as wrangler secret
+  SUPABASE_URL?: string;
+  SUPABASE_ANON_KEY?: string;
+  SUPABASE_SERVICE_ROLE_KEY?: string;
+  // Reed.co.uk job board API key
+  REED_API_KEY?: string;
+  // Resend API key for transactional email
+  RESEND_API_KEY?: string;
+  // Calendly embed URL (set by client)
+  CALENDLY_URL?: string;
 };
 
-let cached: AppEnv | undefined;
+let cached: AppEnv | null = null;
 
-export async function tryGetEnv(): Promise<AppEnv> {
-  if (cached !== undefined) return cached;
+export async function getEnv(): Promise<AppEnv> {
+  if (cached) return cached;
   try {
-    const specifier = "cloudflare:workers";
-    const mod = (await import(/* @vite-ignore */ specifier)) as unknown as {
+    const mod = (await import("cloudflare:workers")) as unknown as {
       env: AppEnv;
     };
-    if (!mod.env?.DB) throw new Error("Runtime bindings unavailable");
     cached = mod.env;
     return cached;
-  } catch {
-    const { getMockEnv } = await import("./mockEnv");
-    cached = getMockEnv();
-    return cached;
+  } catch (err) {
+    throw new Error(
+      "Cloudflare bindings unavailable — run under wrangler/vite-cloudflare. " +
+        String(err),
+    );
   }
 }
 
-export async function requireEnv(): Promise<AppEnv> {
-  return tryGetEnv();
-}
-
+// D1 types shim — avoids needing @cloudflare/workers-types as a dep for
+// consumers that only build the worker via wrangler.
 declare global {
   interface D1Database {
     prepare(query: string): D1PreparedStatement;
-    batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>;
+    batch<T = unknown>(
+      statements: D1PreparedStatement[],
+    ): Promise<D1Result<T>[]>;
     exec<T = unknown>(query: string): Promise<D1ExecResult>;
   }
   interface D1PreparedStatement {
@@ -60,40 +69,20 @@ declare global {
     count: number;
     duration: number;
   }
-
   interface R2Bucket {
     put(
       key: string,
-      value: ArrayBuffer | ArrayBufferView | string | Blob | ReadableStream | null,
-      options?: Record<string, unknown>,
-    ): Promise<R2Object>;
+      value: ArrayBuffer | ReadableStream | string,
+      options?: { httpMetadata?: { contentType?: string } },
+    ): Promise<unknown>;
     get(key: string): Promise<R2ObjectBody | null>;
-    head(key: string): Promise<R2Object | null>;
-    delete(keys: string | string[]): Promise<void>;
-    list(options?: {
-      prefix?: string;
-      limit?: number;
-      cursor?: string;
-    }): Promise<R2Objects>;
+    delete(key: string): Promise<void>;
   }
-  interface R2Object {
-    key: string;
-    size: number;
-    etag: string;
-    uploaded: Date;
-    httpMetadata?: Record<string, unknown>;
-    customMetadata?: Record<string, string>;
-  }
-  interface R2ObjectBody extends R2Object {
-    body: ReadableStream | null;
+  interface R2ObjectBody {
     arrayBuffer(): Promise<ArrayBuffer>;
     text(): Promise<string>;
-    json<T = unknown>(): Promise<T>;
-    blob(): Promise<Blob>;
   }
-  interface R2Objects {
-    objects: R2Object[];
-    truncated: boolean;
-    cursor?: string;
+  interface Ai {
+    run(model: string, input: unknown): Promise<unknown>;
   }
 }

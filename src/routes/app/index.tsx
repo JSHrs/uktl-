@@ -1,578 +1,250 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Sparkles, ArrowUpRight, X } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  listLeadsFn,
-  updateLeadFn,
-  draftLeadReplyFn,
-} from "@/lib/functions";
-import {
-  Badge,
-  Spinner,
+  EmptyState,
+  PageHeader,
+  Pill,
+  ScoreBar,
+  Section,
   StatCard,
-  PreviewBanner,
-} from "@/components/dashboard/primitives";
-import {
-  STATUS_OPTIONS,
-  type Lead,
-  type LeadStatus,
-} from "@/lib/schemas";
+  StatusPill,
+} from "@/components/app/AppLayout";
+import { listCandidatesFn, listJobsFn } from "@/lib/server/functions";
 
 export const Route = createFileRoute("/app/")({
   loader: async () => {
-    const leads = await listLeadsFn();
-    return { leads };
+    const [candidates, jobs] = await Promise.all([
+      listCandidatesFn(),
+      listJobsFn(),
+    ]);
+    return { candidates, jobs };
   },
-  component: LeadsPage,
+  component: OverviewPage,
 });
 
-function LeadsPage() {
-  const { leads: initial } = Route.useLoaderData();
-  const [leads, setLeads] = useState<Lead[]>(initial);
-  const [selected, setSelected] = useState<Lead | null>(null);
-  const [filter, setFilter] = useState<string>("All");
-  const [drafting, setDrafting] = useState(false);
+function OverviewPage() {
+  const { candidates, jobs } = Route.useLoaderData();
 
-  const previewMode =
-    leads.length > 0 && leads[0]?.id?.startsWith("lead_seed_") === true;
-
-  const filtered =
-    filter === "All"
-      ? leads
-      : leads.filter((l) => l.priority === filter || l.status === filter);
-
-  const statusUpdate = async (id: string, status: LeadStatus) => {
-    setLeads((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, status } : l)),
-    );
-    if (selected?.id === id) setSelected({ ...selected, status });
-    try {
-      await updateLeadFn({ data: { id, status } });
-    } catch {
-      // optimistic — leave UI as-is even on error in preview mode
-    }
-  };
-
-  const generateDraft = async () => {
-    if (!selected) return;
-    setDrafting(true);
-    try {
-      const result = await draftLeadReplyFn({ data: { id: selected.id } });
-      const updated = { ...selected, ai_draft: result.draft };
-      setSelected(updated);
-      setLeads((prev) =>
-        prev.map((l) => (l.id === selected.id ? updated : l)),
-      );
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Draft failed";
-      setSelected({ ...selected, ai_draft: `Error generating draft:\n\n${msg}` });
-    } finally {
-      setDrafting(false);
-    }
-  };
-
-  const scoreColor = (s: number) =>
-    s >= 80 ? "var(--green)" : s >= 50 ? "var(--amber)" : "var(--red)";
-
-  const totalLeads = leads.length;
-  const newLeads = leads.filter((l) => l.status === "New").length;
-  const highPriority = leads.filter((l) => l.priority === "High").length;
-  const avgScore =
-    leads.length === 0
-      ? 0
-      : Math.round(leads.reduce((a, l) => a + l.score, 0) / leads.length);
+  const parsed = candidates.filter((c) => c.status === "parsed");
+  const pending = candidates.filter(
+    (c) => c.status === "uploaded" || c.status === "parsing" || c.status === "uploading",
+  );
+  const failed = candidates.filter((c) => c.status === "failed");
+  const openJobs = jobs.filter((j) => j.status === "open");
+  const avgQuality =
+    parsed.length === 0
+      ? null
+      : Math.round(parsed.reduce((acc, c) => acc + (c.quality_score ?? 0), 0) / parsed.length);
+  const recent = [...candidates].sort((a, b) => b.created_at - a.created_at).slice(0, 6);
 
   return (
-    <div>
-      <PreviewBanner when={previewMode} />
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: selected ? "1fr 420px" : "1fr",
-          gap: 24,
-        }}
-      >
-        <div>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: 16,
-              marginBottom: 24,
-            }}
+    <>
+      <PageHeader
+        eyebrow="Overview"
+        title={
+          <>
+            Today's{" "}
+            <em className="not-italic italic font-normal text-ink-soft">pipeline</em>
+          </>
+        }
+        lede="Every uploaded CV is parsed, graded, and ranked against open mandates automatically."
+        actions={
+          <Link
+            to="/app/upload"
+            className="text-[13px] px-4 py-2 border border-ink bg-ink text-paper rounded-full hover:opacity-90 transition-opacity"
           >
-            <StatCard label="Total Leads" value={totalLeads} />
-            <StatCard label="New" value={newLeads} color="#1d4ed8" />
-            <StatCard
-              label="High Priority"
-              value={highPriority}
-              color="var(--red)"
-            />
-            <StatCard
-              label="Avg Score"
-              value={avgScore}
-              color="var(--green)"
-            />
-          </div>
+            Upload CV
+          </Link>
+        }
+      />
 
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              marginBottom: 16,
-              flexWrap: "wrap",
-            }}
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard
+          label="Total candidates"
+          value={candidates.length}
+          sub={parsed.length ? `${parsed.length} parsed` : "none parsed yet"}
+        />
+        <StatCard
+          label="Open mandates"
+          value={openJobs.length}
+          sub={`${jobs.length} total`}
+        />
+        <StatCard
+          label="Processing"
+          value={pending.length}
+          sub={failed.length ? `${failed.length} failed` : "queue clear"}
+          accent={pending.length > 0}
+        />
+        <StatCard
+          label="Avg. CV quality"
+          value={avgQuality == null ? "—" : avgQuality}
+          sub={parsed.length ? `over ${parsed.length} CVs` : "no data yet"}
+        />
+      </div>
+
+      {/* Quick actions */}
+      <div className="mt-6 flex flex-wrap gap-2">
+        {[
+          { label: "Upload a CV", to: "/app/upload" },
+          { label: "Browse candidates", to: "/app/candidates" },
+          { label: "Discover mandates", to: "/app/discover" },
+          { label: "HR & Law", to: "/app/hr" },
+        ].map((a) => (
+          <Link
+            key={a.to}
+            to={a.to}
+            className="text-[12px] px-3.5 py-1.5 border border-rule text-ink-soft rounded-full hover:border-ink hover:text-ink transition-colors"
           >
-            {[
-              "All",
-              "High",
-              "Medium",
-              "Low",
-              "New",
-              "Contacted",
-              "Qualified",
-            ].map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                style={{
-                  padding: "6px 14px",
-                  borderRadius: 20,
-                  fontSize: 12,
-                  background: filter === f ? "var(--navy)" : "white",
-                  color: filter === f ? "white" : "var(--slate)",
-                  border: "1px solid rgba(0,0,0,0.08)",
-                  cursor: "pointer",
-                  fontWeight: filter === f ? 500 : 400,
-                  fontFamily: "inherit",
-                }}
+            {a.label} →
+          </Link>
+        ))}
+      </div>
+
+      {/* Recent uploads */}
+      <Section title="Recent uploads">
+        {recent.length === 0 ? (
+          <EmptyState
+            title="No CVs uploaded yet"
+            body="Upload a CV to see the pipeline in action — parsing, scoring, and matching happen automatically."
+            action={
+              <Link
+                to="/app/upload"
+                className="text-[13px] px-4 py-2 border border-ink bg-ink text-paper rounded-full hover:opacity-90 transition-opacity"
               >
-                {f}
-              </button>
-            ))}
-          </div>
-
-          <div
-            style={{
-              background: "white",
-              border: "1px solid rgba(0,0,0,0.08)",
-              borderRadius: 4,
-              overflow: "hidden",
-            }}
-          >
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                Upload first CV
+              </Link>
+            }
+          />
+        ) : (
+          <div className="border border-rule rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
               <thead>
-                <tr style={{ background: "#f9f8f6" }}>
-                  {[
-                    "Name & Company",
-                    "Service",
-                    "Score",
-                    "Priority",
-                    "Status",
-                    "Date",
-                  ].map((h) => (
-                    <th key={h} style={th}>
-                      {h}
-                    </th>
-                  ))}
+                <tr className="bg-paper-deep border-b border-rule">
+                  <Th>Candidate</Th>
+                  <Th>Headline</Th>
+                  <Th>Status</Th>
+                  <Th>Quality</Th>
+                  <Th>Uploaded</Th>
                 </tr>
               </thead>
-              <tbody>
-                {filtered.map((l) => (
-                  <tr
-                    key={l.id}
-                    onClick={() => setSelected(l)}
-                    style={{
-                      borderBottom: "1px solid rgba(0,0,0,0.06)",
-                      cursor: "pointer",
-                      background: selected?.id === l.id ? "#fdf8f0" : "white",
-                      transition: "background 0.15s",
-                    }}
-                  >
-                    <td style={td}>
-                      <div
-                        style={{
-                          fontWeight: 500,
-                          fontSize: 14,
-                          color: "var(--ink)",
-                        }}
+              <tbody className="divide-y divide-rule">
+                {recent.map((c) => (
+                  <tr key={c.id} className="hover:bg-paper-deep/40 transition-colors">
+                    <Td>
+                      <Link
+                        to="/app/candidates/$id"
+                        params={{ id: c.id }}
+                        className="font-medium text-ink hover:underline"
                       >
-                        {l.name}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 12,
-                          color: "var(--muted-c)",
-                          marginTop: 2,
-                        }}
-                      >
-                        {l.company ?? "—"}
-                      </div>
-                    </td>
-                    <td
-                      style={{
-                        ...td,
-                        fontSize: 13,
-                        color: "var(--slate)",
-                      }}
-                    >
-                      {l.service}
-                    </td>
-                    <td style={td}>
-                      <span
-                        className="font-serif"
-                        style={{
-                          fontWeight: 600,
-                          color: scoreColor(l.score),
-                          fontSize: 15,
-                        }}
-                      >
-                        {l.score}
-                      </span>
-                      <span
-                        style={{ color: "var(--muted-c)", fontSize: 11 }}
-                      >
-                        /100
-                      </span>
-                    </td>
-                    <td style={td}>
-                      <Badge text={l.priority} />
-                    </td>
-                    <td style={td}>
-                      <Badge text={l.status} />
-                    </td>
-                    <td
-                      style={{
-                        ...td,
-                        fontSize: 12,
-                        color: "var(--muted-c)",
-                      }}
-                    >
-                      {fmtDate(l.created_at)}
-                    </td>
+                        {c.name ?? c.source_filename ?? "—"}
+                      </Link>
+                    </Td>
+                    <Td className="text-ink-soft max-w-[28ch] truncate">{c.headline ?? "—"}</Td>
+                    <Td>
+                      <StatusPill status={c.status} />
+                    </Td>
+                    <Td>
+                      {c.quality_score != null ? (
+                        <div className="w-28">
+                          <ScoreBar value={c.quality_score} />
+                        </div>
+                      ) : (
+                        <span className="text-ink-mute">—</span>
+                      )}
+                    </Td>
+                    <Td className="text-ink-mute tabular-nums text-[12px]">
+                      {formatRelative(c.created_at)}
+                    </Td>
                   </tr>
                 ))}
-                {filtered.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      style={{
-                        textAlign: "center",
-                        padding: 40,
-                        color: "var(--muted-c)",
-                        fontSize: 13,
-                      }}
-                    >
-                      No leads matching this filter.
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
-          </div>
-        </div>
-
-        {selected && (
-          <div
-            className="anim-fadein"
-            style={{
-              background: "white",
-              border: "1px solid rgba(0,0,0,0.08)",
-              borderRadius: 4,
-              overflow: "auto",
-            }}
-          >
-            <div
-              style={{
-                padding: "20px 24px",
-                borderBottom: "1px solid rgba(0,0,0,0.08)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-              }}
-            >
-              <div>
-                <h3
-                  style={{
-                    fontSize: 16,
-                    fontWeight: 500,
-                    color: "var(--ink)",
-                  }}
+            {candidates.length > 6 && (
+              <div className="px-4 py-3 border-t border-rule bg-paper-deep">
+                <Link
+                  to="/app/candidates"
+                  className="text-[12px] text-ink-mute hover:text-ink transition-colors"
                 >
-                  {selected.name}
-                </h3>
-                <p
-                  style={{
-                    fontSize: 13,
-                    color: "var(--muted-c)",
-                    marginTop: 2,
-                  }}
-                >
-                  {selected.company ?? "Independent"}
-                </p>
+                  View all {candidates.length} candidates →
+                </Link>
               </div>
-              <button
-                onClick={() => setSelected(null)}
-                style={{
-                  background: "none",
-                  color: "var(--muted-c)",
-                  fontSize: 18,
-                  padding: "0 4px",
-                  cursor: "pointer",
-                  border: "none",
-                }}
-              >
-                <X size={16} strokeWidth={1.5} />
-              </button>
-            </div>
-
-            <div style={{ padding: "20px 24px" }}>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 12,
-                  marginBottom: 20,
-                }}
-              >
-                {[
-                  ["Email", selected.email],
-                  ["Phone", selected.phone ?? "—"],
-                  ["Service", selected.service],
-                  ["Score", `${selected.score}/100`],
-                ].map(([k, v]) => (
-                  <div
-                    key={k as string}
-                    style={{
-                      background: "#f9f8f6",
-                      padding: "12px 14px",
-                      borderRadius: 3,
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: 10,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.1em",
-                        color: "var(--muted-c)",
-                        marginBottom: 4,
-                      }}
-                    >
-                      {k}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 13,
-                        color: "var(--ink)",
-                        fontWeight: 400,
-                        wordBreak: "break-word",
-                      }}
-                    >
-                      {v as string}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ marginBottom: 20 }}>
-                <label
-                  style={{
-                    fontSize: 11,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                    color: "var(--muted-c)",
-                    display: "block",
-                    marginBottom: 8,
-                  }}
-                >
-                  Update Status
-                </label>
-                <select
-                  value={selected.status}
-                  onChange={(e) =>
-                    statusUpdate(selected.id, e.target.value as LeadStatus)
-                  }
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px",
-                    border: "1px solid rgba(0,0,0,0.08)",
-                    borderRadius: 3,
-                    fontSize: 13,
-                    background: "white",
-                    color: "var(--ink)",
-                    fontFamily: "inherit",
-                  }}
-                >
-                  {STATUS_OPTIONS.map((o) => (
-                    <option key={o}>{o}</option>
-                  ))}
-                </select>
-              </div>
-
-              {selected.message && (
-                <div
-                  style={{
-                    background: "#f9f8f6",
-                    padding: 14,
-                    borderRadius: 3,
-                    marginBottom: 20,
-                  }}
-                >
-                  <p
-                    style={{
-                      fontSize: 11,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.1em",
-                      color: "var(--muted-c)",
-                      marginBottom: 8,
-                    }}
-                  >
-                    Their Message
-                  </p>
-                  <p
-                    style={{
-                      fontSize: 13,
-                      color: "var(--slate)",
-                      lineHeight: 1.7,
-                    }}
-                  >
-                    {selected.message}
-                  </p>
-                </div>
-              )}
-
-              <div
-                style={{
-                  borderTop: "1px solid rgba(0,0,0,0.08)",
-                  paddingTop: 20,
-                }}
-              >
-                <p
-                  style={{
-                    fontSize: 12,
-                    letterSpacing: "0.08em",
-                    color: "var(--slate)",
-                    textTransform: "uppercase",
-                    marginBottom: 12,
-                    fontWeight: 500,
-                  }}
-                >
-                  AI Draft Reply
-                </p>
-
-                {selected.ai_draft ? (
-                  <div>
-                    <textarea
-                      defaultValue={selected.ai_draft}
-                      rows={10}
-                      style={{
-                        width: "100%",
-                        padding: 14,
-                        border: "1px solid rgba(0,0,0,0.08)",
-                        borderRadius: 3,
-                        fontSize: 13,
-                        lineHeight: 1.75,
-                        resize: "vertical",
-                        color: "var(--ink)",
-                        background: "#fafdf9",
-                        fontFamily: "inherit",
-                      }}
-                    />
-                    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                      <a
-                        href={`mailto:${selected.email}?subject=Re: Your enquiry to UK Talent Link&body=${encodeURIComponent(selected.ai_draft ?? "")}`}
-                        style={{
-                          flex: 1,
-                          background: "var(--navy)",
-                          color: "white",
-                          padding: "10px",
-                          borderRadius: 3,
-                          fontSize: 13,
-                          fontWeight: 500,
-                          textAlign: "center",
-                          textDecoration: "none",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 6,
-                        }}
-                      >
-                        Send Email <ArrowUpRight size={14} />
-                      </a>
-                      <button
-                        onClick={generateDraft}
-                        disabled={drafting}
-                        style={{
-                          padding: "10px 14px",
-                          background: "white",
-                          border: "1px solid rgba(0,0,0,0.08)",
-                          borderRadius: 3,
-                          fontSize: 12,
-                          color: "var(--slate)",
-                          cursor: drafting ? "wait" : "pointer",
-                          fontFamily: "inherit",
-                        }}
-                      >
-                        {drafting ? "Working…" : "Regenerate"}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={generateDraft}
-                    disabled={drafting}
-                    style={{
-                      width: "100%",
-                      padding: 12,
-                      background: "var(--gold)",
-                      color: "var(--navy)",
-                      borderRadius: 3,
-                      fontSize: 13,
-                      fontWeight: 600,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      opacity: drafting ? 0.7 : 1,
-                      border: "none",
-                      cursor: drafting ? "wait" : "pointer",
-                      fontFamily: "inherit",
-                    }}
-                  >
-                    {drafting ? (
-                      <>
-                        <Spinner size={14} /> Generating with AI…
-                      </>
-                    ) : (
-                      <><Sparkles size={14} /> Generate AI Reply Draft</>
-                    )}
-                  </button>
-                )}
-              </div>
-            </div>
+            )}
           </div>
         )}
-      </div>
-    </div>
+      </Section>
+
+      {/* Open mandates */}
+      <Section
+        title="Open mandates"
+        actions={
+          openJobs.length > 4 ? (
+            <Link to="/app/jobs" className="text-[12px] text-ink-mute hover:text-ink transition-colors">
+              View all →
+            </Link>
+          ) : undefined
+        }
+      >
+        {openJobs.length === 0 ? (
+          <EmptyState
+            title="No open mandates"
+            body="Mandates are added by your admin team or synced from Reed.co.uk."
+          />
+        ) : (
+          <div className="grid sm:grid-cols-2 gap-3">
+            {openJobs.slice(0, 4).map((j) => (
+              <Link
+                key={j.id}
+                to="/app/jobs/$id"
+                params={{ id: j.id }}
+                className="group border border-rule rounded-lg p-5 hover:border-ink/30 hover:bg-paper-deep/40 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="min-w-0">
+                    <div className="font-medium text-[14px] text-ink truncate">{j.title}</div>
+                    <div className="text-[13px] text-ink-mute mt-0.5 truncate">
+                      {j.company ?? "Confidential"}{j.location ? ` · ${j.location}` : ""}
+                    </div>
+                  </div>
+                  {j.seniority && <Pill>{j.seniority}</Pill>}
+                </div>
+                {j.must_have_skills.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {j.must_have_skills.slice(0, 3).map((s) => (
+                      <Pill key={s}>{s}</Pill>
+                    ))}
+                    {j.must_have_skills.length > 3 && (
+                      <Pill>+{j.must_have_skills.length - 3}</Pill>
+                    )}
+                  </div>
+                )}
+              </Link>
+            ))}
+          </div>
+        )}
+      </Section>
+    </>
   );
 }
 
-const th: React.CSSProperties = {
-  padding: "12px 16px",
-  textAlign: "left",
-  fontSize: 11,
-  letterSpacing: "0.1em",
-  textTransform: "uppercase",
-  color: "var(--muted-c)",
-  fontWeight: 500,
-  borderBottom: "1px solid rgba(0,0,0,0.08)",
-};
+function Th({ children }: { children: React.ReactNode }) {
+  return (
+    <th className="text-left font-mono text-[10px] tracking-[0.14em] uppercase px-4 py-3 text-ink-mute font-normal">
+      {children}
+    </th>
+  );
+}
 
-const td: React.CSSProperties = {
-  padding: "14px 16px",
-};
+function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <td className={`px-4 py-3 align-middle text-[13px] ${className}`}>{children}</td>;
+}
 
-function fmtDate(ms: number): string {
-  return new Date(ms).toISOString().slice(0, 10);
+function formatRelative(ts: number): string {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }
