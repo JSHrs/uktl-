@@ -225,12 +225,44 @@ function CandidateDetailPage() {
                   style={{
                     fontSize: "44px",
                     fontVariationSettings: '"opsz" 144, "SOFT" 50',
+                    color: c.quality_score >= 75 ? "oklch(0.45 0.12 155)" : c.quality_score >= 50 ? "oklch(0.55 0.12 80)" : "oklch(0.55 0.18 25)",
                   }}
                 >
                   {c.quality_score}
+                  <span className="text-ink-mute font-body text-base font-normal ml-1">/100</span>
                 </div>
+
+                {/* Score breakdown by category */}
+                {c.score_breakdown && (
+                  <div className="mt-5 space-y-3">
+                    {(
+                      [
+                        ["contact_information", "Contact info"],
+                        ["experience", "Experience"],
+                        ["skills", "Skills"],
+                        ["education", "Education"],
+                      ] as const
+                    ).map(([key, label]) => (
+                      <div key={key}>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-[11px] text-ink-mute">{label}</span>
+                          <span className="font-mono text-[11px] tabular-nums text-ink-soft">
+                            {(c.score_breakdown as Record<string, number>)[key]}
+                          </span>
+                        </div>
+                        <div className="h-1 rounded-full bg-paper-deep overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-accent"
+                            style={{ width: `${(c.score_breakdown as Record<string, number>)[key]}%`, opacity: 0.7 }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {c.quality_notes.length > 0 && (
-                  <ul className="mt-4 text-sm text-ink-soft space-y-2 list-disc list-inside">
+                  <ul className="mt-4 text-xs text-ink-soft space-y-1.5 list-disc list-inside">
                     {c.quality_notes.map((n, i) => (
                       <li key={i}>{n}</li>
                     ))}
@@ -241,6 +273,41 @@ function CandidateDetailPage() {
               <div className="text-sm text-ink-soft mt-3">Not yet scored.</div>
             )}
           </div>
+
+          {/* CV Improvement Report */}
+          {c.improvement_report && (
+            <div className="border border-rule rounded-md p-6 bg-paper">
+              <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute mb-4">
+                Improvement report
+              </div>
+              {c.improvement_report.overall && (
+                <p className="text-sm text-ink leading-relaxed mb-5">
+                  {(c.improvement_report as Record<string, string>).overall}
+                </p>
+              )}
+              <div className="space-y-4">
+                {(
+                  [
+                    ["contact_information", "Contact info"],
+                    ["experience", "Experience"],
+                    ["skills", "Skills"],
+                    ["education", "Education"],
+                  ] as const
+                ).map(([key, label]) => {
+                  const text = (c.improvement_report as Record<string, string>)[key];
+                  if (!text) return null;
+                  return (
+                    <div key={key}>
+                      <div className="font-mono text-[10px] tracking-[0.12em] uppercase text-ink-mute mb-1">
+                        {label}
+                      </div>
+                      <p className="text-xs text-ink-soft leading-relaxed">{text}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="border border-rule rounded-md p-6 bg-paper">
             <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute mb-4">

@@ -51,6 +51,14 @@ export function Nav() {
         ))}
         <li>
           <Link
+            to="/auth/login"
+            className="text-[13px] text-ink-soft hover:text-ink transition-colors"
+          >
+            Sign in
+          </Link>
+        </li>
+        <li>
+          <Link
             to="/app"
             className="text-[13px] px-[18px] py-2 bg-ink text-paper rounded-full transition-all duration-300 hover:opacity-80 [transition-timing-function:var(--ease-publication)]"
           >

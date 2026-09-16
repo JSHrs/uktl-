@@ -46,9 +46,28 @@ Rules:
   skills ("mergers and acquisitions", "employment law") not just tech.
 - Seniority: infer from titles and YoE when not explicit.`;
 
-const QUALITY_PROMPT = `Given this parsed CV JSON, assess resume quality on 0-100 and list
-at most 5 short, concrete improvement notes. Return ONLY:
-{ "score": number, "notes": [string] }`;
+const QUALITY_PROMPT = `You are a CV quality assessor for an executive recruitment firm specialising in Construction and Technology.
+
+Given the parsed CV JSON below, return a JSON object with this exact shape and no other text:
+{
+  "score": <overall 0-100>,
+  "breakdown": {
+    "contact_information": <0-100, based on completeness: name, email, phone, location, LinkedIn>,
+    "experience": <0-100, based on detail, quantification, recency, relevance>,
+    "skills": <0-100, based on depth, specificity, industry relevance>,
+    "education": <0-100, based on completeness and level>
+  },
+  "notes": [<up to 5 short actionable bullet points>],
+  "improvement_report": {
+    "contact_information": "<1-2 sentences of specific advice>",
+    "experience": "<1-2 sentences of specific advice>",
+    "skills": "<1-2 sentences of specific advice>",
+    "education": "<1-2 sentences of specific advice>",
+    "overall": "<2-3 sentence overall assessment and top priority action>"
+  }
+}
+
+Rules: output ONLY the JSON. No prose, no markdown. Scores reflect Construction/Technology sector standards.`;
 
 export type ParseResult = {
   profile: ParsedProfile;
@@ -142,7 +161,11 @@ async function parseWithAnthropic(
     try {
       quality = QualityAssessmentSchema.parse(extractJsonObject(qText));
     } catch {
-      // Fall through with default quality.
+      // Fall through with default quality — try parsing a subset.
+      try {
+        const raw = extractJsonObject(qText) as Record<string, unknown>;
+        quality = { score: Number(raw.score) || 50, notes: (raw.notes as string[]) ?? [] };
+      } catch { /* ignore */ }
     }
   }
   return { profile, quality };

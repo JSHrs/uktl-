@@ -4,11 +4,13 @@ import { z } from "zod";
 
 import { getEnv } from "./env";
 import {
+  createBooking,
   createFaqTopic,
   createJob,
   deleteCandidate,
   deleteFaqTopic,
   deleteJob,
+  getAdminAnalytics,
   getCandidate,
   getFaqTopic,
   getJob,
@@ -19,6 +21,7 @@ import {
   insertCandidateShell,
   listAllFaqTopics,
   listAllJobs,
+  listBookings,
   listCandidates,
   listFaqTopics,
   listJobs,
@@ -677,3 +680,246 @@ export const adminDeleteCandidateFn = createServerFn({ method: "POST" })
     await deleteCandidate(env, data.id);
     return { ok: true };
   });
+
+// ── Candidate Auth (Supabase) ─────────────────────────────────────────────────
+
+export const candidateRegisterFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) =>
+    z.object({
+      email: z.string().email(),
+      password: z.string().min(8),
+      name: z.string().min(1),
+    }).parse(raw),
+  )
+  .handler(async ({ data }) => {
+    const { setSessionCookies } = await import("../supabase");
+    const { createClient } = await import("@supabase/supabase-js");
+    const env = await getEnv();
+    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw new Error("Supabase not configured");
+    const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+    const { data: authData, error } = await client.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: { data: { name: data.name } },
+    });
+    if (error) throw new Error(error.message);
+    if (authData.session) {
+      await setSessionCookies(authData.session.access_token, authData.session.refresh_token, authData.session.expires_in);
+    }
+    return { userId: authData.user?.id ?? null, needsConfirmation: !authData.session };
+  });
+
+export const candidateLoginFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) =>
+    z.object({ email: z.string().email(), password: z.string() }).parse(raw),
+  )
+  .handler(async ({ data }) => {
+    const { setSessionCookies } = await import("../supabase");
+    const { createClient } = await import("@supabase/supabase-js");
+    const env = await getEnv();
+    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw new Error("Supabase not configured");
+    const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+    const { data: authData, error } = await client.auth.signInWithPassword({ email: data.email, password: data.password });
+    if (error) throw new Error(error.message);
+    await setSessionCookies(authData.session.access_token, authData.session.refresh_token, authData.session.expires_in);
+    return { userId: authData.user.id, email: authData.user.email };
+  });
+
+export const candidateLogoutFn = createServerFn({ method: "POST" }).handler(async () => {
+  const { clearSessionCookies } = await import("../supabase");
+  await clearSessionCookies();
+  return { ok: true };
+});
+
+export const getCandidateSessionFn = createServerFn({ method: "GET" }).handler(async () => {
+  const { getCandidateSession } = await import("../supabase");
+  return await getCandidateSession();
+});
+
+export const candidateMagicLinkFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) => z.object({ email: z.string().email() }).parse(raw))
+  .handler(async ({ data }) => {
+    const { createClient } = await import("@supabase/supabase-js");
+    const env = await getEnv();
+    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw new Error("Supabase not configured");
+    const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+    const { error } = await client.auth.signInWithOtp({ email: data.email, options: { shouldCreateUser: false } });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const getCandidateProfileFn = createServerFn({ method: "GET" }).handler(async () => {
+  const { getCandidateSession, getSupabaseAdmin } = await import("../supabase");
+  const session = await getCandidateSession();
+  if (!session.userId) return { profile: null, session: null };
+  try {
+    const admin = await getSupabaseAdmin();
+    const { data } = await admin.from("profiles").select("*").eq("id", session.userId).single();
+    return { profile: data, session };
+  } catch {
+    return { profile: null, session };
+  }
+});
+
+export const updateCandidateProfileFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) =>
+    z.object({
+      name: z.string().min(1),
+      phone: z.string().nullable().optional(),
+      location: z.string().nullable().optional(),
+      sector_preference: z.enum(["construction", "technology", "both"]).nullable().optional(),
+    }).parse(raw),
+  )
+  .handler(async ({ data }) => {
+    const { getCandidateSession, getSupabaseAdmin } = await import("../supabase");
+    const session = await getCandidateSession();
+    if (!session.userId) throw new Error("Not authenticated");
+    const admin = await getSupabaseAdmin();
+    const { error } = await admin.from("profiles")
+      .update({ ...data, updated_at: new Date().toISOString() })
+      .eq("id", session.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ── Consultation Bookings ─────────────────────────────────────────────────────
+
+export const createBookingFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) =>
+    z.object({
+      contact_name: z.string().min(1),
+      contact_email: z.string().email(),
+      contact_phone: z.string().nullable().optional(),
+      topic_area: z.string().nullable().optional(),
+      notes: z.string().nullable().optional(),
+    }).parse(raw),
+  )
+  .handler(async ({ data }) => {
+    const { getCandidateSession } = await import("../supabase");
+    const session = await getCandidateSession();
+    const env = await getEnv();
+    const id = "booking_" + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+    await createBooking(env, id, {
+      ...data,
+      auth_user_id: session.userId ?? undefined,
+      user_email: session.email ?? undefined,
+    });
+    // Notify admin via Resend if configured
+    if (env.RESEND_API_KEY) {
+      await sendBookingNotification(env.RESEND_API_KEY, data).catch(() => {});
+    }
+    return { id };
+  });
+
+async function sendBookingNotification(
+  resendKey: string,
+  booking: { contact_name: string; contact_email: string; topic_area?: string | null },
+): Promise<void> {
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: "noreply@uktalentlink.co.uk",
+      to: ["info@uktalentlink.co.uk"],
+      subject: `New consultation booking — ${booking.contact_name}`,
+      text: `New consultation booking received.\n\nName: ${booking.contact_name}\nEmail: ${booking.contact_email}\nTopic: ${booking.topic_area ?? "Not specified"}\n`,
+    }),
+  });
+}
+
+export const adminListBookingsFn = createServerFn({ method: "GET" }).handler(async () => {
+  try {
+    const env = await getEnv();
+    return await listBookings(env);
+  } catch {
+    return [];
+  }
+});
+
+// ── Admin: Analytics ─────────────────────────────────────────────────────────
+
+export const adminGetAnalyticsFn = createServerFn({ method: "GET" }).handler(async () => {
+  try {
+    const env = await getEnv();
+    return await getAdminAnalytics(env);
+  } catch {
+    return {
+      total_candidates: 0, parsed_candidates: 0, avg_quality_score: null,
+      total_jobs: 0, open_jobs: 0, total_faq_views: 0,
+      total_queries: 0, resolved_queries: 0, total_bookings: 0,
+    };
+  }
+});
+
+// ── Reed.co.uk Job Board Sync ─────────────────────────────────────────────────
+
+export const syncReedJobsFn = createServerFn({ method: "POST" })
+  .validator((raw: unknown) =>
+    z.object({
+      keywords: z.string().default(""),
+      sector: z.enum(["construction", "technology"]).default("construction"),
+      resultsToTake: z.number().int().min(1).max(100).default(50),
+    }).parse(raw),
+  )
+  .handler(async ({ data }) => {
+    const env = await getEnv();
+    if (!env.REED_API_KEY) throw new Error("REED_API_KEY not configured");
+
+    // Reed API uses HTTP Basic Auth: API key as username, password blank
+    const auth = btoa(`${env.REED_API_KEY}:`);
+    const params = new URLSearchParams({
+      keywords: data.keywords || (data.sector === "construction" ? "construction engineering" : "software technology"),
+      locationName: "United Kingdom",
+      resultsToTake: String(data.resultsToTake),
+      fullTime: "true",
+    });
+
+    const res = await fetch(`https://www.reed.co.uk/api/1.0/search?${params}`, {
+      headers: { Authorization: `Basic ${auth}`, Accept: "application/json" },
+    });
+    if (!res.ok) throw new Error(`Reed API error: ${res.status}`);
+
+    const body = (await res.json()) as { results?: ReedJob[] };
+    const reedJobs = body.results ?? [];
+
+    let inserted = 0;
+    let skipped = 0;
+
+    for (const rj of reedJobs) {
+      const existing = await env.DB.prepare(`SELECT id FROM jobs WHERE source_id=?`)
+        .bind(String(rj.jobId))
+        .first<{ id: string }>();
+      if (existing) { skipped++; continue; }
+
+      const id = "job_" + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+      const now = Date.now();
+      await env.DB.prepare(
+        `INSERT INTO jobs (id, created_at, title, company, location, sector, description, must_have_skills, nice_to_have_skills, status, source, source_id, source_url, posted_date, expiry_date)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'open', 'reed', ?, ?, ?, ?)`,
+      ).bind(
+        id, now,
+        rj.jobTitle, rj.employerName ?? null,
+        rj.locationName ?? null, data.sector,
+        rj.jobDescription ?? null,
+        JSON.stringify([]), JSON.stringify([]),
+        String(rj.jobId),
+        rj.jobUrl ?? null,
+        rj.date ?? null,
+        rj.expirationDate ?? null,
+      ).run().catch(() => { skipped++; });
+      inserted++;
+    }
+
+    return { inserted, skipped, total: reedJobs.length };
+  });
+
+type ReedJob = {
+  jobId: number;
+  jobTitle: string;
+  employerName?: string;
+  locationName?: string;
+  jobDescription?: string;
+  jobUrl?: string;
+  date?: string;
+  expirationDate?: string;
+};

@@ -23,6 +23,8 @@ export type CandidateDetail = CandidateRow & {
   summary: string | null;
   work_authorization: string | null;
   quality_notes: string[];
+  score_breakdown: { contact_information: number; experience: number; skills: number; education: number } | null;
+  improvement_report: { contact_information: string; experience: string; skills: string; education: string; overall: string } | null;
   links: Record<string, string | null>;
   skills: Array<{ skill: string; skill_raw: string; years_experience: number | null }>;
   experience: Array<{
@@ -95,7 +97,8 @@ export async function writeParsedProfile(
         updated_at=?,
         name=?, email=?, phone=?, location=?, headline=?, summary=?,
         total_years_experience=?, seniority=?, work_authorization=?,
-        quality_score=?, quality_notes=?, links=?, raw_profile=?, parse_error=NULL
+        quality_score=?, quality_notes=?, score_breakdown=?, improvement_report=?,
+        links=?, raw_profile=?, parse_error=NULL
        WHERE id=?`,
     ).bind(
       now,
@@ -110,6 +113,8 @@ export async function writeParsedProfile(
       profile.work_authorization ?? null,
       quality.score,
       JSON.stringify(quality.notes),
+      quality.breakdown ? JSON.stringify(quality.breakdown) : null,
+      quality.improvement_report ? JSON.stringify(quality.improvement_report) : null,
       JSON.stringify(profile.links ?? {}),
       JSON.stringify(profile),
       id,
@@ -263,6 +268,8 @@ export async function getCandidate(
     work_authorization: (row.work_authorization as string | null) ?? null,
     quality_score: (row.quality_score as number | null) ?? null,
     quality_notes: parseJsonArray<string>(row.quality_notes),
+    score_breakdown: parseJsonNullable(row.score_breakdown),
+    improvement_report: parseJsonNullable(row.improvement_report),
     links: parseJsonObject(row.links),
     skills: skills.results ?? [],
     experience: (experience.results ?? []).map((e) => ({
@@ -605,6 +612,124 @@ export async function deleteJob(env: AppEnv, id: string): Promise<void> {
   await env.DB.prepare(`DELETE FROM jobs WHERE id=?`).bind(id).run();
 }
 
+// ── Bookings ─────────────────────────────────────────────────────────────────
+
+export type BookingRow = {
+  id: string;
+  created_at: number;
+  user_email: string | null;
+  auth_user_id: string | null;
+  topic_area: string | null;
+  contact_name: string | null;
+  contact_email: string;
+  contact_phone: string | null;
+  calendly_uri: string | null;
+  status: string;
+  notes: string | null;
+};
+
+export type BookingInput = {
+  contact_name: string;
+  contact_email: string;
+  contact_phone?: string;
+  topic_area?: string;
+  auth_user_id?: string;
+  user_email?: string;
+  notes?: string;
+};
+
+export async function createBooking(env: AppEnv, id: string, input: BookingInput): Promise<void> {
+  const now = Date.now();
+  await env.DB.prepare(
+    `INSERT INTO bookings
+      (id, created_at, user_email, auth_user_id, topic_area, contact_name, contact_email, contact_phone, status, notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+  ).bind(
+    id, now,
+    input.user_email ?? null, input.auth_user_id ?? null,
+    input.topic_area ?? null, input.contact_name,
+    input.contact_email, input.contact_phone ?? null,
+    input.notes ?? null,
+  ).run();
+}
+
+export async function listBookings(env: AppEnv, limit = 100): Promise<BookingRow[]> {
+  const res = await env.DB.prepare(
+    `SELECT * FROM bookings ORDER BY created_at DESC LIMIT ?`,
+  ).bind(limit).all<BookingRow>();
+  return res.results ?? [];
+}
+
+// ── HR Queries ───────────────────────────────────────────────────────────────
+
+export async function recordHrQuery(
+  env: AppEnv,
+  id: string,
+  data: {
+    auth_user_id?: string;
+    question: string;
+    category?: string;
+    faq_topic_id?: number;
+  },
+): Promise<void> {
+  const now = Date.now();
+  await env.DB.prepare(
+    `INSERT INTO hr_queries (id, created_at, auth_user_id, question, category, faq_topic_id)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+  ).bind(
+    id, now,
+    data.auth_user_id ?? null, data.question,
+    data.category ?? null, data.faq_topic_id ?? null,
+  ).run();
+}
+
+export async function resolveHrQuery(
+  env: AppEnv,
+  id: string,
+  resolution_type: string,
+  ai_response?: string,
+): Promise<void> {
+  await env.DB.prepare(
+    `UPDATE hr_queries SET resolved=1, resolution_type=?, ai_response=? WHERE id=?`,
+  ).bind(resolution_type, ai_response ?? null, id).run();
+}
+
+export async function getAdminAnalytics(env: AppEnv): Promise<{
+  total_candidates: number;
+  parsed_candidates: number;
+  avg_quality_score: number | null;
+  total_jobs: number;
+  open_jobs: number;
+  total_faq_views: number;
+  total_queries: number;
+  resolved_queries: number;
+  total_bookings: number;
+}> {
+  const [candidates, jobs, faqViews, queries, bookings] = await env.DB.batch([
+    env.DB.prepare(`SELECT COUNT(*) as n, SUM(CASE WHEN status='parsed' THEN 1 ELSE 0 END) as parsed, AVG(CASE WHEN quality_score IS NOT NULL THEN quality_score END) as avg_score FROM candidates`),
+    env.DB.prepare(`SELECT COUNT(*) as n, SUM(CASE WHEN status='open' THEN 1 ELSE 0 END) as open FROM jobs`),
+    env.DB.prepare(`SELECT COALESCE(SUM(view_count),0) as total FROM faq_topics`),
+    env.DB.prepare(`SELECT COUNT(*) as n, SUM(resolved) as resolved FROM hr_queries`),
+    env.DB.prepare(`SELECT COUNT(*) as n FROM bookings`),
+  ]);
+  const c = (candidates.results?.[0] ?? {}) as Record<string, number | null>;
+  const j = (jobs.results?.[0] ?? {}) as Record<string, number>;
+  const f = (faqViews.results?.[0] ?? {}) as Record<string, number>;
+  const q = (queries.results?.[0] ?? {}) as Record<string, number>;
+  const b = (bookings.results?.[0] ?? {}) as Record<string, number>;
+  return {
+    total_candidates: Number(c.n ?? 0),
+    parsed_candidates: Number(c.parsed ?? 0),
+    avg_quality_score: c.avg_score != null ? Math.round(Number(c.avg_score)) : null,
+    total_jobs: Number(j.n ?? 0),
+    open_jobs: Number(j.open ?? 0),
+    total_faq_views: Number(f.total ?? 0),
+    total_queries: Number(q.n ?? 0),
+    resolved_queries: Number(q.resolved ?? 0),
+    total_bookings: Number(b.n ?? 0),
+  };
+}
+
 // ── Admin: Candidates ────────────────────────────────────────────────────────
 
 export async function deleteCandidate(env: AppEnv, id: string): Promise<void> {
@@ -635,5 +760,13 @@ function parseJsonObject(raw: unknown): Record<string, string | null> {
     return v && typeof v === "object" ? (v as Record<string, string | null>) : {};
   } catch {
     return {};
+  }
+}
+function parseJsonNullable<T>(raw: unknown): T | null {
+  if (!raw) return null;
+  try {
+    return JSON.parse(String(raw)) as T;
+  } catch {
+    return null;
   }
 }

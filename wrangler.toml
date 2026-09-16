@@ -20,11 +20,19 @@ migrations_dir = "migrations"
 binding    = "CV_BUCKET"
 bucket_name = "talent-compass-cvs"
 
+# ── Supabase public vars (safe to expose in source) ──────────────────────────
+[vars]
+SUPABASE_URL      = "https://REPLACE_WITH_SUPABASE_PROJECT_REF.supabase.co"
+SUPABASE_ANON_KEY = "REPLACE_WITH_SUPABASE_ANON_KEY"
+CALENDLY_URL      = ""   # Set to client's Calendly embed URL once provided
+
 # ── Secrets (set via `wrangler secret put`) ────────────────────────────────────
-# ANTHROPIC_API_KEY   — Claude API key for CV parsing and AI features
-# RESEND_API_KEY      — Transactional email (candidate notifications)
-# JWT_SECRET          — HMAC-SHA256 signing key for admin session tokens
-# ADMIN_PASSWORD_HASH — PBKDF2 hash of admin password (see src/lib/server/auth.ts)
+# ANTHROPIC_API_KEY          — Claude API key for CV parsing and AI features
+# RESEND_API_KEY             — Transactional email (candidate notifications)
+# JWT_SECRET                 — HMAC-SHA256 signing key for admin session tokens
+# ADMIN_PASSWORD_HASH        — PBKDF2 hash of admin password (see src/lib/server/auth.ts)
+# SUPABASE_SERVICE_ROLE_KEY  — Supabase service role key (bypasses RLS, server-only)
+# REED_API_KEY               — Reed.co.uk job board API key
 
 # ── Environment: staging ──────────────────────────────────────────────────────
 [env.staging]

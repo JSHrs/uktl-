@@ -12,6 +12,17 @@ export type AppEnv = {
   // Admin auth — set via: wrangler secret put ADMIN_PASSWORD_HASH / JWT_SECRET
   ADMIN_PASSWORD_HASH?: string;
   JWT_SECRET?: string;
+  // Supabase — set SUPABASE_URL + SUPABASE_ANON_KEY as wrangler vars,
+  //            SUPABASE_SERVICE_ROLE_KEY as wrangler secret
+  SUPABASE_URL?: string;
+  SUPABASE_ANON_KEY?: string;
+  SUPABASE_SERVICE_ROLE_KEY?: string;
+  // Reed.co.uk job board API key
+  REED_API_KEY?: string;
+  // Resend API key for transactional email
+  RESEND_API_KEY?: string;
+  // Calendly embed URL (set by client)
+  CALENDLY_URL?: string;
 };
 
 let cached: AppEnv | null = null;

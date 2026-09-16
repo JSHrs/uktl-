@@ -50,7 +50,6 @@ export const LinksSchema = z.object({
   portfolio: z.string().nullable().optional(),
 });
 
-// The canonical shape the LLM must return when extracting a CV.
 export const ParsedProfileSchema = z.object({
   name: z.string().nullable().optional(),
   email: z.string().nullable().optional(),
@@ -73,8 +72,27 @@ export const ParsedProfileSchema = z.object({
 });
 export type ParsedProfile = z.infer<typeof ParsedProfileSchema>;
 
+export const ScoreBreakdownSchema = z.object({
+  contact_information: z.number().min(0).max(100),
+  experience: z.number().min(0).max(100),
+  skills: z.number().min(0).max(100),
+  education: z.number().min(0).max(100),
+});
+export type ScoreBreakdown = z.infer<typeof ScoreBreakdownSchema>;
+
+export const ImprovementReportSchema = z.object({
+  contact_information: z.string(),
+  experience: z.string(),
+  skills: z.string(),
+  education: z.string(),
+  overall: z.string(),
+});
+export type ImprovementReport = z.infer<typeof ImprovementReportSchema>;
+
 export const QualityAssessmentSchema = z.object({
   score: z.number().min(0).max(100),
   notes: z.array(z.string()),
+  breakdown: ScoreBreakdownSchema.optional(),
+  improvement_report: ImprovementReportSchema.optional(),
 });
 export type QualityAssessment = z.infer<typeof QualityAssessmentSchema>;
