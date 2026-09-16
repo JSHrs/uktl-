@@ -140,6 +140,8 @@ export const MOCK_CANDIDATE_DETAILS: Record<string, CandidateDetail> = {
         end_year: "2007",
       },
     ],
+    score_breakdown: null,
+    improvement_report: null,
     parse_error: null,
   },
   cand_preview_002: {
@@ -200,6 +202,8 @@ export const MOCK_CANDIDATE_DETAILS: Record<string, CandidateDetail> = {
         end_year: "2013",
       },
     ],
+    score_breakdown: null,
+    improvement_report: null,
     parse_error: null,
   },
 };

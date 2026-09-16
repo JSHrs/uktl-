@@ -6,6 +6,7 @@ import {
   AdminTr,
 } from "@/routes/admin";
 import { adminListBookingsFn } from "@/lib/server/functions";
+import type { BookingRow } from "@/lib/server/db";
 
 export const Route = createFileRoute("/admin/bookings")({
   loader: () => adminListBookingsFn(),
@@ -30,7 +31,7 @@ function BookingsPage() {
         <AdminTable
           head={["Name", "Email", "Phone", "Topic", "Status", "Date"]}
         >
-          {bookings.map((b) => (
+          {bookings.map((b: BookingRow) => (
             <AdminTr key={b.id}>
               <AdminTd>{b.contact_name ?? "—"}</AdminTd>
               <AdminTd>
