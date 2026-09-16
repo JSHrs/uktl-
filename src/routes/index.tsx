@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState, type CSSProperties } from "react";
 import { SiteLayout, Wrap } from "@/components/site/Layout";
 import { Reveal } from "@/components/site/Reveal";
 import heroMark from "@/assets/hero-mark.jpg";
@@ -22,7 +22,6 @@ function Index() {
     <SiteLayout>
       <Hero />
       <Marquee />
-      <Stats />
       <Services />
       <Platform />
       <Approach />
@@ -37,10 +36,12 @@ function Index() {
 function Hero() {
   const markRef = useRef<HTMLDivElement | null>(null);
   const [entered, setEntered] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
     const t = window.setTimeout(() => setEntered(true), 100);
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setReduceMotion(reduce);
     if (reduce) return () => window.clearTimeout(t);
 
     let raf = 0;
@@ -89,6 +90,7 @@ function Hero() {
         }}
       />
       <div className="absolute inset-0 z-0 pointer-events-none hero-mesh" />
+      <RouteLine animate={entered && !reduceMotion} />
       <div
         aria-hidden="true"
         className="absolute inset-0 z-0 pointer-events-none"
@@ -171,45 +173,12 @@ function Marquee() {
   return (
     <div className="border-t border-b border-rule py-[18px] overflow-hidden bg-paper">
       <div
-        className="flex gap-14 whitespace-nowrap marquee-track font-display font-light text-[17px] text-ink-soft"
+        className="flex gap-14 whitespace-nowrap marquee-track hover:[animation-play-state:paused] font-display font-light text-[17px] text-ink-soft"
         style={{ fontVariationSettings: '"opsz" 144, "SOFT" 70', letterSpacing: "-0.01em" }}
       >
         {row}{row}
       </div>
     </div>
-  );
-}
-
-/* ─────────────────── Stats ─────────────────── */
-
-function Stats() {
-  const stats = [
-    { value: "200+", label: "Senior placements", note: "C-suite to specialist" },
-    { value: "15 yr", label: "Track record", note: "Founded 2009" },
-    { value: "6", label: "Sectors covered", note: "Financial to construction" },
-    { value: "GCC ↔ UK", label: "Cross-border reach", note: "Dubai · Riyadh · London" },
-  ];
-  return (
-    <Reveal>
-      <div className="border-b border-rule">
-        <Wrap>
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-rule">
-            {stats.map((s) => (
-              <div key={s.label} className="px-6 md:px-8 py-10 first:pl-0 last:pr-0">
-                <div
-                  className="font-display font-light tracking-[-0.04em] text-ink leading-none"
-                  style={{ fontSize: "clamp(28px, 3.5vw, 44px)", fontVariationSettings: '"opsz" 144, "SOFT" 30' }}
-                >
-                  {s.value}
-                </div>
-                <div className="font-mono text-[11px] tracking-[0.1em] uppercase text-ink mt-3">{s.label}</div>
-                <div className="text-[13px] text-ink-mute mt-1">{s.note}</div>
-              </div>
-            ))}
-          </div>
-        </Wrap>
-      </div>
-    </Reveal>
   );
 }
 
@@ -256,10 +225,7 @@ function Services() {
                 className="font-display font-light leading-[1] tracking-[-0.03em] max-w-[16ch]"
                 style={{ fontSize: "clamp(36px, 5vw, 68px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
               >
-                Four practices,{" "}
-                <em className="italic text-accent" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 100' }}>
-                  one team.
-                </em>
+                <Words text="Four practices," accent="one team." />
               </h2>
             </div>
             <Link
@@ -277,9 +243,9 @@ function Services() {
               <Link
                 key={s.num}
                 to={s.link}
-                className={`group p-8 md:p-10 border-b border-rule hover:bg-paper-deep transition-colors ${i % 2 === 0 ? "md:border-r" : ""}`}
+                className={`group relative p-8 md:p-10 border-b border-rule hover:bg-paper-deep transition-colors duration-500 after:absolute after:left-0 after:bottom-0 after:h-px after:w-full after:bg-ink after:origin-left after:scale-x-0 after:transition-transform after:duration-700 after:[transition-timing-function:var(--ease-publication)] hover:after:scale-x-100 ${i % 2 === 0 ? "md:border-r" : ""}`}
               >
-                <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-mute mb-6">
+                <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-mute group-hover:text-accent transition-colors duration-500 mb-6">
                   {s.num}
                 </div>
                 <h3
@@ -289,8 +255,11 @@ function Services() {
                   {s.title}
                 </h3>
                 <p className="text-[15px] text-ink-soft leading-[1.6] m-0 max-w-[46ch]">{s.body}</p>
-                <div className="mt-6 text-[13px] text-ink-mute group-hover:text-ink transition-colors">
-                  Learn more →
+                <div className="mt-6 text-[13px] text-ink-mute group-hover:text-ink transition-colors duration-500">
+                  Learn more{" "}
+                  <span className="inline-block transition-transform duration-500 [transition-timing-function:var(--ease-publication)] group-hover:translate-x-1.5">
+                    →
+                  </span>
                 </div>
               </Link>
             ))}
@@ -350,10 +319,7 @@ function Platform() {
                 className="font-display font-light leading-[0.95] tracking-[-0.025em]"
                 style={{ fontSize: "clamp(36px, 5vw, 72px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
               >
-                One upload.{" "}
-                <em className="italic font-light" style={{ color: "oklch(0.765 0.055 263)", fontVariationSettings: '"opsz" 144, "SOFT" 95' }}>
-                  Full intelligence.
-                </em>
+                <Words text="One upload." accent="Full intelligence." accentColor="oklch(0.765 0.055 263)" />
               </h2>
               <p className="text-paper/50 text-[15px] leading-relaxed max-w-[48ch] mt-5">
                 Talent Compass parses a CV end-to-end in under thirty seconds. Every candidate is immediately scored, graded, and ranked — before a consultant opens the file.
@@ -371,15 +337,29 @@ function Platform() {
         </Reveal>
 
         <div className="mt-20 md:mt-24">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 border-t border-paper/10">
+          <div className="relative h-px bg-paper/10" aria-hidden="true">
+            <div
+              className="absolute inset-y-0 left-0 w-full bg-paper/50 origin-left"
+              style={{
+                transform: active ? "scaleX(1)" : "scaleX(0)",
+                transition: "transform 1800ms var(--ease-publication) 150ms",
+              }}
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5">
             {steps.map((step, i) => (
               <div
                 key={step.n}
-                className={`pt-8 pr-6 pb-8 transition-all duration-700 ${active ? "opacity-100" : "opacity-0 translate-y-4"} ${i < steps.length - 1 ? "md:border-r md:border-paper/10" : ""}`}
-                style={{ transitionDelay: active ? `${i * 100}ms` : "0ms" }}
+                className={`pt-8 pr-6 pb-8 transition-all duration-700 [transition-timing-function:var(--ease-publication)] ${active ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"} ${i < steps.length - 1 ? "md:border-r md:border-paper/10" : ""}`}
+                style={{ transitionDelay: active ? `${300 + i * 140}ms` : "0ms" }}
               >
                 <div className="font-mono text-[10px] text-paper/30 tracking-[0.1em] mb-6">{step.n}</div>
-                <div className="font-mono text-[20px] text-paper/25 mb-5 leading-none">{step.glyph}</div>
+                <div
+                  className={`font-mono text-[20px] text-paper/25 mb-5 leading-none transition-all duration-700 ${active ? "scale-100 opacity-100" : "scale-50 opacity-0"}`}
+                  style={{ transitionDelay: active ? `${500 + i * 140}ms` : "0ms" }}
+                >
+                  {step.glyph}
+                </div>
                 <div
                   className="font-display font-light text-paper leading-tight mb-3"
                   style={{ fontSize: "clamp(18px, 1.8vw, 24px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
@@ -430,10 +410,7 @@ function Approach() {
                 className="font-display font-light leading-[1] tracking-[-0.03em]"
                 style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
               >
-                A quieter way to{" "}
-                <em className="italic text-accent" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 100' }}>
-                  build teams.
-                </em>
+                <Words text="A quieter way to" accent="build teams." />
               </h2>
               <p className="text-[15px] text-ink-soft mt-6 leading-[1.65] max-w-[38ch]">
                 Each engagement begins by listening — to your business, your obligations, and the gap between the team you have and the one you need.
@@ -499,10 +476,7 @@ function Sectors() {
                 className="font-display font-light leading-[1] tracking-[-0.03em] max-w-[18ch]"
                 style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
               >
-                Where the work{" "}
-                <em className="italic text-accent" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 100' }}>
-                  tends to land.
-                </em>
+                <Words text="Where the work" accent="tends to land." />
               </h2>
             </div>
             <Link
@@ -522,8 +496,8 @@ function Sectors() {
                 className={`group py-7 px-0 border-b border-rule ${i % 2 === 0 ? "md:pr-12" : "md:pl-12 md:border-l"}`}
               >
                 <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <div className="font-mono text-[10px] tracking-[0.15em] uppercase text-ink-mute mb-2">
+                  <div className="transition-transform duration-500 [transition-timing-function:var(--ease-publication)] group-hover:translate-x-1.5">
+                    <div className="font-mono text-[10px] tracking-[0.15em] uppercase text-ink-mute group-hover:text-accent transition-colors duration-500 mb-2">
                       {String(i + 1).padStart(2, "0")}
                     </div>
                     <h3
@@ -532,8 +506,14 @@ function Sectors() {
                     >
                       {s.name}
                     </h3>
-                    <p className="text-[13px] text-ink-mute mt-2">{s.roles}</p>
+                    <p className="text-[13px] text-ink-mute group-hover:text-ink-soft transition-colors duration-500 mt-2">{s.roles}</p>
                   </div>
+                  <span
+                    aria-hidden="true"
+                    className="text-ink-mute text-lg opacity-0 -translate-x-2 transition-all duration-500 [transition-timing-function:var(--ease-publication)] group-hover:opacity-100 group-hover:translate-x-0 shrink-0"
+                  >
+                    →
+                  </span>
                 </div>
               </div>
             ))}
@@ -550,7 +530,7 @@ function ContactCTA() {
   return (
     <section className="bg-ink text-paper py-24 md:py-36 relative overflow-hidden">
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none mesh-drift"
         style={{
           background: "radial-gradient(ellipse 60% 50% at 80% 50%, oklch(0.285 0.075 263 / 0.3), transparent 70%), radial-gradient(ellipse 40% 40% at 15% 60%, oklch(0.285 0.075 263 / 0.15), transparent 70%)",
         }}
@@ -567,13 +547,7 @@ function ContactCTA() {
                 className="font-display font-light leading-[0.97] tracking-[-0.03em]"
                 style={{ fontSize: "clamp(40px, 6vw, 96px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
               >
-                Tell us about the people problem{" "}
-                <em
-                  className="italic"
-                  style={{ color: "oklch(0.765 0.055 263)", fontVariationSettings: '"opsz" 144, "SOFT" 100' }}
-                >
-                  in front of you.
-                </em>
+                <Words text="Tell us about the people problem" accent="in front of you." accentColor="oklch(0.765 0.055 263)" />
               </h2>
             </div>
 
@@ -608,5 +582,89 @@ function ContactCTA() {
         </Reveal>
       </Wrap>
     </section>
+  );
+}
+
+/* ─────────────────── Motion helpers ─────────────────── */
+
+// Splits a heading into words that rise one by one once the enclosing <Reveal> is in view.
+function Words({
+  text,
+  accent,
+  accentColor,
+}: {
+  text: string;
+  accent?: string;
+  accentColor?: string;
+}) {
+  const parts = [
+    ...text.split(" ").map((w) => ({ w, accent: false })),
+    ...(accent ? accent.split(" ").map((w) => ({ w, accent: true })) : []),
+  ];
+  return (
+    <>
+      {parts.map((p, i) => (
+        <Fragment key={i}>
+          <span className="word" style={{ "--i": i } as CSSProperties}>
+            <span
+              className={p.accent ? (accentColor ? "italic" : "italic text-accent") : undefined}
+              style={
+                p.accent
+                  ? { color: accentColor, fontVariationSettings: '"opsz" 144, "SOFT" 100' }
+                  : undefined
+              }
+            >
+              {p.w}
+            </span>
+          </span>
+          {i < parts.length - 1 ? " " : null}
+        </Fragment>
+      ))}
+    </>
+  );
+}
+
+// London → Gulf route drawn behind the hero headline, with a traveller moving along it.
+const ROUTE_PATH = "M 300 150 C 470 30, 690 120, 820 360";
+
+function RouteLine({ animate }: { animate: boolean }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={`absolute inset-0 z-0 w-full h-full pointer-events-none transition-opacity duration-[1500ms] ${animate ? "opacity-100" : "opacity-0"}`}
+      viewBox="0 0 1000 600"
+      preserveAspectRatio="xMidYMid slice"
+      fill="none"
+    >
+      <defs>
+        <linearGradient id="route-grad" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" style={{ stopColor: "var(--color-accent)", stopOpacity: 0 }} />
+          <stop offset="0.45" style={{ stopColor: "var(--color-accent)", stopOpacity: 0.55 }} />
+          <stop offset="1" style={{ stopColor: "var(--color-accent)", stopOpacity: 0.1 }} />
+        </linearGradient>
+      </defs>
+      <path d={ROUTE_PATH} stroke="url(#route-grad)" strokeWidth="1" className="route-path" />
+      <g className="route-node" style={{ animationDelay: "1.1s" }}>
+        <circle cx="300" cy="150" r="2.5" className="fill-accent" />
+        <circle cx="300" cy="150" r="2.5" className="stroke-accent route-ring" strokeWidth="0.75" />
+      </g>
+      <g className="route-node" style={{ animationDelay: "3.2s" }}>
+        <circle cx="820" cy="360" r="2.5" className="fill-accent" />
+        <circle cx="820" cy="360" r="2.5" className="stroke-accent route-ring" strokeWidth="0.75" style={{ animationDelay: "1.5s" }} />
+      </g>
+      {animate && (
+        <circle r="2" className="fill-accent">
+          <animateMotion
+            path={ROUTE_PATH}
+            dur="11s"
+            begin="3.4s"
+            repeatCount="indefinite"
+            calcMode="spline"
+            keyTimes="0;1"
+            keySplines="0.42 0 0.58 1"
+          />
+        </circle>
+      )}
+    </svg>
   );
 }

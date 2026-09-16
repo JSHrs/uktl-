@@ -184,12 +184,60 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes routeDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes ringPulse {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  100% { transform: scale(5);   opacity: 0; }
+}
+
 /* Hero gradient overlay */
 .hero-mesh {
   background:
     radial-gradient(ellipse 55% 45% at 78% 18%, oklch(0.285 0.075 263 / 0.055), transparent 70%),
     radial-gradient(ellipse 40% 35% at 18% 82%, oklch(0.285 0.075 263 / 0.035), transparent 70%);
   animation: meshDrift 28s ease-in-out infinite alternate;
+}
+
+.mesh-drift {
+  animation: meshDrift 32s ease-in-out infinite alternate;
+}
+
+/* Hero route line (London → Gulf) */
+.route-path {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  animation: routeDraw 2.8s var(--ease-publication) 900ms forwards;
+}
+.route-node {
+  opacity: 0;
+  animation: dotIn 0.6s var(--ease-publication) forwards;
+}
+.route-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ringPulse 3.6s ease-out infinite;
+}
+
+/* Word-by-word heading reveal (driven by the enclosing .reveal.in) */
+.word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+.word > span {
+  display: inline-block;
+  transform: translateY(110%);
+  transition: transform 1000ms var(--ease-publication);
+  transition-delay: calc(var(--i, 0) * 55ms);
+}
+.reveal.in .word > span,
+.reveal-stagger.in .word > span {
+  transform: translateY(0);
 }
 
 /* Scrollbar hide utility */
@@ -274,4 +322,7 @@
     transition-duration: 0.01ms !important;
   }
   .title-line > span { transform: none; }
+  .word > span { transform: none; }
+  .route-path { stroke-dashoffset: 0; }
+  .route-node { opacity: 1; }
 }
