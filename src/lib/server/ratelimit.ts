@@ -19,7 +19,7 @@ export const RATE_LIMITS = {
   /** Costly: one Anthropic call per question. */
   aiEscalation: { limit: 20, windowMs: 60 * 60 * 1000 },
   /** Credential stuffing defence. */
-  adminLogin: { limit: 8, windowMs: 15 * 60 * 1000 },
+  adminLogin: { limit: 20, windowMs: 15 * 60 * 1000 },
   /** Public forms — spam defence. */
   publicForm: { limit: 10, windowMs: 60 * 60 * 1000 },
   /** Outbound Reed sync (admin-triggered but bulk). */
@@ -93,3 +93,4 @@ export async function pruneRateLimits(env: AppEnv): Promise<void> {
     /* housekeeping only */
   }
 }
+
