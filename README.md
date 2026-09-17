@@ -25,7 +25,7 @@ npx tsc --noEmit       # must be 0 errors
 npm run build          # must pass
 ```
 
-Admin dashboard in development: `/admin/login`, password `admin123` (only accepted while `ADMIN_PASSWORD_HASH` is unset — remove before production, see CLAUDE.md).
+Admin dashboard: `/admin/login`. Configure `ADMIN_PASSWORD_HASH` and `JWT_SECRET`; missing secrets disable access. No demo credentials are accepted.
 
 For a full local stack with D1 and R2, run under Wrangler and put secrets in `.dev.vars` (gitignored). See `DEPLOYMENT.md`.
 
@@ -50,3 +50,4 @@ See **DEPLOYMENT.md** (Cloudflare infrastructure, migrations, secrets, Supabase 
 ## Status
 
 Merged to `main` and building cleanly as of September 2026. Open items are listed under "Known gaps" in CLAUDE.md.
+
