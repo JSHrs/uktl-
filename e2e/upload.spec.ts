@@ -72,7 +72,7 @@ test.describe("CV upload page", () => {
     fs.unlinkSync(bigFilePath);
   });
 
-  test("submitting a file starts the pipeline or reports processing is unavailable", async ({ page }) => {
+  test("signed-out upload requires sign-in", async ({ page }) => {
     await page.goto("/app/upload");
 
     const fileChooserPromise = page.waitForEvent("filechooser");
@@ -82,10 +82,8 @@ test.describe("CV upload page", () => {
 
     await page.getByRole("button", { name: /parse & match/i }).click();
 
-    // With Cloudflare bindings the stages progress; without them the server
-    // function rejects with a clear message rather than pretending to parse.
-    await expect(
-      page.getByText(/uploading|parsing|matching|done|unavailable/i).first(),
-    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/please sign in/i).first()).toBeVisible({ timeout: 15_000 });
+    await expect(page).toHaveURL(/\/app\/upload/);
   });
 });
+
