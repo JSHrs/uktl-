@@ -22,27 +22,37 @@ test.describe("Admin authentication", () => {
     await page.goto("/admin/login");
     await page.getByPlaceholder(/password/i).fill("wrongpassword");
     await page.getByRole("button", { name: /sign in/i }).click();
-    await expect(page.getByText(/invalid/i)).toBeVisible();
+    await expect(page.getByText(/invalid|not configured|login failed/i)).toBeVisible();
     await expect(page).toHaveURL(/\/admin\/login/);
   });
 
-  test("signs in with dev password and lands on overview", async ({ page }) => {
+  test("signs in with configured password and lands on overview", async ({ page }) => {
+    test.skip(!process.env.E2E_ADMIN_PASSWORD || !process.env.E2E_BASE_URL, "requires configured staging credentials");
     await page.goto("/admin/login");
-    await page.getByPlaceholder(/password/i).fill("admin123");
+    await page.getByPlaceholder(/password/i).fill(process.env.E2E_ADMIN_PASSWORD!);
     await page.getByRole("button", { name: /sign in/i }).click();
     await expect(page).toHaveURL(/\/admin\/?$/);
     await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
   });
 
   test("sign out returns to login page", async ({ page }) => {
+    test.skip(!process.env.E2E_ADMIN_PASSWORD || !process.env.E2E_BASE_URL, "requires configured staging credentials");
     // Sign in first
     await page.goto("/admin/login");
-    await page.getByPlaceholder(/password/i).fill("admin123");
+    await page.getByPlaceholder(/password/i).fill(process.env.E2E_ADMIN_PASSWORD!);
     await page.getByRole("button", { name: /sign in/i }).click();
     await expect(page).toHaveURL(/\/admin\/?$/);
 
     // Sign out
     await page.getByRole("button", { name: /sign out/i }).click();
+    await expect(page).toHaveURL(/\/admin\/login/);
+  });
+
+  test("rejects the removed demo password", async ({ page }) => {
+    await page.goto("/admin/login");
+    await page.getByPlaceholder(/password/i).fill("admin123");
+    await page.getByRole("button", { name: /sign in/i }).click();
+    await expect(page.getByText(/invalid|not configured|login failed/i)).toBeVisible();
     await expect(page).toHaveURL(/\/admin\/login/);
   });
 
@@ -53,3 +63,4 @@ test.describe("Admin authentication", () => {
     expect(robots).toMatch(/nofollow/);
   });
 });
+
