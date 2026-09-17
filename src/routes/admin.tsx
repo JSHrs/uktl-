@@ -1,3 +1,4 @@
+import { DataError } from "@/components/app/DataError";
 import type { ReactNode } from "react";
 import { createFileRoute, Link, Outlet, redirect, useRouter } from "@tanstack/react-router";
 import { adminLogoutFn, adminSessionFn } from "@/lib/functions";
@@ -13,6 +14,7 @@ export const Route = createFileRoute("/admin")({
     const { valid } = await adminSessionFn();
     if (!valid) throw redirect({ to: "/admin/login" });
   },
+  errorComponent: DataError,
   component: AdminLayout,
 });
 
@@ -200,3 +202,4 @@ export const textareaCls =
 
 export const selectCls =
   "w-full border border-rule rounded px-3 py-2 text-sm bg-paper text-ink focus:outline-none focus:border-ink transition-colors";
+
