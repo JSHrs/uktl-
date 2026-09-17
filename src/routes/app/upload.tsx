@@ -1,10 +1,11 @@
 import { useState, useCallback, useRef } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/AppLayout";
-import { uploadAndParseCvFn } from "@/lib/functions";
+import { uploadAndParseCvFn, getViewerFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/app/upload")({
+  loader: () => getViewerFn(),
   component: UploadPage,
 });
 
@@ -28,6 +29,7 @@ function stagePercent(stage: Stage): number {
 
 function UploadPage() {
   const navigate = useNavigate();
+  const viewer = Route.useLoaderData();
   const [file, setFile] = useState<File | null>(null);
   const [stage, setStage] = useState<Stage>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +64,10 @@ function UploadPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!file || busy) return;
+    if (!viewer.isAdmin && !viewer.userId) {
+      setError("Please sign in before uploading your CV.");
+      return;
+    }
     setError(null);
     setStage("uploading");
 
@@ -101,6 +107,7 @@ function UploadPage() {
 
   return (
     <>
+      {!viewer.isAdmin && !viewer.userId && <Link to="/auth/login" className="text-sm underline">Sign in to upload your CV</Link>}
       <PageHeader
         eyebrow="Upload"
         title={
@@ -237,3 +244,4 @@ function UploadPage() {
     </>
   );
 }
+

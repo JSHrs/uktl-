@@ -14,6 +14,51 @@ export type NotificationOutcome =
 const FROM = "noreply@uktalentlink.co.uk";
 const TO = ["info@uktalentlink.co.uk"];
 
+export async function deliverNotification(env: AppEnv, kind: "enquiries" | "bookings", id: string): Promise<NotificationOutcome> {
+  try {
+    return await claimAndDeliverNotification(env, kind, id);
+  } catch {
+    console.error("[notify] delivery state unavailable", { kind, id });
+    return { status: "failed", reason: "Delivery state unavailable; check before resending" };
+  }
+}
+
+/** Atomically claim one send; concurrent retries cannot send the same record. */
+async function claimAndDeliverNotification(
+  env: AppEnv,
+  kind: "enquiries" | "bookings",
+  id: string,
+): Promise<NotificationOutcome> {
+  if (kind !== "enquiries" && kind !== "bookings") throw new Error("Invalid notification kind");
+  const now = Date.now();
+  // Resend's idempotency keys expire after 24h. Stop retries before that
+  // boundary; old or interrupted sends need provider-log reconciliation.
+  const row = await env.DB.prepare(
+    `UPDATE ${kind} SET notification_status='sending',
+       notification_attempts=notification_attempts+1, notification_at=?
+     WHERE id=? AND notification_status IN ('pending','failed','skipped')
+       AND created_at > ? RETURNING *`,
+  ).bind(now, id, now - 23 * 60 * 60 * 1000).first<Record<string, unknown>>();
+  if (!row) return { status: "skipped", reason: "Already sent, in progress, or requires delivery reconciliation" };
+  const email = kind === "enquiries"
+    ? enquiryEmail({ name: String(row.name), email: String(row.email), company: row.company as string | null,
+        enquiry_type: row.enquiry_type as string | null, message: String(row.message) })
+    : bookingEmail({ contact_name: String(row.contact_name), contact_email: String(row.contact_email),
+        topic_area: row.topic_area as string | null });
+  const outcome = await sendNotificationEmail(env, email, `uktl-${kind}-${id}`);
+  try {
+    await env.DB.prepare(
+      `UPDATE ${kind} SET notification_status=?, notification_error=? WHERE id=?`,
+    ).bind(outcome.status, outcome.status === "sent" ? null : outcome.reason, id).run();
+  } catch {
+    // Keep the claimed row in 'sending' and require reconciliation: never
+    // throw after saving the original enquiry and encourage resubmission.
+    console.error("[notify] delivery state persistence failed", { kind, id });
+    return { status: "failed", reason: "Delivery requires reconciliation" };
+  }
+  return outcome;
+}
+
 type Email = {
   subject: string;
   text: string;
@@ -33,6 +78,7 @@ function safeReason(input: string): string {
 export async function sendNotificationEmail(
   env: AppEnv,
   email: Email,
+  idempotencyKey: string,
 ): Promise<NotificationOutcome> {
   if (!env.RESEND_API_KEY) {
     return { status: "skipped", reason: "RESEND_API_KEY not configured" };
@@ -40,9 +86,11 @@ export async function sendNotificationEmail(
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
+      signal: AbortSignal.timeout(15000),
       headers: {
         Authorization: `Bearer ${env.RESEND_API_KEY}`,
         "Content-Type": "application/json",
+        "Idempotency-Key": idempotencyKey,
       },
       body: JSON.stringify({
         from: FROM,
@@ -54,16 +102,14 @@ export async function sendNotificationEmail(
     });
 
     if (!res.ok) {
-      const body = safeReason(await res.text().catch(() => ""));
-      const reason = `Resend HTTP ${res.status}${body ? `: ${body}` : ""}`;
-      // Safe log: status + redacted provider message, no key, no message body.
-      console.error("[notify] delivery failed", { status: res.status, reason });
+      const reason = `Resend HTTP ${res.status}`;
+      console.error("[notify] delivery failed", { status: res.status });
       return { status: "failed", reason };
     }
     return { status: "sent" };
   } catch (err) {
-    const reason = safeReason(err instanceof Error ? err.message : String(err));
-    console.error("[notify] delivery error", { reason });
+    const reason = "Email delivery could not be confirmed";
+    console.error("[notify] delivery could not be confirmed");
     return { status: "failed", reason };
   }
 }

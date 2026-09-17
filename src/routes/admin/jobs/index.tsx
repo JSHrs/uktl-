@@ -14,7 +14,7 @@ function AdminJobsList() {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState<{ inserted: number; skipped: number } | null>(null);
+  const [syncResult, setSyncResult] = useState<{ inserted: number; skipped: number; failed: number } | null>(null);
 
   async function syncFromReed() {
     if (syncing) return;
@@ -22,7 +22,7 @@ function AdminJobsList() {
     setSyncResult(null);
     try {
       const result = await syncReedJobsFn({ data: { keywords: "", sector: "construction", resultsToTake: 50 } });
-      setSyncResult({ inserted: result.inserted, skipped: result.skipped });
+      setSyncResult({ inserted: result.inserted, skipped: result.skipped, failed: result.failed });
       await router.invalidate();
     } catch (err) {
       alert(err instanceof Error ? err.message : "Reed sync failed");
@@ -69,7 +69,8 @@ function AdminJobsList() {
       {syncResult && (
         <div className="mb-4 px-4 py-3 rounded-md border border-accent/30 bg-accent-soft text-sm text-accent">
           Reed sync complete — {syncResult.inserted} new mandate{syncResult.inserted !== 1 ? "s" : ""} imported
-          {syncResult.skipped > 0 ? `, ${syncResult.skipped} already existed` : ""}.
+          {syncResult.skipped > 0 ? `, ${syncResult.skipped} already existed` : ""}
+          {syncResult.failed > 0 ? `, ${syncResult.failed} failed — retry the sync` : ""}.
         </div>
       )}
 
@@ -130,3 +131,4 @@ function AdminJobsList() {
     </>
   );
 }
+

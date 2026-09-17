@@ -18,10 +18,13 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - run: npm ci
+
+      - name: Regression tests
+        run: npm run test:unit
 
       - name: Typecheck
         run: npx tsc --noEmit
@@ -43,3 +46,4 @@ jobs:
           name: playwright-report
           path: playwright-report
           retention-days: 7
+

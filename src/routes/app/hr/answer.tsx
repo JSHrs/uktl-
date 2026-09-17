@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 import {
   escalateToAiFn,
+  getViewerFn,
   matchFaqTopicFn,
   recordFaqViewFn,
 } from "@/lib/functions";
@@ -42,6 +43,11 @@ function AnswerPage() {
   async function requestAi() {
     setLoadingAi(true);
     try {
+      const viewer = await getViewerFn();
+      if (!viewer.isAdmin && !viewer.userId) {
+        setAiResponse("Please sign in to request AI guidance.");
+        return;
+      }
       const result = await escalateToAiFn({
         data: { question: q, category, additionalContext: context || undefined },
       });
@@ -55,6 +61,7 @@ function AnswerPage() {
 
   return (
     <div className="max-w-[760px]">
+      <Link to="/auth/login" className="text-sm underline">Sign in for AI guidance</Link>
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-ink-mute mb-8">
         <Link to="/app/hr" className="hover:text-ink transition-colors">
@@ -315,3 +322,4 @@ function formatDuration(s: number | null): string {
   const sec = s % 60;
   return `${m}:${String(sec).padStart(2, "0")}`;
 }
+

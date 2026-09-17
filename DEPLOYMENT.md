@@ -10,7 +10,7 @@
 
 | Tool | Install |
 |------|---------|
-| Node 20+ | `nvm install 20` |
+| Node 24+ | `nvm install 24` |
 | Wrangler CLI | `npm install -g wrangler` |
 | Cloudflare account | `wrangler login` |
 | Supabase project | https://supabase.com (one per environment is recommended) |
@@ -35,7 +35,7 @@ wrangler d1 migrations apply talent-compass-staging-db --env staging
 wrangler d1 migrations apply talent-compass-db --env production
 ```
 
-Migrations live in `./migrations/`, numbered `0001_` → `0008_`, and are applied in order:
+Migrations live in `./migrations/`, numbered `0001_` → `0009_`, and are applied in order:
 
 | File | Adds |
 |---|---|
@@ -47,6 +47,7 @@ Migrations live in `./migrations/`, numbered `0001_` → `0008_`, and are applie
 | 0006_jobs_source | source / source_id / source_url / posted_date / expiry_date on jobs (Reed dedup) |
 | 0007_enquiries | enquiries (contact form) |
 | 0008_match_stages | stage / stage_updated_at on matches (pipeline) |
+| 0009_rate_limits_and_notifications | durable rate-limit counters; notification delivery state |
 
 Never edit an applied migration; add a new numbered file.
 
@@ -103,7 +104,7 @@ node scripts/hash-password.mjs
 
 Paste the hex output into `wrangler secret put ADMIN_PASSWORD_HASH`.
 
-> The demo password `admin123` is accepted **only** while `ADMIN_PASSWORD_HASH` is unset, and the login page currently prints it. This is intentional for now so the dashboard can be exercised without secrets. **Before go-live:** remove the fallback in `src/lib/server/auth.ts` (`verifyPassword`) and the hint in `src/routes/admin/login.tsx`.
+> Both admin secrets are mandatory in every environment. There is no demo password or signing-key fallback; missing secrets disable login. Apply migration 0009 before serving traffic.
 
 ---
 
@@ -143,7 +144,8 @@ The production route `talent-compass.cranbrooklegal.com/*` is set in `wrangler.t
 ## 4 — Post-deploy verification
 
 ```bash
-E2E_BASE_URL=https://talent-compass.cranbrooklegal.com npm run test:e2e
+E2E_BASE_URL=https://<staging-host> E2E_HAS_DB=1 npm run test:e2e
+# Supply E2E_ADMIN_PASSWORD through your environment/secret store; never commit it.
 ```
 
 Manual checklist:
@@ -186,4 +188,15 @@ D1 schema changes are not rolled back by a Worker rollback; write a forward migr
 - `candidates.raw_profile` keeps the full Claude extraction for re-matching (`rematchCandidateFn`).
 - `candidates.auth_user_id` links a CV to a Supabase user; `profiles.d1_candidate_id` is a mirror.
 - `enquiries` and `bookings` are persisted even when Resend is not configured; the email is a notification, not the record.
-- There is no CI. `CLAUDE.md` lists the checks to run by hand before pushing.
+- CI runs regression tests, typecheck, build and browser checks. Run configured, database-backed staging tests separately before release.
+
+
+## Launch hardening requirements (17 September 2026)
+
+Apply the new Supabase migration `20260917085347_harden_auth_schema.sql` after the initial schema. It restricts analytics access, pins the signup trigger search path and restricts direct profile-update columns. This migration has not yet been applied or tested against a live UKTL project.
+
+Notifications show delivery state in the admin bookings and enquiries views. Retry is concurrency-guarded and uses a stable Resend idempotency key. After 23h, or if a process stops while status is `sending`, reconcile with provider logs before manually resending. No automated delivery worker is implemented yet.
+
+CV/AI actions now require authentication and enforce D1 quotas. CV processing without an API key or a valid complete grading response fails explicitly; it no longer synthesizes a score. Signed-out users may browse the public FAQ catalogue but must sign in for AI guidance.
+
+Staging acceptance must verify expired-session refresh, anonymous/cross-account CV rejection, repeated-request rate limits, real PDF/DOCX processing, notification failures and retries, Reed duplicate handling, and database outages. Browser skips are not evidence that these integrations work.

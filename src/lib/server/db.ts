@@ -669,6 +669,7 @@ export async function deleteJob(env: AppEnv, id: string): Promise<void> {
 // ── Bookings ─────────────────────────────────────────────────────────────────
 
 export type BookingRow = {
+  notification_status: string;
   id: string;
   created_at: number;
   user_email: string | null;
@@ -735,6 +736,7 @@ export async function createEnquiry(env: AppEnv, id: string, input: EnquiryInput
 }
 
 export type EnquiryRow = {
+  notification_status: string;
   id: string;
   created_at: number;
   name: string;
@@ -867,3 +869,4 @@ function parseJsonNullable<T>(raw: unknown): T | null {
     return null;
   }
 }
+

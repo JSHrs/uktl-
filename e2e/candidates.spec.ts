@@ -1,8 +1,9 @@
 import { test, expect, type Page } from "./fixtures";
 
 async function signInAsAdmin(page: Page) {
+  test.skip(!process.env.E2E_ADMIN_PASSWORD || !process.env.E2E_BASE_URL, "requires configured staging credentials");
   await page.goto("/admin/login");
-  await page.getByPlaceholder(/password/i).fill("admin123");
+  await page.getByPlaceholder(/password/i).fill(process.env.E2E_ADMIN_PASSWORD!);
   await page.getByRole("button", { name: /sign in/i }).click();
   await expect(page).toHaveURL(/\/admin\/?$/);
 }
@@ -47,3 +48,4 @@ test.describe("Candidate list and detail", () => {
     await expect(page.getByText(/no candidates match/i)).toBeVisible();
   });
 });
+

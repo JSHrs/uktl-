@@ -54,7 +54,9 @@ export async function createSessionToken(secret: string): Promise<string> {
 export async function verifySessionToken(token: string, secret: string): Promise<boolean> {
   if (!token || !secret) return false;
   try {
-    const [payloadB64, sigB64] = token.split(".");
+    const parts = token.split(".");
+    if (parts.length !== 2) return false;
+    const [payloadB64, sigB64] = parts;
     if (!payloadB64 || !sigB64) return false;
 
     const enc = new TextEncoder();
@@ -81,3 +83,4 @@ export async function verifySessionToken(token: string, secret: string): Promise
     return false;
   }
 }
+
