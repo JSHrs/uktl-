@@ -31,7 +31,8 @@ export async function requireAdmin(): Promise<void> {
   if (!(await isAdminRequest())) throw new Error("Unauthorized — admin session required");
 }
 
-export type Viewer = { isAdmin: boolean; userId: string | null };
+import type { Viewer } from "./access-policy";
+export type { Viewer } from "./access-policy";
 
 export async function getViewer(): Promise<Viewer> {
   const { getCandidateSession } = await import("../supabase");
@@ -48,8 +49,4 @@ export async function requireViewer(): Promise<Viewer> {
   return viewer;
 }
 
-// Admin sees everything; a signed-in candidate only their own linked record.
-export function canAccessCandidate(viewer: Viewer, ownerId: string | null | undefined): boolean {
-  if (viewer.isAdmin) return true;
-  return !!viewer.userId && ownerId === viewer.userId;
-}
+export { canAccessCandidate } from "./access-policy";
