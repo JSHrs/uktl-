@@ -3,7 +3,7 @@ import {
   QualityAssessmentSchema,
   type ParsedProfile,
   type QualityAssessment,
-} from "../schemas/profile";
+} from "../schemas/profile.ts";
 
 const EXTRACTION_PROMPT = `You are a structured-data extractor for an executive search firm.
 Extract the attached CV into a strict JSON object matching this schema:
@@ -82,10 +82,8 @@ export async function parseCv(
   input: ParseInput,
   opts: { apiKey?: string; model?: string },
 ): Promise<ParseResult> {
-  if (opts.apiKey) {
-    return parseWithAnthropic(input, opts.apiKey, opts.model ?? "claude-sonnet-4-6");
-  }
-  return parseWithHeuristics(input);
+  if (!opts.apiKey) throw new Error("CV processing is not configured");
+  return parseWithAnthropic(input, opts.apiKey, opts.model ?? "claude-sonnet-4-6");
 }
 
 async function parseWithAnthropic(
@@ -110,6 +108,7 @@ async function parseWithAnthropic(
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
+    signal: AbortSignal.timeout(60000),
     headers: {
       "x-api-key": apiKey,
       "anthropic-version": "2023-06-01",
@@ -122,8 +121,7 @@ async function parseWithAnthropic(
     }),
   });
   if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Anthropic error ${res.status}: ${body.slice(0, 400)}`);
+    throw new Error(`CV extraction unavailable (HTTP ${res.status}). Please retry.`);
   }
   const payload = (await res.json()) as {
     content?: Array<{ type: string; text?: string }>;
@@ -135,6 +133,7 @@ async function parseWithAnthropic(
   // Quality pass — cheap, text-only.
   const qRes = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
+    signal: AbortSignal.timeout(60000),
     headers: {
       "x-api-key": apiKey,
       "anthropic-version": "2023-06-01",
@@ -142,7 +141,7 @@ async function parseWithAnthropic(
     },
     body: JSON.stringify({
       model,
-      max_tokens: 512,
+      max_tokens: 2048,
       messages: [
         {
           role: "user",
@@ -151,65 +150,23 @@ async function parseWithAnthropic(
       ],
     }),
   });
-  let quality: QualityAssessment = { score: 50, notes: [] };
-  if (qRes.ok) {
-    const qPayload = (await qRes.json()) as {
-      content?: Array<{ type: string; text?: string }>;
-    };
-    const qText =
-      qPayload.content?.find((c) => c.type === "text")?.text?.trim() ?? "";
-    try {
-      quality = QualityAssessmentSchema.parse(extractJsonObject(qText));
-    } catch {
-      // Fall through with default quality — try parsing a subset.
-      try {
-        const raw = extractJsonObject(qText) as Record<string, unknown>;
-        quality = { score: Number(raw.score) || 50, notes: (raw.notes as string[]) ?? [] };
-      } catch { /* ignore */ }
-    }
+  if (!qRes.ok) throw new Error(`CV grading unavailable (HTTP ${qRes.status}). Please retry.`);
+  const qPayload = (await qRes.json()) as {
+    stop_reason?: string;
+    content?: Array<{ type: string; text?: string }>;
+  };
+  if (qPayload.stop_reason === "max_tokens") {
+    throw new Error("CV grading response was incomplete. Please retry.");
+  }
+  const qText = qPayload.content?.find((c) => c.type === "text")?.text?.trim() ?? "";
+  let quality: QualityAssessment;
+  try {
+    quality = QualityAssessmentSchema.required({ breakdown: true, improvement_report: true })
+      .parse(extractJsonObject(qText));
+  } catch {
+    throw new Error("CV grading returned an invalid assessment. Please retry.");
   }
   return { profile, quality };
-}
-
-// Fallback that works offline on plain text. Designed so the app is usable
-// without an Anthropic key for local demos — extraction is noticeably worse.
-async function parseWithHeuristics(input: ParseInput): Promise<ParseResult> {
-  const text =
-    input.kind === "text"
-      ? input.text
-      : "Binary PDF supplied. Configure ANTHROPIC_API_KEY for full extraction.";
-
-  const emailMatch = text.match(/[\w.%+-]+@[\w.-]+\.[A-Za-z]{2,}/);
-  const phoneMatch = text.match(/\+?\d[\d\s().-]{7,}\d/);
-  const nameMatch = text.match(/^([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})\s*$/m);
-  const linkedinMatch = text.match(/https?:\/\/(?:www\.)?linkedin\.com\/[\w\-/]+/i);
-
-  const profile: ParsedProfile = ParsedProfileSchema.parse({
-    name: nameMatch?.[1] ?? null,
-    email: emailMatch?.[0] ?? null,
-    phone: phoneMatch?.[0] ?? null,
-    location: null,
-    headline: null,
-    summary: null,
-    total_years_experience: null,
-    seniority: null,
-    work_authorization: null,
-    skills: [],
-    experience: [],
-    education: [],
-    languages: [],
-    certifications: [],
-    links: { linkedin: linkedinMatch?.[0] ?? null },
-  });
-  return {
-    profile,
-    quality: {
-      score: 20,
-      notes: [
-        "Heuristic parse only — configure ANTHROPIC_API_KEY for accurate extraction.",
-      ],
-    },
-  };
 }
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -237,3 +194,4 @@ function extractJsonObject(text: string): unknown {
   }
   return JSON.parse(payload.slice(start, end + 1));
 }
+
