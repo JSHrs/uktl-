@@ -75,8 +75,9 @@ function LoginPage() {
         </form>
 
         <p className="mt-6 text-xs text-ink-mute text-center">
-          Demo password: <span className="font-mono">admin123</span>
+          Authorised consultants only.
         </p>
+
       </div>
     </div>
   );
