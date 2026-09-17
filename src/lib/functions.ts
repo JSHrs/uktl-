@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { setCookie, deleteCookie } from "@tanstack/start-server-core";
+import { setCookie, deleteCookie, getRequestHeader } from "@tanstack/start-server-core";
 import { z } from "zod";
 
 import { getEnv } from "./server/env";
@@ -49,8 +49,11 @@ import {
   getViewer,
   isAdminRequest,
   requireAdmin,
+  requireViewer,
 } from "./server/viewer";
 import { enforceRateLimit } from "./server/ratelimit";
+import { deliverNotification } from "./server/notify";
+import { syncReedJobs } from "./server/reed";
 import { parseCv } from "./server/parse";
 import { scoreMatch } from "./server/match";
 import { normaliseSkillList } from "./server/skills";
@@ -85,7 +88,7 @@ export const listCandidatesFn = createServerFn({ method: "GET" }).handler(
       const env = await getEnv();
       return await listCandidates(env, scope);
     } catch {
-      return [];
+      throw new Error("Data is temporarily unavailable. Please try again.");
     }
   },
 );
@@ -101,7 +104,7 @@ export const getCandidateDetailFn = createServerFn({ method: "GET" })
       const matches = await getMatchesForCandidate(env, data.id);
       return { candidate, matches };
     } catch {
-      return null;
+      throw new Error("Data is temporarily unavailable. Please try again.");
     }
   });
 
@@ -124,7 +127,7 @@ export const getAnonymisedCandidateFn = createServerFn({ method: "GET" })
       );
       return anonymiseProfile(profile);
     } catch {
-      return null;
+      throw new Error("Data is temporarily unavailable. Please try again.");
     }
   });
 
@@ -149,7 +152,7 @@ export const getJobDetailFn = createServerFn({ method: "GET" })
       const matches = viewer.isAdmin ? await getMatchesForJob(env, data.id) : [];
       return { job, matches, canManage: viewer.isAdmin };
     } catch {
-      return null;
+      throw new Error("Data is temporarily unavailable. Please try again.");
     }
   });
 
@@ -178,6 +181,7 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
     return raw;
   })
   .handler(async ({ data }) => {
+    const viewer = await requireViewer();
     const file = data.get("file");
     if (!(file instanceof File)) {
       throw new Error("No file uploaded");
@@ -198,6 +202,8 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
     } catch {
       throw new Error("CV processing is unavailable here — Cloudflare D1 and R2 bindings are not configured");
     }
+    await enforceRateLimit(env, "cvUpload", viewer.userId ?? "admin");
+    if (!env.ANTHROPIC_API_KEY) throw new Error("CV processing is not configured");
     const bytes = await file.arrayBuffer();
     const id = newId();
     const r2Key = `cvs/${id}/${sanitiseFilename(file.name)}`;
@@ -423,31 +429,17 @@ For your specific situation, speaking with a qualified employment lawyer is reco
 export const escalateToAiFn = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) =>
     z.object({
-      question: z.string(),
-      category: z.string().optional(),
-      additionalContext: z.string().optional(),
+      question: z.string().trim().min(1).max(4000),
+      category: z.string().max(100).optional(),
+      additionalContext: z.string().max(8000).optional(),
     }).parse(raw),
   )
   .handler(async ({ data }) => {
-    let apiKey: string | undefined;
-    try {
-      const env = await getEnv();
-      apiKey = env.ANTHROPIC_API_KEY;
-    } catch {
-      apiKey = undefined;
-    }
-
-    if (!apiKey) {
-      return {
-        response:
-          "This is a placeholder AI response (Anthropic API key not configured in this environment).\n\n" +
-          "In production, Claude would provide detailed ACAS-grounded guidance on your question. " +
-          "The response would reference relevant UK employment legislation and explain your rights clearly.\n\n" +
-          "This information is for general guidance only and does not constitute legal advice. " +
-          "For your specific situation, speaking with a qualified employment lawyer is recommended.",
-        source: "mock",
-      };
-    }
+    const viewer = await requireViewer();
+    const env = await getEnv();
+    await enforceRateLimit(env, "aiEscalation", viewer.userId ?? "admin");
+    const apiKey = env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error("AI guidance is currently unavailable");
 
     const userMessage = [
       `Question: ${data.question}`,
@@ -515,19 +507,24 @@ function sanitiseFilename(name: string): string {
 // ── Admin auth ───────────────────────────────────────────────────────────────
 
 export const adminLoginFn = createServerFn({ method: "POST" })
-  .inputValidator((raw: unknown) => z.object({ password: z.string() }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ password: z.string().min(1).max(1024) }).parse(raw))
   .handler(async ({ data }) => {
-    let hash: string | undefined;
-    let secret = DEV_JWT_SECRET;
+    let env: Awaited<ReturnType<typeof getEnv>>;
+    let secret: string;
     try {
-      const env = await getEnv();
-      hash = env.ADMIN_PASSWORD_HASH;
+      env = await getEnv();
       secret = getJwtSecret(env);
-    } catch { /* preview mode */ }
+      if (!env.ADMIN_PASSWORD_HASH) throw new Error("Admin access is not configured");
+    } catch {
+      return { ok: false as const, error: "Admin access is not configured" };
+    }
+    // Only trust Cloudflare's overwritten edge header; never forwarded client IDs.
+    await enforceRateLimit(env, "adminLogin", getRequestHeader("cf-connecting-ip") ?? "unknown");
+    const hash = env.ADMIN_PASSWORD_HASH;
     const valid = await verifyPassword(data.password, hash);
     if (!valid) return { ok: false as const, error: "Invalid password" };
     const token = await createSessionToken(secret);
-    setCookie(SESSION_COOKIE, token, { httpOnly: true, sameSite: "strict", maxAge: 8 * 3600, path: "/" });
+    setCookie(SESSION_COOKIE, token, { httpOnly: true, secure: true, sameSite: "strict", maxAge: 8 * 3600, path: "/" });
     return { ok: true as const };
   });
 
@@ -548,8 +545,8 @@ export const adminListFaqFn = createServerFn({ method: "GET" }).handler(async ()
     const env = await getEnv();
     return await listAllFaqTopics(env);
   } catch {
-    return [];
-  }
+      throw new Error("Data is temporarily unavailable. Please try again.");
+    }
 });
 
 export const adminGetFaqFn = createServerFn({ method: "GET" })
@@ -560,7 +557,7 @@ export const adminGetFaqFn = createServerFn({ method: "GET" })
       const env = await getEnv();
       return await getFaqTopic(env, data.id);
     } catch {
-      return null;
+      throw new Error("Data is temporarily unavailable. Please try again.");
     }
   });
 
@@ -624,8 +621,8 @@ export const adminListJobsFn = createServerFn({ method: "GET" }).handler(async (
     const env = await getEnv();
     return await listAllJobs(env);
   } catch {
-    return [];
-  }
+      throw new Error("Data is temporarily unavailable. Please try again.");
+    }
 });
 
 const JobInputSchema = z.object({
@@ -863,34 +860,16 @@ export const createBookingFn = createServerFn({ method: "POST" })
     const { getCandidateSession } = await import("./supabase");
     const session = await getCandidateSession();
     const env = await getEnv();
+    await enforceRateLimit(env, "publicForm", getRequestHeader("cf-connecting-ip") ?? "unknown");
     const id = "booking_" + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
     await createBooking(env, id, {
       ...data,
       auth_user_id: session.userId ?? undefined,
       user_email: session.email ?? undefined,
     });
-    // Notify admin via Resend if configured
-    if (env.RESEND_API_KEY) {
-      await sendBookingNotification(env.RESEND_API_KEY, data).catch(() => {});
-    }
-    return { id };
+    const notification = await deliverNotification(env, "bookings", id);
+    return { id, notification };
   });
-
-async function sendBookingNotification(
-  resendKey: string,
-  booking: { contact_name: string; contact_email: string; topic_area?: string | null },
-): Promise<void> {
-  await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: "noreply@uktalentlink.co.uk",
-      to: ["info@uktalentlink.co.uk"],
-      subject: `New consultation booking — ${booking.contact_name}`,
-      text: `New consultation booking received.\n\nName: ${booking.contact_name}\nEmail: ${booking.contact_email}\nTopic: ${booking.topic_area ?? "Not specified"}\n`,
-    }),
-  });
-}
 
 // ── Contact enquiries ────────────────────────────────────────────────────────
 
@@ -906,6 +885,7 @@ export const submitEnquiryFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const env = await getEnv();
+    await enforceRateLimit(env, "publicForm", getRequestHeader("cf-connecting-ip") ?? "unknown");
     const id = "enq_" + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
     await createEnquiry(env, id, {
       name: data.name,
@@ -914,30 +894,18 @@ export const submitEnquiryFn = createServerFn({ method: "POST" })
       enquiry_type: data.enquiry_type || null,
       message: data.message,
     });
-    if (env.RESEND_API_KEY) {
-      await sendEnquiryNotification(env.RESEND_API_KEY, data).catch(() => {});
-    }
-    return { id };
+    const notification = await deliverNotification(env, "enquiries", id);
+    return { id, notification };
   });
 
-async function sendEnquiryNotification(
-  resendKey: string,
-  e: { name: string; email: string; company?: string; enquiry_type?: string; message: string },
-): Promise<void> {
-  await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: "noreply@uktalentlink.co.uk",
-      to: ["info@uktalentlink.co.uk"],
-      reply_to: e.email,
-      subject: `New enquiry — ${e.name}${e.enquiry_type ? ` (${e.enquiry_type})` : ""}`,
-      text:
-        `Name: ${e.name}\nEmail: ${e.email}\nCompany: ${e.company || "—"}\n` +
-        `Type: ${e.enquiry_type || "—"}\n\n${e.message}\n`,
-    }),
+export const adminRetryNotificationFn = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) => z.object({ kind: z.enum(["enquiries", "bookings"]), id: z.string() }).parse(raw))
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const env = await getEnv();
+    await enforceRateLimit(env, "publicForm", "admin-notification-retry");
+    return deliverNotification(env, data.kind, data.id);
   });
-}
 
 export const adminListEnquiriesFn = createServerFn({ method: "GET" }).handler(async () => {
   await requireAdmin();
@@ -945,8 +913,8 @@ export const adminListEnquiriesFn = createServerFn({ method: "GET" }).handler(as
     const env = await getEnv();
     return await listEnquiries(env);
   } catch {
-    return [];
-  }
+      throw new Error("Data is temporarily unavailable. Please try again.");
+    }
 });
 
 export const adminSetEnquiryStatusFn = createServerFn({ method: "POST" })
@@ -966,8 +934,8 @@ export const adminListBookingsFn = createServerFn({ method: "GET" }).handler(asy
     const env = await getEnv();
     return await listBookings(env);
   } catch {
-    return [];
-  }
+      throw new Error("Data is temporarily unavailable. Please try again.");
+    }
 });
 
 // ── Admin: Analytics ─────────────────────────────────────────────────────────
@@ -978,11 +946,7 @@ export const adminGetAnalyticsFn = createServerFn({ method: "GET" }).handler(asy
     const env = await getEnv();
     return await getAdminAnalytics(env);
   } catch {
-    return {
-      total_candidates: 0, parsed_candidates: 0, avg_quality_score: null,
-      total_jobs: 0, open_jobs: 0, total_faq_views: 0,
-      total_queries: 0, resolved_queries: 0, total_bookings: 0,
-    };
+    throw new Error("Analytics is temporarily unavailable. Please try again.");
   }
 });
 
@@ -999,63 +963,7 @@ export const syncReedJobsFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await requireAdmin();
     const env = await getEnv();
-    if (!env.REED_API_KEY) throw new Error("REED_API_KEY not configured");
-
-    // Reed API uses HTTP Basic Auth: API key as username, password blank
-    const auth = btoa(`${env.REED_API_KEY}:`);
-    const params = new URLSearchParams({
-      keywords: data.keywords || (data.sector === "construction" ? "construction engineering" : "software technology"),
-      locationName: "United Kingdom",
-      resultsToTake: String(data.resultsToTake),
-      fullTime: "true",
-    });
-
-    const res = await fetch(`https://www.reed.co.uk/api/1.0/search?${params}`, {
-      headers: { Authorization: `Basic ${auth}`, Accept: "application/json" },
-    });
-    if (!res.ok) throw new Error(`Reed API error: ${res.status}`);
-
-    const body = (await res.json()) as { results?: ReedJob[] };
-    const reedJobs = body.results ?? [];
-
-    let inserted = 0;
-    let skipped = 0;
-
-    for (const rj of reedJobs) {
-      const existing = await env.DB.prepare(`SELECT id FROM jobs WHERE source_id=?`)
-        .bind(String(rj.jobId))
-        .first<{ id: string }>();
-      if (existing) { skipped++; continue; }
-
-      const id = "job_" + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
-      const now = Date.now();
-      await env.DB.prepare(
-        `INSERT INTO jobs (id, created_at, title, company, location, sector, description, must_have_skills, nice_to_have_skills, status, source, source_id, source_url, posted_date, expiry_date)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'open', 'reed', ?, ?, ?, ?)`,
-      ).bind(
-        id, now,
-        rj.jobTitle, rj.employerName ?? null,
-        rj.locationName ?? null, data.sector,
-        rj.jobDescription ?? null,
-        JSON.stringify([]), JSON.stringify([]),
-        String(rj.jobId),
-        rj.jobUrl ?? null,
-        rj.date ?? null,
-        rj.expirationDate ?? null,
-      ).run().catch(() => { skipped++; });
-      inserted++;
-    }
-
-    return { inserted, skipped, total: reedJobs.length };
+    await enforceRateLimit(env, "reedSync", "admin");
+    return syncReedJobs(env, data);
   });
 
-type ReedJob = {
-  jobId: number;
-  jobTitle: string;
-  employerName?: string;
-  locationName?: string;
-  jobDescription?: string;
-  jobUrl?: string;
-  date?: string;
-  expirationDate?: string;
-};
