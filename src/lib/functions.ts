@@ -42,7 +42,7 @@ import {
   type FaqTopicInput,
   type JobInput,
 } from "./server/db";
-import { DEV_JWT_SECRET, SESSION_COOKIE, createSessionToken, verifyPassword } from "./server/auth";
+import { SESSION_COOKIE, createSessionToken, verifyPassword } from "./server/auth";
 import {
   canAccessCandidate,
   getJwtSecret,
@@ -50,6 +50,7 @@ import {
   isAdminRequest,
   requireAdmin,
 } from "./server/viewer";
+import { enforceRateLimit } from "./server/ratelimit";
 import { parseCv } from "./server/parse";
 import { scoreMatch } from "./server/match";
 import { normaliseSkillList } from "./server/skills";
