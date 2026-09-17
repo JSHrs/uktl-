@@ -1,3 +1,4 @@
+import { NotificationStatus } from "@/components/app/NotificationStatus";
 import { useState } from "react";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -132,6 +133,7 @@ function EnquiriesPage() {
                       </option>
                     ))}
                   </select>
+                  <NotificationStatus kind="enquiries" id={e.id} status={e.notification_status} createdAt={e.created_at} />
                 </AdminTd>
               </AdminTr>
             );
@@ -149,3 +151,4 @@ function formatDate(ts: number): string {
     year: "numeric",
   });
 }
+
