@@ -6,14 +6,15 @@ const HAS_DB = !!process.env.E2E_HAS_DB;
 
 async function signInAndGoToMandates(page: Page) {
   await page.goto("/admin/login");
-  await page.getByPlaceholder(/password/i).fill("admin123");
+  await page.getByPlaceholder(/password/i).fill(process.env.E2E_ADMIN_PASSWORD!);
   await page.getByRole("button", { name: /sign in/i }).click();
   await expect(page).toHaveURL(/\/admin\/?$/);
   await page.getByRole("navigation").getByRole("link", { name: "Mandates", exact: true }).click();
   await expect(page).toHaveURL(/\/admin\/jobs/);
 }
 
-test.describe("Admin — mandate management", () => {
+test.describe.serial("Admin — mandate management", () => {
+  test.skip(!process.env.E2E_ADMIN_PASSWORD || !process.env.E2E_BASE_URL, "requires configured staging credentials");
   test("mandates list page loads", async ({ page }) => {
     await signInAndGoToMandates(page);
     await expect(page.getByRole("heading", { name: /mandate/i })).toBeVisible();
@@ -60,3 +61,4 @@ test.describe("Admin — mandate management", () => {
     });
   });
 });
+
