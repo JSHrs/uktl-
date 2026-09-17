@@ -28,7 +28,7 @@ UK Talent Link's public website plus **Talent Compass**, a recruitment intellige
 
 | PR | Delivered |
 |---|---|
-| #3 | Adopted this branch as `main`, superseding an earlier rebuild. Brought in: Supabase candidate auth, CV quality breakdown + improvement report, Reed.co.uk job sync, bookings + analytics, the minimalist redesign of the site and app shell, removal of all mock data. |
+| #3 | Adopted this branch as `main`, superseding an earlier rebuild. Brought in: Supabase candidate auth, CV quality breakdown + improvement report, Reed.co.uk job sync, bookings + analytics, the minimalist redesign of the site and app shell, removal of candidate/job mock datasets (AI/parser fallback removal followed in launch hardening). |
 | #4 | Fixed all seven Codex review findings: admin server functions now authenticate; candidate data scoped (admin all / candidate own / anonymous nothing); migration 0005 rebuilt correctly; contact form persists + emails; DOCX text extraction; CV linked to the signed-in candidate; magic-link callback. **Also fixed the runtime break that made every page return 500** (`.validator` → `.inputValidator`) and the build failure (import-protection, stale route tree). |
 | #5 | `CLAUDE.md`, `README.md`, rewritten `DEPLOYMENT.md`. Landing page: stats strip removed, London→Gulf route animation, word-by-word heading reveals, hover motion, all `prefers-reduced-motion`-safe. |
 | #6 | Deployable Workers build + `wrangler deploy --dry-run` passing for staging and production. CI workflow. Playwright suite repaired (24 pass / 7 skipped / 0 fail). Pipeline stages (migration 0008). Admin enquiries inbox. CV download route. Toast notifications. |
@@ -41,13 +41,14 @@ UK Talent Link's public website plus **Talent Compass**, a recruitment intellige
 npm ci
 npx tsc --noEmit            # 0 errors — keep it there
 npm run build               # Workers bundle → dist/server + dist/client
-PW_EXECUTABLE_PATH=/opt/pw-browsers/chromium npm run test:e2e   # 24 passed, 7 skipped (need D1)
+npm run test:unit            # current security/integration regression tests
+PW_EXECUTABLE_PATH=/opt/pw-browsers/chromium npm run test:e2e   # historic baseline: 24 passed, 7 skipped; authenticated tests now require staging credentials
 npx wrangler deploy --dry-run --outdir /tmp/wr --env production   # lists DB, CV_BUCKET, ASSETS, vars
 ```
 
 CI (`.github/workflows/ci.yml`) runs typecheck, build and e2e on every PR and push to `main`; the first run on `main` passed in ~2 minutes. Do not merge red.
 
-Migrations `0001`–`0008` replay cleanly on SQLite (`node:sqlite`, Node 22) — replay them again whenever you add one.
+Migrations `0001`–`0009` replay cleanly on SQLite (`node:sqlite`, Node 22) — replay them again whenever you add one.
 
 ---
 
@@ -58,9 +59,9 @@ Nothing has been deployed to any environment yet. In order:
 1. **Cloudflare infrastructure** — create D1 databases and R2 buckets, paste the D1 ids into `wrangler.toml`, apply migrations (`DEPLOYMENT.md` §1).
 2. **Supabase project** — apply `supabase/migrations/20260915000001_initial.sql`; set Site URL; add `<SITE_URL>/auth/callback` to Redirect URLs for each environment (§1.4).
 3. **Vars and secrets** — fill every `[vars]` / `[env.*.vars]` block; `wrangler secret put` for `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `JWT_SECRET`, `ADMIN_PASSWORD_HASH`, `SUPABASE_SERVICE_ROLE_KEY`, `REED_API_KEY` (§2).
-4. **Remove the demo admin password.** `admin123` is accepted while `ADMIN_PASSWORD_HASH` is unset and is printed on `/admin/login`. It was kept deliberately so the dashboard can be exercised without secrets. Delete the fallback branch in `src/lib/server/auth.ts` (`verifyPassword`) and the hint paragraph in `src/routes/admin/login.tsx`, then update the e2e admin sign-in helper to read the password from an env var.
+4. **Configure secure admin access.** Demo-password and signing-key fallbacks are removed. Set both secrets and apply D1 migration 0009. Browser tests read `E2E_ADMIN_PASSWORD` and require a configured staging URL.
 5. **Deploy staging, run the post-deploy checklist** (`DEPLOYMENT.md` §4), then production.
-6. **Resend sender domain** — `noreply@uktalentlink.co.uk` must be verified in Resend or notifications silently fail (they are wrapped in `.catch`).
+6. **Resend sender domain** — `noreply@uktalentlink.co.uk` must be verified in Resend or notifications otherwise fail and are recorded in the admin delivery status.
 
 Housekeeping worth one dedicated commit each: run `prettier --write .` once so `npm run lint` becomes meaningful (currently ~250 formatting errors on untouched lines); and remove the unused `AI` binding / `PARSE_PROVIDER` from `src/lib/server/env.ts`.
 
@@ -121,3 +122,12 @@ Supabase holds `profiles` (mirror: `d1_candidate_id`), plus Postgres copies of `
 - Follow the design system (tokens, Fraunces/Geist, `Reveal`, `AppLayout` primitives); no ad-hoc colours.
 - Update `CLAUDE.md` when a rule changes, `DEPLOYMENT.md` when infrastructure changes, and add a row to §2 of this note when you ship something.
 - Never commit secrets. `.dev.vars` is gitignored for local Wrangler runs.
+
+
+## 10. Launch-readiness work — 17 September 2026
+
+The first Lovable pass exhausted available credits and left an undefined `DEV_JWT_SECRET` reference plus a package/lock mismatch. The GitHub repair restores the locked dependencies and completes the integration of fail-closed admin auth, authenticated and D1-rate-limited CV/AI actions, candidate refresh-cookie renewal, notification delivery state/retry controls, explicit CV grading failures, corrected Reed counts and protected-read outage states.
+
+New regression tests cover credentials, malformed tokens, candidate ownership, refresh-only sessions, invalid refreshed sessions, durable limits, migration replay, grading failures, real zero scores, email failures/concurrent retries and Reed counters. Local results: 14 tests passed, TypeScript passed, Workers build passed. Browser installation was blocked by upstream download failures; browser verification must be completed in CI and configured staging. Supabase hardening SQL is prepared but has not been applied to a live project.
+
+Remaining launch gates: passing final PR CI; provision dedicated UKTL staging Supabase and Cloudflare D1/R2; apply migrations; supply API keys and secrets securely; verify sender domain; run database-backed staging acceptance; review production domain/configuration; deploy only after those gates pass. Rate-limit cleanup scheduling and automatic notification retries remain future operational work. No environment has been deployed by this change.
