@@ -1,3 +1,4 @@
+import { DataError } from "@/components/app/DataError";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { AppShell } from "@/components/app/AppLayout";
 
@@ -13,6 +14,7 @@ export const Route = createFileRoute("/app")({
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
+  errorComponent: DataError,
   component: AppLayoutRoute,
 });
 
@@ -23,3 +25,4 @@ function AppLayoutRoute() {
     </AppShell>
   );
 }
+
