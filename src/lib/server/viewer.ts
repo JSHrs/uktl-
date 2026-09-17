@@ -1,20 +1,28 @@
 import { getCookie } from "@tanstack/start-server-core";
 import { getEnv } from "./env";
-import { DEV_JWT_SECRET, SESSION_COOKIE, verifySessionToken } from "./auth";
+import { SESSION_COOKIE, verifySessionToken } from "./auth";
 
+/**
+ * The admin session signing key. There is no development fallback: without
+ * JWT_SECRET no admin session can be issued or verified, so admin access
+ * fails closed.
+ */
 export function getJwtSecret(env: { JWT_SECRET?: string }): string {
-  return env.JWT_SECRET ?? DEV_JWT_SECRET;
+  if (!env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is not configured — admin sessions are disabled");
+  }
+  return env.JWT_SECRET;
 }
 
 export async function isAdminRequest(): Promise<boolean> {
   const token = getCookie(SESSION_COOKIE);
   if (!token) return false;
-  let secret = DEV_JWT_SECRET;
+  let secret: string;
   try {
-    const env = await getEnv();
-    secret = getJwtSecret(env);
+    secret = getJwtSecret(await getEnv());
   } catch {
-    /* preview */
+    // No bindings or no signing key configured → nobody is an admin.
+    return false;
   }
   return verifySessionToken(token, secret);
 }
@@ -29,6 +37,15 @@ export async function getViewer(): Promise<Viewer> {
   const { getCandidateSession } = await import("../supabase");
   const [isAdmin, session] = await Promise.all([isAdminRequest(), getCandidateSession()]);
   return { isAdmin, userId: session.userId };
+}
+
+/** Any authenticated principal — admin consultant or signed-in candidate. */
+export async function requireViewer(): Promise<Viewer> {
+  const viewer = await getViewer();
+  if (!viewer.isAdmin && !viewer.userId) {
+    throw new Error("Please sign in to continue");
+  }
+  return viewer;
 }
 
 // Admin sees everything; a signed-in candidate only their own linked record.
