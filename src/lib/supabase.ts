@@ -34,20 +34,16 @@ export async function getCandidateSession(): Promise<{
   try {
     const accessToken  = await getCookie(ACCESS_COOKIE);
     const refreshToken = await getCookie(REFRESH_COOKIE);
-    if (!accessToken) return { userId: null, email: null };
+    if (!accessToken && !refreshToken) return { userId: null, email: null };
 
     const env = await getEnv();
     if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) return { userId: null, email: null };
 
     const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
-      auth: { persistSession: false },
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
-    const { data, error } = await client.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken ?? "",
-    });
-    if (error || !data.user) return { userId: null, email: null };
-    return { userId: data.user.id, email: data.user.email ?? null };
+    const { resolveCandidateSession } = await import("./server/candidate-session");
+    return await resolveCandidateSession(client.auth, accessToken, refreshToken, setSessionCookies);
   } catch {
     return { userId: null, email: null };
   }
@@ -78,3 +74,4 @@ export async function clearSessionCookies(): Promise<void> {
   await deleteCookie(ACCESS_COOKIE, { path: "/" });
   await deleteCookie(REFRESH_COOKIE, { path: "/" });
 }
+
