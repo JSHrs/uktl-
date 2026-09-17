@@ -1,3 +1,4 @@
+import { NotificationStatus } from "@/components/app/NotificationStatus";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   AdminHeader,
@@ -43,6 +44,7 @@ function BookingsPage() {
               <AdminTd className="text-ink-soft">{b.topic_area ?? "—"}</AdminTd>
               <AdminTd>
                 <StatusBadge status={b.status} />
+                  <NotificationStatus kind="bookings" id={b.id} status={b.notification_status} createdAt={b.created_at} />
               </AdminTd>
               <AdminTd className="text-ink-mute tabular-nums text-xs">
                 {formatDate(b.created_at)}
@@ -76,3 +78,4 @@ function formatDate(ts: number): string {
     year: "numeric",
   });
 }
+
