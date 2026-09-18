@@ -14,6 +14,7 @@ export type RateLimitResult =
 export type RateLimitRule = { limit: number; windowMs: number };
 
 export const RATE_LIMITS = {
+  uploadReconciliation: { limit: 12, windowMs: 60 * 60 * 1000 },
   /** Costly: two Anthropic calls per upload. */
   cvWorker: { limit: 60, windowMs: 60 * 60 * 1000 },
   cvUpload: { limit: 10, windowMs: 60 * 60 * 1000 },
@@ -97,4 +98,3 @@ export async function pruneRateLimits(env: AppEnv): Promise<void> {
     /* housekeeping only */
   }
 }
-

@@ -61,6 +61,7 @@ import { syncReedJobs } from "./server/reed";
 import {resumeReedSync,reedSyncStates} from "./server/reed-sync";
 import { parseCv } from "./server/parse";
 import { scoreMatch } from "./server/match";
+import { inspectUploadReconciliation } from "./server/upload-reconciliation";
 import { normaliseSkillList } from "./server/skills";
 import { anonymiseProfile } from "./server/anonymize";
 import { extractDocxText } from "./server/docx";
@@ -1083,3 +1084,12 @@ export const getCvQueueFn=createServerFn({method:"GET"}).handler(async()=>{
 });
 
 export const reedSyncStatesFn=createServerFn({method:"GET"}).handler(async()=>{await requireAdmin();return reedSyncStates(await getEnv());});
+
+export const inspectUploadsFn=createServerFn({method:"POST"})
+  .inputValidator((raw:unknown)=>z.object({}).strict().parse(raw))
+  .handler(async()=>{
+    await requireAdmin();
+    const env=await getEnv();
+    await enforceRateLimit(env,"uploadReconciliation","administrator");
+    return inspectUploadReconciliation(env);
+  });

@@ -1,5 +1,14 @@
 # Current stage checkpoint — 18 September 2026
 
+## Upload reconciliation inspection checkpoint
+
+- Administrator-only, rate-limited inspection on `/admin/processing` identifies up to 100 old unreferenced CV objects and 100 old candidate records missing object metadata. More-results flags prevent treating a truncated sample as complete.
+- A 24-hour grace period excludes recent writes. Candidate and CV-version references protect retained files; pending/running tasks exclude candidate records from missing-file findings. No CV bytes, object paths or profile contents are returned.
+- Supabase Storage metadata remains read-only, following https://supabase.com/docs/guides/storage/schema/design. The Supabase skill guided metadata-only inspection, access checks and verification. No files/records deleted, database schema changed, scheduler activated or app deployed. Actual cleanup with rechecks, complete inventory and byte-level verification remain open.
+- Local 50 unit tests, TypeScript and Workers build passed. Both exact SQL queries passed read-only EXPLAIN on current UKTL. Isolated PostgreSQL fixtures were added for orphan detection, CV-version protection, grace period and pending-worker protection; current CI must verify them.
+- Previous staff checkpoint CI `35370994696` failed because a test compared PostgreSQL numeric text `'50'` with number `50`; corrected via explicit Number conversion. Its application/browser job passed. Do not treat that previous run as a complete pass.
+- Stage 2 continues. Rough implementation estimate remains about 60% (50–65% range), not launch readiness. Remaining: safe cleanup, broader/bounded match refresh, Claude evaluation, live provider checks, HR/booking, privacy/operations and live acceptance. Previous Supabase synchronization stays deferred.
+
 ## Staff pipeline score freshness
 
 - Existing staff vacancy pipeline matches now recalculate from current profile and job evidence before selecting the top 50. Cached rankings cannot hide a newly stronger match. Equal scores use a stable candidate-ID tie-break.

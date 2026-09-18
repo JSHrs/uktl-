@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {postgresQuery} from '../src/lib/server/postgres.ts';
 import {registerQueuedCv,activateQueuedCv,processNextCv,saveProfileRevision} from '../src/lib/server/processing.ts';
 import {getMatchesForCandidate,getMatchesForJob} from '../src/lib/server/db.ts';
+import {inspectUploadReconciliation} from '../src/lib/server/upload-reconciliation.ts';
 const url=process.env.TEST_DATABASE_URL??'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
 if(!['127.0.0.1','localhost'].includes(new URL(url).hostname)) throw new Error('Only the isolated local database may be used');
 const sql=postgres(url,{max:1,prepare:false});
@@ -40,7 +41,7 @@ try{await sql.begin(async tx=>{
   assert.equal(fresh.score,0);assert.equal(fresh.stage,'shortlisted');
   const staffFresh=(await getMatchesForJob(env,job)).find(m=>m.candidate_id===candidate)!;
   assert.equal(staffFresh.score,0);assert.equal(staffFresh.stage,'shortlisted');
-  assert.equal((await tx`SELECT score FROM matches WHERE candidate_id=${candidate} AND job_id=${job}`)[0].score,50);
+  assert.equal(Number((await tx`SELECT score FROM matches WHERE candidate_id=${candidate} AND job_id=${job}`)[0].score),50);
   const newJob=crypto.randomUUID();
   await tx`INSERT INTO jobs(id,created_at,title,status,must_have_skills) VALUES(${newJob},2,'New import','open','["python"]')`;
   assert.equal((await getMatchesForCandidate(env,candidate)).find(m=>m.job_id===newJob)!.score,50);
@@ -65,6 +66,25 @@ try{await sql.begin(async tx=>{
   assert.equal((await processNextCv(env)).status,'deferred_or_failed');
   const failed=(await tx`SELECT status,last_error,attempts FROM processing_jobs WHERE candidate_id=${candidate} AND profile_revision=3`)[0];
   assert.equal(failed.status,'pending');assert.equal(failed.attempts,1);assert.ok(!failed.last_error.includes('secret'));
+  // Isolated metadata fixtures only: no object bytes or production Storage writes.
+  const orphanId=crypto.randomUUID(),versionId=crypto.randomUUID(),recentId=crypto.randomUUID();
+  const versionKey=`cvs/${candidate}/old-version.txt`;
+  await tx`INSERT INTO storage.objects(id,bucket_id,name,created_at,updated_at) VALUES
+    (${orphanId},'uktl-cvs',${`cvs/${orphanId}/fixture.txt`},now()-interval '48 hours',now()-interval '48 hours'),
+    (${versionId},'uktl-cvs',${versionKey},now()-interval '48 hours',now()-interval '48 hours'),
+    (${recentId},'uktl-cvs',${`cvs/${recentId}/fixture.txt`},now(),now())`;
+  await tx`INSERT INTO cv_versions(id,candidate_id,version,storage_key,filename,content_type,size_bytes,created_at)
+    VALUES(${crypto.randomUUID()},${candidate},1,${versionKey},'fixture.txt','text/plain',1,1)`;
+  const missingId=crypto.randomUUID();
+  await tx`INSERT INTO candidates(id,created_at,updated_at,status,source_r2_key)
+    VALUES(${missingId},1,1,'failed',${`cvs/${missingId}/missing.txt`})`;
+  await tx`UPDATE candidates SET created_at=1,updated_at=1 WHERE id=${candidate}`;
+  const report=await inspectUploadReconciliation(env);
+  assert.ok(report.orphanObjects.some(o=>o.id===orphanId));
+  assert.ok(!report.orphanObjects.some(o=>o.id===versionId||o.id===recentId));
+  assert.ok(report.missingFiles.some(c=>c.id===missingId));
+  assert.ok(!report.missingFiles.some(c=>c.id===candidate),'pending task protects active candidate');
+  assert.equal((await tx`SELECT count(*)::int AS n FROM storage.objects WHERE id=${orphanId}`)[0].n,1);
   throw new Rollback();
 });throw new Error('Fixtures were not rolled back');}catch(e){if(!(e instanceof Rollback))throw e;}finally{globalThis.fetch=originalFetch;await sql.end();}
 console.log('PASS: actual worker registration, activation, parse/grade, skill mapping, preserved stages, edit refresh, stale-result rejection and private retry errors; all fixtures rolled back');
