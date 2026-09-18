@@ -7,11 +7,15 @@ export const Route = createFileRoute("/api/reed-sync")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const authorization = request.headers.get("authorization");
+        if (!authorization || !/^Bearer \S{32,}$/.test(authorization))
+          return new Response("Unauthorized", {
+            status: 401,
+            headers: { "Cache-Control": "no-store" },
+          });
         try {
           const env = await getEnv();
-          if (
-            !(await validMaintenanceSecret(request.headers.get("authorization"), env.CRON_SECRET))
-          )
+          if (!(await validMaintenanceSecret(authorization, env.CRON_SECRET)))
             return new Response("Unauthorized", { status: 401 });
           const { sector } = await request.json();
           if (sector !== "construction" && sector !== "technology")
