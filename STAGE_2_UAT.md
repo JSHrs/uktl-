@@ -4,6 +4,8 @@
 
 Implemented: private upload registration plus durable task before storage, delayed recovery if activation is interrupted, three bounded attempts, 15-minute leases, stale-result fencing, optimistic profile revision checks, editable extraction, refreshed assessment, candidate status display, administrator queue and secret-protected maintenance endpoint. No live provider or deployed browser acceptance is claimed.
 
+Verified implementation commit: `58db92348aad4910161b89a5e6b5c86a3b7495bc`; [CI 35360043671](https://github.com/devacnt/UKTL/actions/runs/35360043671) passed both jobs. 36 unit tests and 24 browser checks passed; 14 authenticated cases remain skipped.
+
 Automated evidence: `supabase/tests/cv_processing.sql` exercises lease recovery, token rejection, ownership, stale edits, retry delay/ceiling and function privileges. The entire live test transaction rolls back. `scripts/test-processing-postgres.ts` exercises the actual worker and persistence statements against isolated PostgreSQL with synthetic provider responses; it checks skill normalization, consultant-stage preservation, correction refresh and rejection of in-flight stale results. It makes no paid AI calls.
 
 ## When the owner connects Cloudflare

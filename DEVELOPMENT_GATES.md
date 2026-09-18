@@ -30,7 +30,7 @@ Required evidence: commit and CI URL; live RLS test results; staging URL; tester
 
 ## Gate 2 — recruitment service (D2–D6)
 
-Implementation: IN PROGRESS. Discovery persistence/history, vacancy interest visibility and conservative rules-based scoring are implemented. Durable queue/leases/retries and revision-safe editable extraction are implemented with live rollback SQL checks. Reed scheduling, Claude matching/evaluation and orphan cleanup remain. Live acceptance remains OPEN; deferred hosting does not block development.
+Implementation: IN PROGRESS. Discovery persistence/history, vacancy interest visibility and conservative rules-based scoring are implemented. Durable queue/leases/retries and revision-safe editable extraction passed automated checkpoint `58db9234` / CI `35360043671`, including actual PostgreSQL worker integration and live rollback SQL checks. Reed scheduling, Claude matching/evaluation and orphan cleanup remain. Live acceptance remains OPEN; deferred hosting does not block development.
 
 - PDF/DOCX intake, malware strategy, bounded extraction, private files, processing states, durable retries and orphan reconciliation.
 - Candidate reviews/edits extracted contact, sector, skills, work history and education; changes trigger versioned re-assessment/rematching.

@@ -9,7 +9,7 @@
 - [x] Fixed skill-alias deduplication so raw labels/years cannot attach to a different skill.
 - [x] Supabase migration `20260918145535` applied; live rollback tests passed; security advisor returned no findings.
 - [x] Local 36 unit tests, TypeScript and Workers build passed; PostgreSQL worker integration is included in CI.
-- [ ] CI for this checkpoint must pass before its implementation gate is accepted.
+- [x] Implementation commit `58db92348aad4910161b89a5e6b5c86a3b7495bc` passed [CI 35360043671](https://github.com/devacnt/UKTL/actions/runs/35360043671): 36 unit tests, 24 browser checks, 14 credential-dependent skips, fresh PostgreSQL 17 migration replay, staff/discovery/lease SQL checks and actual worker integration with synthetic provider responses. This is the accepted automated checkpoint, not deployed Stage 2 acceptance.
 - [ ] Actual Claude/storage/runtime and authenticated editor browser tests remain unexecuted; see STAGE_2_UAT.md.
 - [ ] Remaining Stage 2: orphan reconciliation, Claude matching/evaluation and complete daily Reed ingestion. Stage 2 remains IN PROGRESS.
 
