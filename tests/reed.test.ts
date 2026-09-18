@@ -27,7 +27,15 @@ test("Reed dates reject invalid calendars and distinguish UK day/month; sector f
     "technology",
   )!;
   assert.equal(j.salaryMin, null);
-  assert.equal(j.sourceUrl, "https://www.reed.co.uk/jobs/1");
+  assert.equal(j.sourceUrl, null);
+  assert.equal(
+    normaliseReedJob(
+      { jobTitle: "Software engineer", jobUrl: "https://www.reed.co.uk/jobs/software-engineer/1" },
+      1,
+      "technology",
+    )!.sourceUrl,
+    "https://www.reed.co.uk/jobs/software-engineer/1",
+  );
 });
 test("Reed upsert preserves IDs, staff closure and curated requirements; expired roles reject interest", async () => {
   const { db, env } = databaseFixture();

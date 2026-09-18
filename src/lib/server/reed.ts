@@ -32,6 +32,21 @@ export function reedDate(value: unknown): string | null {
 const text = (v: unknown, max = 1000) =>
   typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null;
 const money = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : null);
+function reedSourceUrl(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" &&
+      ["reed.co.uk", "www.reed.co.uk"].includes(url.hostname) &&
+      !url.username &&
+      !url.password &&
+      url.pathname.startsWith("/jobs/")
+      ? url.toString()
+      : null;
+  } catch {
+    return null;
+  }
+}
 export function normaliseReedJob(raw: Record<string, unknown>, id: number, sector: ReedSector) {
   const title = text(raw.jobTitle);
   if (!title) throw new Error("Invalid Reed vacancy");
@@ -49,7 +64,7 @@ export function normaliseReedJob(raw: Record<string, unknown>, id: number, secto
     sector,
     description: text(raw.jobDescription, 100000),
     sourceId: String(id),
-    sourceUrl: `https://www.reed.co.uk/jobs/${id}`,
+    sourceUrl: reedSourceUrl(raw.jobUrl),
     posted: reedDate(raw.datePosted ?? raw.date),
     expiry,
     salaryMin: min,
@@ -168,7 +183,11 @@ export async function syncReedJobs(
           (detail.jobId != null && detail.jobId !== id)
         )
           throw new Error("Invalid vacancy detail");
-        const job = normaliseReedJob({ ...detail, date: detail.date ?? raw.date }, id, data.sector);
+        const job = normaliseReedJob(
+          { ...detail, date: detail.date ?? raw.date, jobUrl: detail.jobUrl ?? raw.jobUrl },
+          id,
+          data.sector,
+        );
         if (!job) {
           result.skipped++;
           continue;
