@@ -1,3 +1,4 @@
+import { saveCandidateDecision, undoCandidateDecision, listCandidateDecisions, listJobInterests } from "./server/discovery";
 import { validateCvUpload } from "./server/upload-validation";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/start-server-core";
@@ -33,7 +34,6 @@ import {
   listJobs,
   markCandidateFailed,
   markCandidateParsing,
-  recordSwipe,
   setMatchStage,
   updateFaqTopic,
   updateJob,
@@ -151,7 +151,8 @@ export const getJobDetailFn = createServerFn({ method: "GET" })
       if (!job) return null;
       // Pipeline rows carry candidate names — consultants only.
       const matches = viewer.isStaff ? await getMatchesForJob(env, data.id) : [];
-      return { job, matches, canManage: !!viewer.isStaff };
+      const interests = viewer.isStaff ? await listJobInterests(env, data.id) : [];
+      return { job, matches, interests, canManage: !!viewer.isStaff };
     } catch {
       throw new Error("Data is temporarily unavailable. Please try again.");
     }
@@ -270,55 +271,49 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
   });
 
 export const getDiscoverJobsFn = createServerFn({ method: "GET" })
-  .inputValidator((raw: unknown) =>
-    z.object({ candidateId: z.string().optional() }).parse(raw),
-  )
+  .inputValidator((raw: unknown) => z.object({ candidateId: z.string().min(1).max(100).optional() }).parse(raw))
   .handler(async ({ data }) => {
+    const viewer = await getViewer();
     try {
       const env = await getEnv();
+      const candidateId = data.candidateId ?? (viewer.userId ? await getLatestCandidateIdForUser(env, viewer.userId) : null);
+      const owner = candidateId ? await getCandidateAuthUserId(env,candidateId) : undefined;
+      if (candidateId && (owner === undefined || !canAccessCandidate(viewer,owner))) throw new Error("Profile unavailable");
       const allJobs = await listJobs(env);
-      let unseenJobs = allJobs;
       const matchMap: Record<string, number> = {};
-
-      const owner = data.candidateId ? await getCandidateAuthUserId(env, data.candidateId) : undefined;
-      const canUseCandidate =
-        !!data.candidateId && owner !== undefined && canAccessCandidate(await getViewer(), owner);
-
-      if (data.candidateId && canUseCandidate) {
-        const swipedIds = new Set(await getSwipedJobIds(env, data.candidateId));
-        unseenJobs = allJobs.filter((j) => !swipedIds.has(j.id));
-        const candidateMatches = await getMatchesForCandidate(env, data.candidateId);
-        candidateMatches.forEach((m) => {
-          matchMap[m.job_id] = m.score;
-        });
+      const swipedIds = new Set(candidateId ? await getSwipedJobIds(env,candidateId) : []);
+      if (candidateId) {
+        for (const match of await getMatchesForCandidate(env,candidateId)) matchMap[match.job_id] = match.score;
       }
-
-      return { jobs: unseenJobs, matches: matchMap };
+      const jobs = allJobs.filter(j=>!swipedIds.has(j.id)).sort((a,b)=>(matchMap[b.id] ?? -1)-(matchMap[a.id] ?? -1) || b.created_at-a.created_at || a.id.localeCompare(b.id));
+      return { jobs, matches:matchMap, candidateId: candidateId ?? undefined,
+        canDecide: !!viewer.userId && owner === viewer.userId, signedIn:!!viewer.userId, unavailable:false };
     } catch {
-      return { jobs: [], matches: {} };
+      return { jobs:[], matches:{} as Record<string,number>, candidateId:undefined,
+        canDecide:false, signedIn:!!viewer.userId, unavailable:true };
     }
   });
 
 export const recordSwipeFn = createServerFn({ method: "POST" })
-  .inputValidator((raw: unknown) =>
-    z
-      .object({
-        candidateId: z.string(),
-        jobId: z.string(),
-        action: z.enum(["interested", "dismissed"]),
-      })
-      .parse(raw),
-  )
+  .inputValidator((raw: unknown) => z.object({candidateId:z.string().min(1).max(100),jobId:z.string().min(1).max(100),action:z.enum(["interested","dismissed"])}).parse(raw))
   .handler(async ({ data }) => {
-    try {
-      const env = await getEnv();
-      const owner = await getCandidateAuthUserId(env, data.candidateId);
-      if (owner === undefined || !canAccessCandidate(await getViewer(), owner)) return { ok: false };
-      await recordSwipe(env, data.candidateId, data.jobId, data.action);
-      return { ok: true };
-    } catch {
-      return { ok: false };
-    }
+    const viewer = await requireViewer();
+    const env = await getEnv();
+    const saved = await saveCandidateDecision(env,viewer.userId!,data.candidateId,data.jobId,data.action);
+    return { ok:true as const, ...saved };
+  });
+export const undoSwipeFn = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) => z.object({candidateId:z.string().min(1).max(100),jobId:z.string().min(1).max(100),swipedAt:z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER)}).parse(raw))
+  .handler(async ({ data }) => {
+    const viewer = await requireViewer();
+    await undoCandidateDecision(await getEnv(),viewer.userId!,data.candidateId,data.jobId,data.swipedAt);
+    return {ok:true};
+  });
+export const getSwipeHistoryFn = createServerFn({ method: "GET" })
+  .inputValidator((raw: unknown) => z.object({cursor:z.object({at:z.number().int().nonnegative(),candidateId:z.string().max(100),jobId:z.string().max(100)}).optional()}).parse(raw))
+  .handler(async ({data}) => {
+    const viewer = await requireViewer();
+    return listCandidateDecisions(await getEnv(),viewer.userId!,data.cursor);
   });
 
 // ── HR / Employment Law functions ─────────────────────────────────────────────

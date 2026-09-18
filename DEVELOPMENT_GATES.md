@@ -1,5 +1,10 @@
 # UKTL development and release gates
 
+## Hosting decision — 18 September 2026
+
+The owner will connect Cloudflare through Lovable later. Continue GitHub development without waiting for hosting, runtime secrets or Stage 1 live UAT. Implementation phases may advance after their automated checks pass; deployed acceptance remains OPEN until tested. Revisit the connection when the application is ready for integrated staging tests, and again before production release. No Lovable credits are authorized or needed for the current coding work.
+
+
 The approved scope is D1–D13. Full client CRM and interview-management expansion are not release prerequisites. A stage is accepted only when its code, automated, live-system and user gates pass. A skipped or unexecuted required test is BLOCKED, never PASS. No stage percentage substitutes for evidence.
 
 ## Gate 0 — source and scope baseline
@@ -24,6 +29,8 @@ Status: IN PROGRESS. Implementation and automated checkpoint passed at `8a5ab095
 Required evidence: commit and CI URL; live RLS test results; staging URL; tester/date and UAT results. Gate 1 cannot be accepted while staging, email delivery, identities or live tests are missing.
 
 ## Gate 2 — recruitment service (D2–D6)
+
+Implementation: IN PROGRESS. Discovery persistence/history, vacancy interest visibility and conservative rules-based scoring are implemented. Queue, editable extraction, Reed scheduling and Claude matching remain. Live acceptance remains OPEN; deferred hosting does not block development.
 
 - PDF/DOCX intake, malware strategy, bounded extraction, private files, processing states, durable retries and orphan reconciliation.
 - Candidate reviews/edits extracted contact, sector, skills, work history and education; changes trigger versioned re-assessment/rematching.

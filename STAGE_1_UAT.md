@@ -1,5 +1,10 @@
 # Stage 1 — accounts, staff roles and staging acceptance
 
+## Hosting decision — 18 September 2026
+
+The owner will connect Cloudflare through Lovable later. Continue GitHub development without waiting for hosting, runtime secrets or Stage 1 live UAT. Implementation phases may advance after their automated checks pass; deployed acceptance remains OPEN until tested. Revisit the connection when the application is ready for integrated staging tests, and again before production release. No Lovable credits are authorized or needed for the current coding work.
+
+
 Status: implementation under verification; live user acceptance BLOCKED until the prerequisites below are supplied. Do not mark this stage complete from unit or anonymous browser tests alone.
 
 ## Configuration required from the account owner

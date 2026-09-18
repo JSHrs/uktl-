@@ -501,21 +501,6 @@ function rowToFaqTopic(row: Record<string, unknown>): FaqTopic {
   };
 }
 
-export async function recordSwipe(
-  env: AppEnv,
-  candidateId: string,
-  jobId: string,
-  action: "interested" | "dismissed",
-): Promise<void> {
-  await env.DB.prepare(
-    `INSERT INTO candidate_swipes (candidate_id, job_id, action, swiped_at)
-     VALUES (?, ?, ?, ?)
-     ON CONFLICT(candidate_id,job_id) DO UPDATE SET action=excluded.action, swiped_at=excluded.swiped_at`,
-  )
-    .bind(candidateId, jobId, action, Date.now())
-    .run();
-}
-
 export async function getSwipedJobIds(
   env: AppEnv,
   candidateId: string,

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
-import { getDiscoverJobsFn, recordSwipeFn } from "@/lib/functions";
+import { getDiscoverJobsFn, recordSwipeFn, undoSwipeFn } from "@/lib/functions";
 import type { Job } from "@/lib/schemas/job";
 
 export const Route = createFileRoute("/app/discover")({
@@ -21,17 +21,27 @@ type SwipeAction = "interested" | "dismissed";
 type FlyDir = "right" | "left" | null;
 
 function DiscoverPage() {
-  const { jobs: initialJobs, matches } = Route.useLoaderData();
-  const { candidate: candidateId } = Route.useSearch();
+  const { jobs: initialJobs, matches, candidateId, canDecide, signedIn, unavailable } = Route.useLoaderData();
 
   const [queue, setQueue] = useState<Job[]>(initialJobs);
   const [swipedCount, setSwipedCount] = useState(0);
   const [flyDir, setFlyDir] = useState<FlyDir>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [lastDecision, setLastDecision] = useState<{job:Job;swipedAt:number} | null>(null);
+  const generation = useRef(0);
 
   // Drag state via ref — avoids re-renders during drag
   const drag = useRef({ active: false, startX: 0, startY: 0, x: 0, y: 0 });
   const cardRef = useRef<HTMLDivElement>(null);
   const isAnimating = useRef(false);
+
+  useEffect(() => {
+    generation.current += 1;
+    setQueue(initialJobs); setSwipedCount(0); setLastDecision(null); setSaveError("");
+    setFlyDir(null); setSaving(false); isAnimating.current = false;
+    return () => { generation.current += 1; };
+  }, [initialJobs,candidateId]);
 
   const current = queue[0] ?? null;
   const next = queue[1] ?? null;
@@ -63,36 +73,48 @@ function DiscoverPage() {
     if (passBadge) passBadge.style.opacity = "0";
   }, []);
 
-  const triggerSwipe = useCallback(
-    (action: SwipeAction) => {
-      if (isAnimating.current || !current) return;
-      isAnimating.current = true;
-
-      setFlyDir(action === "interested" ? "right" : "left");
-
-      // Persist to server (fire-and-forget)
-      if (candidateId) {
-        recordSwipeFn({
-          data: { candidateId, jobId: current.id, action },
-        }).catch(() => {});
-      }
-
+  const triggerSwipe = useCallback(async (action: SwipeAction) => {
+    if (isAnimating.current || !current || !candidateId || !canDecide) return;
+    const version = generation.current;
+    isAnimating.current = true; setSaving(true); setSaveError(""); resetCard();
+    try {
+      const saved = await recordSwipeFn({data:{candidateId,jobId:current.id,action}});
+      if (!saved.ok) throw new Error("Decision was not saved. Please try again.");
+      if (version !== generation.current) return;
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!reducedMotion) setFlyDir(action === "interested" ? "right" : "left");
       setTimeout(() => {
-        setQueue((q) => q.slice(1));
-        setSwipedCount((n) => n + 1);
-        setFlyDir(null);
-        isAnimating.current = false;
-      }, 380);
-    },
-    [current, candidateId],
-  );
+        if (version !== generation.current) return;
+        setQueue(q=>q.filter(j=>j.id !== current.id)); setSwipedCount(n=>n+1);
+        setLastDecision({job:current,swipedAt:saved.swipedAt});
+        setFlyDir(null); setSaving(false); isAnimating.current = false;
+      }, reducedMotion ? 0 : 380);
+    } catch (e) {
+      if (version !== generation.current) return;
+      setSaveError(e instanceof Error ? e.message : "Decision was not saved. Please try again.");
+      setSaving(false); isAnimating.current = false; resetCard();
+    }
+  },[current,candidateId,canDecide,resetCard]);
+
+  async function undoLast() {
+    if (!lastDecision || !candidateId || isAnimating.current) return;
+    const version = generation.current;
+    isAnimating.current = true; setSaving(true); setSaveError("");
+    try {
+      await undoSwipeFn({data:{candidateId,jobId:lastDecision.job.id,swipedAt:lastDecision.swipedAt}});
+      if (version !== generation.current) return;
+      setQueue(q=>[lastDecision.job,...q.filter(j=>j.id !== lastDecision.job.id)]);
+      setLastDecision(null); setSwipedCount(n=>Math.max(0,n-1));
+    } catch (e) { if (version === generation.current) setSaveError(e instanceof Error ? e.message : "Undo failed. Please retry."); }
+    finally { if (version === generation.current) {setSaving(false); isAnimating.current = false;} }
+  }
 
   // Pointer handlers
   const onPointerDown = useCallback((e: React.PointerEvent) => {
-    if (isAnimating.current) return;
+    if (isAnimating.current || !canDecide) return;
     drag.current = { active: true, startX: e.clientX, startY: e.clientY, x: 0, y: 0 };
     cardRef.current?.setPointerCapture(e.pointerId);
-  }, []);
+  }, [canDecide]);
 
   const onPointerMove = useCallback(
     (e: React.PointerEvent) => {
@@ -120,6 +142,7 @@ function DiscoverPage() {
   // Keyboard support
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.repeat || (e.target instanceof HTMLElement && e.target.closest("input,textarea,select,button,a,[contenteditable=true]"))) return;
       if (e.key === "ArrowRight") triggerSwipe("interested");
       if (e.key === "ArrowLeft") triggerSwipe("dismissed");
     };
@@ -135,9 +158,14 @@ function DiscoverPage() {
         ? "translateX(-140vw) rotate(-28deg)"
         : undefined;
 
-  if (queue.length === 0) {
-    return <EmptyState swipedCount={swipedCount} candidateId={candidateId} />;
-  }
+  const feedback = <div className="w-full max-w-[520px] my-4 text-sm" aria-live="polite">
+    {saving && <p>Saving…</p>}
+    {saveError && <p role="alert" className="text-red-700">{saveError}</p>}
+    {lastDecision && <button disabled={saving} onClick={undoLast} className="underline mt-2 disabled:opacity-50">Undo last decision</button>}
+    {signedIn && <Link to="/app/activity" className="underline block mt-3">View interests and history</Link>}
+  </div>;
+  if (unavailable) return <div role="alert"><h1 className="font-display text-3xl">Discovery is temporarily unavailable</h1><p className="my-4">Your decisions have not been changed. Please reload to try again.</p></div>;
+  if (queue.length === 0) return <div className="flex flex-col items-center">{feedback}<EmptyState swipedCount={swipedCount} candidateId={candidateId} /></div>;
 
   return (
     <div className="flex flex-col items-center min-h-[calc(100vh-100px)] pb-12 select-none">
@@ -160,22 +188,23 @@ function DiscoverPage() {
             {queue.length} remaining
           </div>
         </div>
-        {candidateId && (
+        {canDecide && (
           <p className="text-sm text-ink-mute mt-2">
-            Swipe right to express interest · left to skip
+            Swipe right to express interest · left to skip. Interest is not an external job application.
           </p>
         )}
-        {!candidateId && (
+        {!canDecide && (
           <p className="text-sm text-ink-mute mt-2">
-            Browsing without a profile.{" "}
-            <Link to="/app/candidates" className="underline">
-              Select a candidate
+            Browsing only.{" "}
+            <Link to={signedIn ? "/app/upload" : "/auth/login"} className="underline">
+              {signedIn ? "Upload your CV" : "Sign in"}
             </Link>{" "}
-            to track your swipes.
+            to record your own decisions.
           </p>
         )}
       </div>
 
+      {feedback}
       {/* Card stack */}
       <div className="relative w-full max-w-[520px]" style={{ height: 520 }}>
         {/* Ghost cards behind */}
@@ -192,14 +221,14 @@ function DiscoverPage() {
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
+          onPointerCancel={() => {drag.current.active=false;resetCard();}}
           style={{
             position: "absolute",
             inset: 0,
             cursor: "grab",
             transform: flyTransform,
             transition: flyDir ? "transform 0.38s cubic-bezier(0.36, 0, 0.66, -0.2)" : "transform 0.28s cubic-bezier(0.22, 1, 0.36, 1)",
-            touchAction: "none",
+            touchAction: "pan-y",
           }}
         >
           <JobCard job={current} score={matches[current.id]} />
@@ -224,6 +253,7 @@ function DiscoverPage() {
       <div className="flex items-center gap-6 mt-10">
         <ActionButton
           onClick={() => triggerSwipe("dismissed")}
+          disabled={saving || !canDecide}
           label="Pass"
           icon="←"
           tone="pass"
@@ -233,6 +263,7 @@ function DiscoverPage() {
         </div>
         <ActionButton
           onClick={() => triggerSwipe("interested")}
+          disabled={saving || !canDecide}
           label="Keen"
           icon="→"
           tone="keen"
@@ -361,11 +392,13 @@ function ActionButton({
   label,
   icon,
   tone,
+  disabled,
 }: {
   onClick: () => void;
   label: string;
   icon: string;
   tone: "keen" | "pass";
+  disabled: boolean;
 }) {
   const cls =
     tone === "keen"
@@ -374,6 +407,7 @@ function ActionButton({
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       className={`flex items-center gap-2 px-5 py-2.5 border rounded-full font-mono text-sm tracking-[0.06em] transition-colors ${cls}`}
     >
       {tone === "pass" && <span>{icon}</span>}

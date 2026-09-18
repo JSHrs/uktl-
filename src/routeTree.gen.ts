@@ -29,6 +29,7 @@ import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AppUploadRouteImport } from './routes/app/upload'
 import { Route as AppProfileRouteImport } from './routes/app/profile'
 import { Route as AppDiscoverRouteImport } from './routes/app/discover'
+import { Route as AppActivityRouteImport } from './routes/app/activity'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminEnquiriesRouteImport } from './routes/admin/enquiries'
 import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
@@ -149,6 +150,11 @@ const AppDiscoverRoute = AppDiscoverRouteImport.update({
   path: '/discover',
   getParentRoute: () => AppRoute,
 } as any)
+const AppActivityRoute = AppActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => AppRoute,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -259,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/login': typeof AdminLoginRoute
+  '/app/activity': typeof AppActivityRoute
   '/app/discover': typeof AppDiscoverRoute
   '/app/profile': typeof AppProfileRoute
   '/app/upload': typeof AppUploadRoute
@@ -298,6 +305,7 @@ export interface FileRoutesByTo {
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/login': typeof AdminLoginRoute
+  '/app/activity': typeof AppActivityRoute
   '/app/discover': typeof AppDiscoverRoute
   '/app/profile': typeof AppProfileRoute
   '/app/upload': typeof AppUploadRoute
@@ -340,6 +348,7 @@ export interface FileRoutesById {
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/login': typeof AdminLoginRoute
+  '/app/activity': typeof AppActivityRoute
   '/app/discover': typeof AppDiscoverRoute
   '/app/profile': typeof AppProfileRoute
   '/app/upload': typeof AppUploadRoute
@@ -383,6 +392,7 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/enquiries'
     | '/admin/login'
+    | '/app/activity'
     | '/app/discover'
     | '/app/profile'
     | '/app/upload'
@@ -422,6 +432,7 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/enquiries'
     | '/admin/login'
+    | '/app/activity'
     | '/app/discover'
     | '/app/profile'
     | '/app/upload'
@@ -463,6 +474,7 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/enquiries'
     | '/admin/login'
+    | '/app/activity'
     | '/app/discover'
     | '/app/profile'
     | '/app/upload'
@@ -646,6 +658,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDiscoverRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/activity': {
+      id: '/app/activity'
+      path: '/activity'
+      fullPath: '/app/activity'
+      preLoaderRoute: typeof AppActivityRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/login'
@@ -815,6 +834,7 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface AppRouteChildren {
+  AppActivityRoute: typeof AppActivityRoute
   AppDiscoverRoute: typeof AppDiscoverRoute
   AppProfileRoute: typeof AppProfileRoute
   AppUploadRoute: typeof AppUploadRoute
@@ -829,6 +849,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppActivityRoute: AppActivityRoute,
   AppDiscoverRoute: AppDiscoverRoute,
   AppProfileRoute: AppProfileRoute,
   AppUploadRoute: AppUploadRoute,

@@ -1,9 +1,28 @@
 # Current stage checkpoint — 18 September 2026
 
+## Recruitment implementation checkpoint
+
+- [x] Discovery automatically uses the signed-in user's latest CV and ranks unseen jobs by available match score.
+- [x] Decisions save before cards disappear; errors stay visible. Anonymous visitors/staff reviewing somebody else cannot submit candidate intent.
+- [x] Atomic owner/open-role checks, monotonic decision versions, and conditional undo prevent cross-account writes and stale-tab deletion.
+- [x] Candidate interest/history page with pagination and withdrawal/undo; staff-only expressed-interest list on vacancy detail.
+- [x] Pointer cancellation no longer submits a swipe; vertical mobile scrolling and reduced-motion handling improved.
+- [x] Rules-based matching no longer awards missing-data defaults, duplicate-skill credit or broad geographic proximity bonuses. This is not the scoped Claude engine or a calibrated probability of success.
+- [x] Local verification: 30 unit tests, TypeScript, Workers build, targeted lint and whitespace checks passed.
+- [ ] Current commit's GitHub browser and PostgreSQL integration results: inspect CI after commit. Added actual bound-query PostgreSQL regression runner, restricted to disposable local CI.
+- [ ] Durable CV queue/retries/orphan cleanup; editable extraction and versioned re-assessment.
+- [ ] Claude-backed matching/calibration and refreshed cached results; daily Reed Edge Function and expiry handling.
+- [ ] Deployed/mobile end-to-end acceptance after the owner connects hosting. No live recruitment completion claimed.
+
+## Hosting decision — 18 September 2026
+
+The owner will connect Cloudflare through Lovable later. Continue GitHub development without waiting for hosting, runtime secrets or Stage 1 live UAT. Implementation phases may advance after their automated checks pass; deployed acceptance remains OPEN until tested. Revisit the connection when the application is ready for integrated staging tests, and again before production release. No Lovable credits are authorized or needed for the current coding work.
+
+
 - Gate 0 PASS: recovered source transferred and old repository preserved.
 - Gate 1 IN PROGRESS: named Supabase staff authentication, mandatory MFA, real password recovery, user-scoped profile writes, authentication rate limits and staging preflight implemented. No shared admin-cookie fallback.
 - Applied migration `20260918112245_named_staff_access_and_mfa`; rollback policy tests passed on the target project. Security advisor: no findings.
-- Local: 22 unit tests passed; TypeScript/build passed; targeted lint passed. Code commit `8a5ab095de3f51b9ca2158db51b98578da9e7f9a` passed CI run `35340244815`: 22 unit tests and 22 browser tests passed, 14 staging-credential cases skipped. The separate PostgreSQL 17 job passed clean migration replay and staff/ownership SQL tests. Final documentation/form-label follow-up verification is pending.
+- Local: 22 unit tests passed; TypeScript/build passed; targeted lint passed. Code commit `8a5ab095de3f51b9ca2158db51b98578da9e7f9a` passed CI run `35340244815`: 22 unit tests and 22 browser tests passed, 14 staging-credential cases skipped. The separate PostgreSQL 17 job passed clean migration replay and staff/ownership SQL tests. The documentation/form-label follow-up `27d484d9` also passed CI `35340723416`.
 - Prepared isolated staging deployment and authenticated test workflow; missing hosting/runtime configuration, SMTP, staging identities and user acceptance prevent Stage 1 completion.
 - Gates 2–4 not accepted. No deployment, end-to-end live provider verification or product-readiness claim.
 - Approved delivery scope is D1–D13 plus the priority hardening in DEVELOPMENT_GATES.md. Full client CRM/interview expansion is not an MVP prerequisite.

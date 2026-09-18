@@ -9,6 +9,7 @@ export function databaseFixture() {
   const env = { DB: { prepare(sql: string) {
     let args: any[] = [];
     return { bind(...values: any[]) { args = values; return this; },
+      async all() { return {results: db.prepare(sql).all(...args), success:true}; },
       async first() { return db.prepare(sql).get(...args) ?? null; },
       async run() { const r = db.prepare(sql).run(...args); return { success: true, meta: { changes: Number(r.changes) } }; },
     };

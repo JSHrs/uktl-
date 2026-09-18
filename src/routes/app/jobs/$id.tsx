@@ -18,7 +18,7 @@ export const Route = createFileRoute("/app/jobs/$id")({
 type Filter = MatchStage | "all";
 
 function JobDetailPage() {
-  const { job, matches, canManage } = Route.useLoaderData();
+  const { job, matches, interests, canManage } = Route.useLoaderData();
   const router = useRouter();
   const [filter, setFilter] = useState<Filter>("all");
   const [busy, setBusy] = useState<string | null>(null);
@@ -95,6 +95,16 @@ function JobDetailPage() {
               </div>
             </Section>
           )}
+
+          {canManage && <Section title={`Expressed interest (${interests.length})`}>
+            <p className="text-sm text-ink-soft mb-4">Candidate decisions recorded in UKTL; these are not external job applications.</p>
+            {interests.length === 0 ? <p className="text-sm text-ink-mute">No expressed interests yet.</p> :
+              <ul className="space-y-3">{interests.map(i=><li key={i.candidate_id} className="border border-rule rounded p-3">
+                <Link to="/app/candidates/$id" params={{id:i.candidate_id}} className="underline">{i.name ?? "Candidate"}</Link>
+                <p className="text-sm text-ink-soft">{i.headline}</p>
+                <p className="text-xs text-ink-mute">Interested since {new Date(i.swiped_at).toISOString().slice(0,10)}</p>
+              </li>)}</ul>}
+          </Section>}
 
           {canManage && (
             <Section title={`Pipeline (${matches.length})`}>

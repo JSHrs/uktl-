@@ -1,6 +1,6 @@
-import type { Job, Match, MatchScore } from "../schemas/job";
+import type { Job, MatchScore } from "../schemas/job";
 import type { ParsedProfile, Seniority } from "../schemas/profile";
-import { normaliseSkill } from "./skills";
+import { normaliseSkill } from "./skills.ts";
 
 const SENIORITY_ORDER: Seniority[] = [
   "junior",
@@ -28,20 +28,20 @@ export function scoreMatch(
   matched_skills: string[];
   missing_skills: string[];
 } {
-  const mustHave = job.must_have_skills.map(normaliseSkill);
-  const niceHave = job.nice_to_have_skills.map(normaliseSkill);
+  const mustHave = [...new Set(job.must_have_skills.map(normaliseSkill).filter(Boolean))];
+  const niceHave = [...new Set(job.nice_to_have_skills.map(normaliseSkill).filter(Boolean))].filter(s=>!mustHave.includes(s));
 
-  const candSet = new Set(candidateSkills);
+  const candSet = new Set(candidateSkills.map(normaliseSkill).filter(Boolean));
   const matchedMust = mustHave.filter((s) => candSet.has(s));
   const matchedNice = niceHave.filter((s) => candSet.has(s));
   const missingMust = mustHave.filter((s) => !candSet.has(s));
 
   const mustScore =
-    mustHave.length === 0 ? 100 : (matchedMust.length / mustHave.length) * 100;
+    mustHave.length === 0 ? 0 : (matchedMust.length / mustHave.length) * 100;
   const niceScore =
     niceHave.length === 0 ? 0 : (matchedNice.length / niceHave.length) * 100;
   // Must-haves dominate; nice-haves top up.
-  const skills_overlap = Math.round(mustScore * 0.8 + niceScore * 0.2);
+  const skills_overlap = Math.round(mustHave.length ? (niceHave.length ? mustScore * 0.8 + niceScore * 0.2 : mustScore) : niceScore * 0.2);
 
   const experience_fit = scoreExperience(
     candidate.total_years_experience ?? null,
@@ -88,25 +88,18 @@ export function scoreMatch(
 }
 
 function scoreExperience(cand: number | null, min: number | null): number {
-  if (min == null) return 75;
-  if (cand == null) return 40;
-  if (cand >= min) {
-    // diminishing bonus above the bar; cap the cost of being dramatically overqualified
-    const over = cand - min;
-    const bonus = Math.max(0, 20 - Math.abs(over - 3) * 2);
-    return Math.min(100, 80 + bonus);
-  }
-  // below bar: linear penalty
-  const gap = min - cand;
-  return Math.max(10, Math.round(80 - gap * 15));
+  if (min == null || cand == null || !Number.isFinite(min) || !Number.isFinite(cand) || min < 0 || cand < 0) return 0;
+  // Meeting the requirement is sufficient; excess years do not earn extra credit.
+  if (min === 0 || cand >= min) return 100;
+  return Math.round((cand / min) * 100);
 }
 
 function scoreSeniority(cand: Seniority | null, job: Seniority | null): number {
-  if (!job) return 75;
-  if (!cand) return 40;
+  if (!job) return 0;
+  if (!cand) return 0;
   const ci = SENIORITY_ORDER.indexOf(cand);
   const ji = SENIORITY_ORDER.indexOf(job);
-  if (ci === -1 || ji === -1) return 50;
+  if (ci === -1 || ji === -1) return 0;
   const gap = Math.abs(ci - ji);
   if (gap === 0) return 100;
   if (gap === 1) return 75;
@@ -115,24 +108,17 @@ function scoreSeniority(cand: Seniority | null, job: Seniority | null): number {
 }
 
 function scoreLocation(cand: string | null, job: string | null): number {
-  if (!job) return 70;
-  if (!cand) return 50;
-  const c = cand.toLowerCase();
-  const j = job.toLowerCase();
-  if (c.includes(j) || j.includes(c)) return 100;
-  const regions: Array<[string, string[]]> = [
-    ["uk", ["london", "uk", "england", "manchester", "edinburgh"]],
-    ["uae", ["dubai", "abu dhabi", "uae"]],
-    ["ksa", ["riyadh", "jeddah", "saudi", "ksa"]],
-    ["qatar", ["doha", "qatar"]],
-    ["bahrain", ["manama", "bahrain"]],
-  ];
-  for (const [, tokens] of regions) {
-    const inC = tokens.some((t) => c.includes(t));
-    const inJ = tokens.some((t) => j.includes(t));
-    if (inC && inJ) return 90;
-  }
-  return 30;
+  const normalise = (value: string) => value.toLowerCase().trim().replace(/\s+/g," ");
+  if (!job?.trim()) return 0;
+  const j = normalise(job);
+  if (j === "remote" || j === "fully remote") return 100;
+  if (!cand?.trim()) return 0;
+  const c = normalise(cand);
+  if (c === j) return 100;
+  // Compare explicit city names, never substrings (York is not New York).
+  const city = (value: string) => value.split(",")[0].trim();
+  if (city(c) === city(j)) return 100;
+  return 0;
 }
 
 function buildReasoning(ctx: {
@@ -145,7 +131,13 @@ function buildReasoning(ctx: {
   candidate: ParsedProfile;
   job: Job;
 }): string {
-  const parts: string[] = [];
+  const parts: string[] = ["Rules-based evidence score; requires human review."];
+  const unknown: string[] = [];
+  if (!ctx.job.must_have_skills.some(s=>normaliseSkill(s))) unknown.push("essential job skills");
+  if (ctx.job.min_years_experience == null || ctx.candidate.total_years_experience == null) unknown.push("experience comparison");
+  if (!ctx.job.seniority || !ctx.candidate.seniority) unknown.push("seniority comparison");
+  if (!ctx.job.location?.trim() || (!ctx.candidate.location?.trim() && !/^(fully )?remote$/i.test(ctx.job.location.trim()))) unknown.push("location comparison");
+  if (unknown.length) parts.push(`Not established: ${unknown.join(", ")}. Missing information earns no points and must not be treated as a rejection.`);
   if (ctx.matchedMust.length) {
     parts.push(`Matches must-haves: ${ctx.matchedMust.join(", ")}.`);
   }

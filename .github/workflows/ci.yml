@@ -60,6 +60,13 @@ jobs:
         run: supabase start
       - name: Staff authorization and ownership regression
         run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -v ON_ERROR_STOP=1 -f supabase/tests/staff_access.sql
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Actual PostgreSQL discovery queries
+        run: node scripts/test-discovery-postgres.ts
       - name: Stop isolated database
         if: always()
         run: supabase stop --no-backup
