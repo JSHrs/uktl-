@@ -80,7 +80,7 @@ function UploadPage() {
       }
 
       setStage("done");
-      toast.success(`CV parsed — quality ${result.quality.score}/100`);
+      toast.success(result.status === "queued" ? "CV securely uploaded — processing is queued" : `CV parsed — quality ${result.quality.score}/100`);
       await navigate({ to: "/app/candidates/$id", params: { id: result.id } });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -138,7 +138,7 @@ function UploadPage() {
           {busy ? (
             <div className="space-y-4">
               <div className="font-display text-xl text-ink">{STAGE_LABELS[stage]}</div>
-              <p role="status" className="text-xs text-ink-mute">Please keep this page open while processing finishes. We will show your results when they are ready.</p>
+              <p role="status" className="text-xs text-ink-mute">Please keep this page open until the upload is confirmed. You can return to your profile to check processing.</p>
             </div>
           ) : file ? (
             <>

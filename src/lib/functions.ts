@@ -1,3 +1,5 @@
+import { registerQueuedCv,activateQueuedCv,failQueuedUpload,processingStatus,processNextCv,saveProfileRevision } from "./server/processing";
+import { EditableProfileSchema } from "./schemas/editable-profile";
 import { storeRegisteredCv } from "./server/upload-lifecycle";
 import { saveCandidateDecision, undoCandidateDecision, listCandidateDecisions, listJobInterests } from "./server/discovery";
 import { validateCvUpload } from "./server/upload-validation";
@@ -104,7 +106,7 @@ export const getCandidateDetailFn = createServerFn({ method: "GET" })
       const candidate = await getCandidate(env, data.id);
       if (!candidate || !canAccessCandidate(viewer, candidate.auth_user_id)) return null;
       const matches = await getMatchesForCandidate(env, data.id);
-      return { candidate, matches };
+      return { candidate, matches: candidate.status === "parsed" ? matches : [], processing: await processingStatus(env,data.id), canEdit:env.DATA_BACKEND === "supabase" && viewer.userId === candidate.auth_user_id };
     } catch {
       throw new Error("Data is temporarily unavailable. Please try again.");
     }
@@ -215,9 +217,9 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
     const r2Key = `cvs/${id}/${sanitiseFilename(file.name)}`;
 
     const stored = await storeRegisteredCv({
-      register: () => insertCandidateShell(env, { id, filename:file.name, r2Key, sizeBytes:bytes.byteLength, authUserId:session.userId }),
+      register: () => (env.DATA_BACKEND === "supabase" ? registerQueuedCv : insertCandidateShell)(env, { id, filename:file.name, r2Key, sizeBytes:bytes.byteLength, authUserId:session.userId }),
       upload: () => env.CV_BUCKET.put(r2Key,bytes,{httpMetadata:{contentType:validated.contentType}}),
-      markFailed: () => markCandidateFailed(env,id,"Private upload did not complete. Please try again."),
+      markFailed: () => env.DATA_BACKEND === "supabase" ? failQueuedUpload(env,id) : markCandidateFailed(env,id,"Private upload did not complete. Please try again."),
     });
     if (!stored) return {id,status:"failed" as const,error:"Private upload did not complete. Please try again."};
     if (session.userId) {
@@ -229,6 +231,11 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
           .update({ d1_candidate_id: id, updated_at: new Date().toISOString() })
           .eq("id", session.userId);
       } catch { /* service role not configured */ }
+    }
+    if (env.DATA_BACKEND === "supabase") {
+      // Failed activation is safe: the registered job becomes due after its grace period.
+      try { await activateQueuedCv(env,id); } catch { /* worker will recover */ }
+      return {id,status:"queued" as const};
     }
     await markCandidateParsing(env, id);
 
@@ -481,19 +488,26 @@ export const rematchCandidateFn = createServerFn({ method: "POST" })
       throw new Error("Candidate not found");
     }
     const rawRow = await env.DB.prepare(
-      `SELECT raw_profile FROM candidates WHERE id=?`,
+      `SELECT raw_profile${env.DATA_BACKEND === "supabase" ? ",profile_revision" : ""} FROM candidates WHERE id=?`,
     )
       .bind(data.id)
-      .first<{ raw_profile: string | null }>();
+      .first<{ raw_profile: string | null; profile_revision?:number }>();
     if (!rawRow?.raw_profile) throw new Error("No parsed profile on record");
     const profile = ParsedProfileSchema.parse(JSON.parse(rawRow.raw_profile));
+    if(env.DATA_BACKEND === "supabase") {
+      if(!detail.auth_user_id) throw new Error("An owned candidate profile is required");
+      await enforceRateLimit(env,"cvUpload",detail.auth_user_id);
+      await env.DB.prepare("SELECT recruitment.revise_cv_profile(?,?::uuid,?,?)")
+        .bind(data.id,detail.auth_user_id,rawRow.profile_revision,JSON.stringify(profile)).run();
+      return {count:0,queued:true};
+    }
     const normalisedSkills = normaliseSkillList(
       (profile.skills ?? []).map((s) => s.skill),
     );
     const jobs = await listJobs(env);
     const matches = jobs.map((job) => scoreMatch(profile, normalisedSkills, job));
     await upsertMatches(env, data.id, matches);
-    return { count: matches.length };
+    return { count: matches.length,queued:false };
   });
 
 function sanitiseFilename(name: string): string {
@@ -1031,3 +1045,38 @@ export const candidateSetPasswordFn = createServerFn({ method: "POST" })
     if (revoked.error) throw new Error("Password changed, but session revocation failed. Please contact support.");
     return { ok: true };
   });
+
+export const getEditableProfileFn=createServerFn({method:"GET"})
+  .inputValidator((raw:unknown)=>z.object({id:z.string().min(1).max(100)}).parse(raw))
+  .handler(async({data})=>{
+    const viewer=await requireViewer(); const env=await getEnv();
+    if(env.DATA_BACKEND!=="supabase") return null;
+    const row=await env.DB.prepare("SELECT raw_profile,profile_revision FROM candidates WHERE id=? AND auth_user_id=?")
+      .bind(data.id,viewer.userId).first<{raw_profile:string|null;profile_revision:number}>();
+    if(!row?.raw_profile) return null;
+    return {profile:ParsedProfileSchema.parse(JSON.parse(row.raw_profile)),revision:row.profile_revision};
+  });
+export const saveEditableProfileFn=createServerFn({method:"POST"})
+  .inputValidator((raw:unknown)=>z.object({id:z.string().min(1).max(100),revision:z.number().int().nonnegative(),profile:EditableProfileSchema}).parse(raw))
+  .handler(async({data})=>{
+    const viewer=await requireViewer(); const env=await getEnv();
+    if(env.DATA_BACKEND!=="supabase") throw new Error("Profile editing requires the Supabase backend");
+    await enforceRateLimit(env,"cvUpload",viewer.userId!);
+    try {
+      await saveProfileRevision(env,data.id,viewer.userId!,data.revision,data.profile);
+    } catch {throw new Error("Your profile could not be saved. Reload to check for changes before trying again.");}
+    return {ok:true as const};
+  });
+export const runCvWorkerFn=createServerFn({method:"POST"})
+  .inputValidator((raw:unknown)=>z.object({}).parse(raw))
+  .handler(async()=>{
+    await requireAdmin();const env=await getEnv();
+    await enforceRateLimit(env,"cvWorker","administrator");
+    return processNextCv(env);
+  });
+export const getCvQueueFn=createServerFn({method:"GET"}).handler(async()=>{
+  await requireAdmin();const env=await getEnv();
+  if(env.DATA_BACKEND!=="supabase") return [];
+  return (await env.DB.prepare("SELECT id,candidate_id,kind,status,attempts,available_at,last_error,updated_at FROM processing_jobs WHERE kind IN ('parse','match') ORDER BY updated_at DESC LIMIT 100")
+    .all<{id:string;candidate_id:string;kind:string;status:string;attempts:number;available_at:number;last_error:string|null;updated_at:number}>()).results??[];
+});

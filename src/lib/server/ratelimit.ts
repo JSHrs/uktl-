@@ -15,6 +15,7 @@ export type RateLimitRule = { limit: number; windowMs: number };
 
 export const RATE_LIMITS = {
   /** Costly: two Anthropic calls per upload. */
+  cvWorker: { limit: 60, windowMs: 60 * 60 * 1000 },
   cvUpload: { limit: 10, windowMs: 60 * 60 * 1000 },
   /** Costly: one Anthropic call per question. */
   aiEscalation: { limit: 20, windowMs: 60 * 60 * 1000 },

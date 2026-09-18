@@ -1,5 +1,6 @@
+import {ProfileEditor} from "@/components/app/ProfileEditor";
 import { createFileRoute, Link, notFound, redirect, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   PageHeader,
@@ -30,8 +31,15 @@ export const Route = createFileRoute("/app/candidates/$id")({
 });
 
 function CandidateDetailPage() {
-  const { candidate: c, matches } = Route.useLoaderData();
+  const { candidate: c, matches, processing, canEdit } = Route.useLoaderData();
   const router = useRouter();
+  const [editing,setEditing]=useState(false);
+  const processingState=processing?.status;
+  useEffect(()=>{
+    if(!processingState || !['pending','running'].includes(processingState) || editing) return;
+    const timer=setInterval(()=>{if(document.visibilityState==='visible') void router.invalidate();},10000);
+    return ()=>clearInterval(timer);
+  },[processingState,editing,router]);
   const [rematching, setRematching] = useState(false);
   const [anonView, setAnonView] = useState(false);
   const [anonProfile, setAnonProfile] = useState<null | {
@@ -45,8 +53,8 @@ function CandidateDetailPage() {
   async function onRematch() {
     setRematching(true);
     try {
-      const { count } = await rematchCandidateFn({ data: { id: c.id } });
-      toast.success(`Re-matched against ${count} open mandate${count === 1 ? "" : "s"}`);
+      const { count,queued } = await rematchCandidateFn({ data: { id: c.id } });
+      toast.success(queued ? "Assessment and match refresh queued" : `Re-matched against ${count} open mandate${count === 1 ? "" : "s"}`);
       await router.invalidate();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Re-match failed");
@@ -94,6 +102,7 @@ function CandidateDetailPage() {
         lede={c.headline ?? undefined}
         actions={
           <>
+            {canEdit && <button onClick={()=>setEditing(true)} className="text-[13px] px-4 py-2 border border-rule rounded-full">Correct profile</button>}
             {c.source_r2_key && (
               <a
                 href={`/api/cv/${c.id}`}
@@ -120,6 +129,11 @@ function CandidateDetailPage() {
         }
       />
 
+      {processing && ['pending','running','failed'].includes(processing.status) && <div role="status" className="border border-rule rounded p-4 mb-6 text-sm">
+        {processing.status==='running'?'Your CV assessment is processing.':processing.status==='pending'?'Your CV assessment is queued. You can leave this page and return later.':'Processing could not complete. Please contact the team or upload your CV again.'}
+        <p className="text-ink-soft mt-1">Attempt {processing.attempts} of 3. Previous match scores are hidden until the current assessment is ready.</p>
+      </div>}
+      {editing && <ProfileEditor id={c.id} onClose={()=>setEditing(false)} onSaved={()=>{setEditing(false);toast.success('Corrections saved; assessment refresh queued');void router.invalidate();}}/>}
       <div className="grid md:grid-cols-[2fr_1fr] gap-10">
         <div>
           <div className="border border-rule rounded-md p-6 bg-paper">

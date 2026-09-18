@@ -67,6 +67,10 @@ jobs:
       - run: npm ci
       - name: Actual PostgreSQL discovery queries
         run: node scripts/test-discovery-postgres.ts
+      - name: CV leases, revisions and retry regression
+        run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -v ON_ERROR_STOP=1 -f supabase/tests/cv_processing.sql
+      - name: Actual CV worker PostgreSQL integration
+        run: node scripts/test-processing-postgres.ts
       - name: Stop isolated database
         if: always()
         run: supabase stop --no-backup

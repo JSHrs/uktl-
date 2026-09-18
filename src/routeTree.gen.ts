@@ -30,6 +30,8 @@ import { Route as AppUploadRouteImport } from './routes/app/upload'
 import { Route as AppProfileRouteImport } from './routes/app/profile'
 import { Route as AppDiscoverRouteImport } from './routes/app/discover'
 import { Route as AppActivityRouteImport } from './routes/app/activity'
+import { Route as ApiMaintenanceRouteImport } from './routes/api/maintenance'
+import { Route as AdminProcessingRouteImport } from './routes/admin/processing'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminEnquiriesRouteImport } from './routes/admin/enquiries'
 import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
@@ -155,6 +157,16 @@ const AppActivityRoute = AppActivityRouteImport.update({
   path: '/activity',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiMaintenanceRoute = ApiMaintenanceRouteImport.update({
+  id: '/api/maintenance',
+  path: '/api/maintenance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminProcessingRoute = AdminProcessingRouteImport.update({
+  id: '/processing',
+  path: '/processing',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -265,6 +277,8 @@ export interface FileRoutesByFullPath {
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/processing': typeof AdminProcessingRoute
+  '/api/maintenance': typeof ApiMaintenanceRoute
   '/app/activity': typeof AppActivityRoute
   '/app/discover': typeof AppDiscoverRoute
   '/app/profile': typeof AppProfileRoute
@@ -305,6 +319,8 @@ export interface FileRoutesByTo {
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/processing': typeof AdminProcessingRoute
+  '/api/maintenance': typeof ApiMaintenanceRoute
   '/app/activity': typeof AppActivityRoute
   '/app/discover': typeof AppDiscoverRoute
   '/app/profile': typeof AppProfileRoute
@@ -348,6 +364,8 @@ export interface FileRoutesById {
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/processing': typeof AdminProcessingRoute
+  '/api/maintenance': typeof ApiMaintenanceRoute
   '/app/activity': typeof AppActivityRoute
   '/app/discover': typeof AppDiscoverRoute
   '/app/profile': typeof AppProfileRoute
@@ -392,6 +410,8 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/enquiries'
     | '/admin/login'
+    | '/admin/processing'
+    | '/api/maintenance'
     | '/app/activity'
     | '/app/discover'
     | '/app/profile'
@@ -432,6 +452,8 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/enquiries'
     | '/admin/login'
+    | '/admin/processing'
+    | '/api/maintenance'
     | '/app/activity'
     | '/app/discover'
     | '/app/profile'
@@ -474,6 +496,8 @@ export interface FileRouteTypes {
     | '/admin/bookings'
     | '/admin/enquiries'
     | '/admin/login'
+    | '/admin/processing'
+    | '/api/maintenance'
     | '/app/activity'
     | '/app/discover'
     | '/app/profile'
@@ -513,6 +537,7 @@ export interface RootRouteChildren {
   ReachRoute: typeof ReachRoute
   SectorsRoute: typeof SectorsRoute
   ServicesRoute: typeof ServicesRoute
+  ApiMaintenanceRoute: typeof ApiMaintenanceRoute
   ApiCvIdRoute: typeof ApiCvIdRoute
 }
 
@@ -665,6 +690,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppActivityRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/maintenance': {
+      id: '/api/maintenance'
+      path: '/api/maintenance'
+      fullPath: '/api/maintenance'
+      preLoaderRoute: typeof ApiMaintenanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/processing': {
+      id: '/admin/processing'
+      path: '/processing'
+      fullPath: '/admin/processing'
+      preLoaderRoute: typeof AdminProcessingRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/login'
@@ -806,6 +845,7 @@ interface AdminRouteChildren {
   AdminBookingsRoute: typeof AdminBookingsRoute
   AdminEnquiriesRoute: typeof AdminEnquiriesRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminProcessingRoute: typeof AdminProcessingRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminFaqIdRoute: typeof AdminFaqIdRoute
   AdminFaqNewRoute: typeof AdminFaqNewRoute
@@ -821,6 +861,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBookingsRoute: AdminBookingsRoute,
   AdminEnquiriesRoute: AdminEnquiriesRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminProcessingRoute: AdminProcessingRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminFaqIdRoute: AdminFaqIdRoute,
   AdminFaqNewRoute: AdminFaqNewRoute,
@@ -895,6 +936,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReachRoute: ReachRoute,
   SectorsRoute: SectorsRoute,
   ServicesRoute: ServicesRoute,
+  ApiMaintenanceRoute: ApiMaintenanceRoute,
   ApiCvIdRoute: ApiCvIdRoute,
 }
 export const routeTree = rootRouteImport

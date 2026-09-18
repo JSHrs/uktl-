@@ -1,0 +1,34 @@
+name: CV processing worker
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *'
+permissions: {}
+concurrency:
+  group: cv-processing-worker
+  cancel-in-progress: false
+jobs:
+  process:
+    if: vars.ENABLE_CV_WORKER == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Process one due task
+        env:
+          MAINTENANCE_URL: ${{ vars.UKTL_MAINTENANCE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          node --input-type=module <<'JS'
+          const url = new URL(process.env.MAINTENANCE_URL);
+          if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash || url.pathname !== '/api/maintenance') throw new Error('Invalid maintenance endpoint');
+          if ((process.env.CRON_SECRET ?? '').length < 32) throw new Error('Configure a strong CRON_SECRET');
+          const response = await fetch(url, {method:'POST',redirect:'error',signal:AbortSignal.timeout(240000),headers:{Authorization:`Bearer ${process.env.CRON_SECRET}`}});
+          if (!response.ok) throw new Error(`Worker request failed: HTTP ${response.status}`);
+          const result = await response.json();
+          if (!['idle','succeeded','deferred_or_failed'].includes(result.status)) throw new Error('Unexpected worker response');
+          console.log(`Worker status: ${result.status}`);
+          if (result.status === 'deferred_or_failed') process.exitCode = 1;
+          JS

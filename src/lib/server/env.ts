@@ -8,6 +8,7 @@ import { createPrivateCvStorage } from "./storage";
 export type AppEnv = {
   DATA_BACKEND?: "d1" | "supabase";
   DATABASE_URL?: string;
+  CRON_SECRET?: string;
   DB: D1Database;
   CV_BUCKET: R2Bucket;
   AI: Ai;

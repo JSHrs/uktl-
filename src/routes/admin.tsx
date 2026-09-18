@@ -29,6 +29,7 @@ const NAV = [
   { to: "/admin/bookings", label: "Bookings" },
   { to: "/admin/enquiries", label: "Enquiries" },
   { to: "/admin/analytics", label: "Analytics" },
+  { to: "/admin/processing", label: "CV processing" },
 ] as const;
 
 function AdminLayout() {

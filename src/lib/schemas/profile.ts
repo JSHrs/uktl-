@@ -51,6 +51,7 @@ export const LinksSchema = z.object({
 });
 
 export const ParsedProfileSchema = z.object({
+  sector: z.enum(["construction","technology","other"]).nullable().optional(),
   name: z.string().nullable().optional(),
   email: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),

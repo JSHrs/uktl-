@@ -1,5 +1,18 @@
 # Current stage checkpoint — 18 September 2026
 
+## Durable processing and profile correction checkpoint
+
+- [x] Durable CV job registration before object storage; queue activation failures recover after a grace period.
+- [x] Protected one-task worker, three-attempt limit, backoff, expiring leases and atomic result fencing.
+- [x] Candidate extraction editor for contact/sector, skills, experience, education and links; revision checks prevent stale-tab overwrites and queue re-assessment.
+- [x] Candidate processing status, administrator queue, and disabled-by-default scheduled runner. No secrets configured or scheduler activated.
+- [x] Fixed skill-alias deduplication so raw labels/years cannot attach to a different skill.
+- [x] Supabase migration `20260918145535` applied; live rollback tests passed; security advisor returned no findings.
+- [x] Local 36 unit tests, TypeScript and Workers build passed; PostgreSQL worker integration is included in CI.
+- [ ] CI for this checkpoint must pass before its implementation gate is accepted.
+- [ ] Actual Claude/storage/runtime and authenticated editor browser tests remain unexecuted; see STAGE_2_UAT.md.
+- [ ] Remaining Stage 2: orphan reconciliation, Claude matching/evaluation and complete daily Reed ingestion. Stage 2 remains IN PROGRESS.
+
 ## Recruitment implementation checkpoint
 
 - [x] Discovery automatically uses the signed-in user's latest CV and ranks unseen jobs by available match score.
@@ -12,8 +25,9 @@
 - [x] Recruitment commit `9d00a164` passed CI `35356211513`, including browser checks and actual bound-query PostgreSQL tests for decisions, ownership and undo. Authenticated live cases remain skipped.
 - [x] Follow-up: register each CV storage key before uploading bytes; a failed registration cannot create an untracked object. Failure-injection tests passed.
 - [x] Removed timer-driven fake upload progress and corrected the private-storage/Claude-processing wording.
-- [x] Follow-up local checks: 33 unit tests, TypeScript, Workers build and targeted lint passed. This follow-up requires its own CI before being treated as verified.
-- [ ] Durable CV queue/retries/orphan cleanup; editable extraction and versioned re-assessment.
+- [x] Follow-up local checks: 33 unit tests, TypeScript, Workers build and targeted lint passed. Follow-up commit `ebea255c` passed CI `35356712909`: 33 unit tests, 24 browser checks, 14 credential-dependent skips, PostgreSQL migration/policy and actual discovery-query tests.
+- [x] Durable queue/retries and editable extraction with revision-safe re-assessment implemented in the newer checkpoint.
+- [ ] Automatic orphan cleanup remains outstanding.
 - [ ] Claude-backed matching/calibration and refreshed cached results; daily Reed Edge Function and expiry handling.
 - [ ] Deployed/mobile end-to-end acceptance after the owner connects hosting. No live recruitment completion claimed.
 

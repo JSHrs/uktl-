@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { SeniorityEnum } from "./profile";
+import { SeniorityEnum } from "./profile.ts";
 
 export const JobStatusEnum = z.enum(["open", "closed"]);
 export type JobStatus = z.infer<typeof JobStatusEnum>;

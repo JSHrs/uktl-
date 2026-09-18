@@ -30,3 +30,8 @@ Staff access uses named verified Supabase users, current `recruitment.staff_user
 - For an application regression, use Cloudflare's previous verified Worker version. Assess database compatibility before rollback. Do not reverse migrations blindly or remove production data.
 
 Legacy D1/R2 infrastructure instructions are archived in docs/LEGACY_D1_DEPLOYMENT.md. They are not the current production setup.
+
+
+## Durable CV worker
+
+Supabase uploads now return a queued state and require the protected worker to process them. See STAGE_2_UAT.md for exact manual and scheduled setup, runtime secrets and acceptance checks. The scheduled workflow is disabled until `ENABLE_CV_WORKER=true`; hosting remains deferred by the owner. Do not enable scheduling against production before isolated staging acceptance.

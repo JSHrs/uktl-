@@ -1,6 +1,7 @@
+import { normaliseSkill } from "./skills.ts";
 import type { AppEnv } from "./env";
 import type { ParsedProfile, QualityAssessment } from "../schemas/profile";
-import { JobSchema, type Job, type Match, type MatchScore, type MatchStage } from "../schemas/job";
+import { JobSchema, type Job, type Match, type MatchScore, type MatchStage } from "../schemas/job.ts";
 
 export type CandidateRow = {
   id: string;
@@ -81,13 +82,13 @@ export async function markCandidateFailed(
     .run();
 }
 
-export async function writeParsedProfile(
+export function parsedProfileStatements(
   env: AppEnv,
   id: string,
   profile: ParsedProfile,
-  normalisedSkills: string[],
+  _normalisedSkills: string[],
   quality: QualityAssessment,
-): Promise<void> {
+): D1PreparedStatement[] {
   const now = Date.now();
   const statements: D1PreparedStatement[] = [];
 
@@ -132,9 +133,9 @@ export async function writeParsedProfile(
     env.DB.prepare(`DELETE FROM candidate_education WHERE candidate_id=?`).bind(id),
   );
 
-  const skillsPaired = (profile.skills ?? []).map((s, i) => ({
+  const skillsPaired = (profile.skills ?? []).map((s) => ({
     raw: s.skill,
-    normal: normalisedSkills[i] ?? s.skill.toLowerCase(),
+    normal: normaliseSkill(s.skill),
     yoe: s.years_experience ?? null,
   }));
   const seen = new Set<string>();
@@ -189,7 +190,11 @@ export async function writeParsedProfile(
     );
   });
 
-  await env.DB.batch(statements);
+  return statements;
+}
+
+export async function writeParsedProfile(env: AppEnv, id: string, profile: ParsedProfile, skills: string[], quality: QualityAssessment): Promise<void> {
+  await env.DB.batch(parsedProfileStatements(env,id,profile,skills,quality));
 }
 
 export async function listCandidates(
@@ -344,12 +349,12 @@ function rowToJob(row: Record<string, unknown>): Job {
   });
 }
 
-export async function upsertMatches(
+export function matchStatements(
   env: AppEnv,
   candidateId: string,
   matches: MatchScore[],
-): Promise<void> {
-  if (matches.length === 0) return;
+): D1PreparedStatement[] {
+  if (matches.length === 0) return [];
   const now = Date.now();
   const statements = matches.map((m) =>
     env.DB.prepare(
@@ -381,7 +386,12 @@ export async function upsertMatches(
       now,
     ),
   );
-  await env.DB.batch(statements);
+  return statements;
+}
+
+export async function upsertMatches(env: AppEnv,candidateId: string,matches: MatchScore[]): Promise<void> {
+  const statements=matchStatements(env,candidateId,matches);
+  if (statements.length) await env.DB.batch(statements);
 }
 
 export async function setMatchStage(
@@ -415,8 +425,8 @@ export async function getMatchesForCandidate(
             j.min_years_experience AS j_min_years, j.description AS j_description,
             j.must_have_skills AS j_must, j.nice_to_have_skills AS j_nice,
             j.status AS j_status, j.created_at AS j_created
-       FROM matches m JOIN jobs j ON j.id=m.job_id
-      WHERE m.candidate_id=?
+       FROM matches m JOIN jobs j ON j.id=m.job_id JOIN candidates c ON c.id=m.candidate_id
+      WHERE m.candidate_id=? AND c.status='parsed' AND j.status='open'
       ORDER BY m.score DESC`,
   )
     .bind(candidateId)
@@ -522,7 +532,7 @@ export async function getMatchesForJob(
   const res = await env.DB.prepare(
     `SELECT m.*, c.name AS c_name, c.headline AS c_headline
        FROM matches m JOIN candidates c ON c.id=m.candidate_id
-      WHERE m.job_id=?
+      WHERE m.job_id=? AND c.status='parsed'
       ORDER BY m.score DESC
       LIMIT 50`,
   )
