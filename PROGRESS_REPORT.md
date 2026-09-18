@@ -27,13 +27,13 @@ The previous workspace and ZIP were unavailable. The newer local-only implementa
 - Baseline: 14 unit tests passed; TypeScript and production build passed.
 - Rebuilt foundation: 18 unit tests passed; TypeScript and production build passed.
 - Local Chromium download failed with network timeouts. No local browser-test pass is claimed. HTTP smoke checks passed for `/`, `/app`, `/auth/login`, `/admin/login`; signed-out `/app/candidates` redirected to login.
-- Live metadata: 29 recruitment tables, all with RLS enabled; private CV bucket with 10 MiB limit and expected MIME types.
-- Baseline destination CI run `35323391299` passed installation, regression tests, TypeScript, production build and its end-to-end job. Credential-dependent cases may be skipped; this is not deployed-workflow verification. The follow-up foundation commit requires its own CI result.
+- Live metadata: 29 recruitment tables, all with RLS enabled; private CV bucket with 10 MiB limit and expected MIME types. Supabase security advisor returned no findings; this is not a complete application security certification.
+- Baseline destination CI run `35323391299` passed installation, regression tests, TypeScript, production build and its end-to-end job. Credential-dependent cases may be skipped; this is not deployed-workflow verification. Foundation code commit `162ebe7f6c3bf292f7e0b4f5436c08cc9fb06465` also passed CI run `35323830436`: 18 unit tests and 18 browser tests passed; 14 credential-dependent browser tests were skipped. TypeScript and production build passed.
 - Runtime database adapter, provider integrations and deployed user journeys remain unverified without runtime credentials and hosting.
 
 ## Remaining checklist
 
-- [ ] Complete current GitHub CI and repair any actual failures.
+- [x] Complete current GitHub CI: both recovery and foundation code runs passed.
 - [ ] Configure runtime secrets, production origin, Auth redirects/email and isolated staging.
 - [ ] Rebuild named staff administration, password recovery, candidate applications/consent/saved jobs/activity, consultant workspace, client organisations/shortlists/feedback, and maintenance from the earlier handover.
 - [ ] Validate upload → parse → grade → match → consultant/client flows, access isolation, private downloads and email retries in staging.
