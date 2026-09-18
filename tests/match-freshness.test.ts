@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {databaseFixture} from './database-fixture.ts';
-import {getMatchesForCandidate} from '../src/lib/server/db.ts';
+import {getMatchesForCandidate,getMatchesForJob} from '../src/lib/server/db.ts';
 
 function fixture() {
   const f=databaseFixture();
@@ -40,5 +40,37 @@ test('closed/expired vacancies and unfinished profiles never expose stale matche
     db.exec("UPDATE jobs SET status='open'; UPDATE candidates SET status='uploaded'");assert.deepEqual(await getMatchesForCandidate(env,'a'),[]);
     db.exec("UPDATE candidates SET status='parsed',raw_profile=NULL");assert.deepEqual(await getMatchesForCandidate(env,'a'),[]);
     db.exec("UPDATE candidates SET raw_profile='invalid json'");await assert.rejects(getMatchesForCandidate(env,'a'));
+  }finally{db.close();}
+});
+
+test('staff ranking refreshes before top-50 selection and preserves stages without writes',async()=>{
+  const {db,env}=fixture();try {
+    for(let i=0;i<51;i++) {
+      const id=`staff-${String(i).padStart(2,'0')}`;
+      db.prepare("INSERT INTO candidates(id,created_at,updated_at,status,raw_profile) VALUES (?,1,1,'parsed',?)")
+        .run(id,JSON.stringify({skills:[{skill:i===50?'Python':'Rust'}]}));
+      db.prepare("INSERT INTO matches(candidate_id,job_id,score,computed_at,stage) VALUES (?,'new',?,1,'shortlisted')").run(id,i===50?0:100);
+    }
+    const results=await getMatchesForJob(env,'new');
+    assert.equal(results.length,50);assert.equal(results[0].candidate_id,'staff-50');
+    assert.equal(results[0].score,50);assert.equal(results[0].stage,'shortlisted');
+    assert.equal(results[1].candidate_id,'staff-00');
+    assert.ok(!JSON.stringify(results).includes('current_profile'));
+    assert.equal(db.prepare("SELECT score FROM matches WHERE candidate_id='staff-50'").get()!.score,0);
+    db.exec("UPDATE jobs SET status='closed'");
+    assert.equal((await getMatchesForJob(env,'new')).length,50,'closed-role pipeline remains reviewable');
+    db.exec("UPDATE candidates SET status='uploaded'");
+    assert.deepEqual(await getMatchesForJob(env,'new'),[]);
+  }finally{db.close();}
+});
+
+test('staff results exclude missing profiles and reject invalid evidence rather than use old scores',async()=>{
+  const {db,env}=fixture();try {
+    db.exec("INSERT INTO matches(candidate_id,job_id,score,computed_at) VALUES ('a','new',99,1)");
+    db.exec("UPDATE candidates SET raw_profile=NULL");
+    assert.deepEqual(await getMatchesForJob(env,'new'),[]);
+    db.exec("UPDATE candidates SET raw_profile='{}invalid'");
+    await assert.rejects(getMatchesForJob(env,'new'));
+    assert.deepEqual(await getMatchesForJob(env,'missing'),[]);
   }finally{db.close();}
 });

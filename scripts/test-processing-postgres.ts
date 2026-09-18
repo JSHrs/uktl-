@@ -2,7 +2,7 @@ import postgres from 'postgres';
 import assert from 'node:assert/strict';
 import {postgresQuery} from '../src/lib/server/postgres.ts';
 import {registerQueuedCv,activateQueuedCv,processNextCv,saveProfileRevision} from '../src/lib/server/processing.ts';
-import {getMatchesForCandidate} from '../src/lib/server/db.ts';
+import {getMatchesForCandidate,getMatchesForJob} from '../src/lib/server/db.ts';
 const url=process.env.TEST_DATABASE_URL??'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
 if(!['127.0.0.1','localhost'].includes(new URL(url).hostname)) throw new Error('Only the isolated local database may be used');
 const sql=postgres(url,{max:1,prepare:false});
@@ -38,6 +38,9 @@ try{await sql.begin(async tx=>{
   await tx`UPDATE jobs SET must_have_skills='["Rust"]' WHERE id=${job}`;
   const fresh=(await getMatchesForCandidate(env,candidate)).find(m=>m.job_id===job)!;
   assert.equal(fresh.score,0);assert.equal(fresh.stage,'shortlisted');
+  const staffFresh=(await getMatchesForJob(env,job)).find(m=>m.candidate_id===candidate)!;
+  assert.equal(staffFresh.score,0);assert.equal(staffFresh.stage,'shortlisted');
+  assert.equal((await tx`SELECT score FROM matches WHERE candidate_id=${candidate} AND job_id=${job}`)[0].score,50);
   const newJob=crypto.randomUUID();
   await tx`INSERT INTO jobs(id,created_at,title,status,must_have_skills) VALUES(${newJob},2,'New import','open','["python"]')`;
   assert.equal((await getMatchesForCandidate(env,candidate)).find(m=>m.job_id===newJob)!.score,50);

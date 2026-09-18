@@ -70,3 +70,5 @@ Acceptance: signed UAT checklist, production secrets/origin/redirects verified, 
 ## Reporting rule
 
 After each stage, report: implementation status; tests passed/failed/skipped; live evidence; user test needed; blockers; next stage. Work needing credentials is prepared for review before asking the user. Keep all completed source in GitHub at each verified checkpoint.
+
+Owner reporting instruction: after every completed development checkpoint, report what changed, what was verified, what remains, and the approximate implementation percentage. Keep estimates explicitly separate from release acceptance; do not increase the estimate mechanically for each commit.

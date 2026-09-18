@@ -1,5 +1,14 @@
 # Current stage checkpoint — 18 September 2026
 
+## Staff pipeline score freshness
+
+- Existing staff vacancy pipeline matches now recalculate from current profile and job evidence before selecting the top 50. Cached rankings cannot hide a newly stronger match. Equal scores use a stable candidate-ID tie-break.
+- Consultant stages remain unchanged; reads do not persist scores or invoke AI. Closed-vacancy pipelines remain available to staff for review, while unfinished/missing profiles do not expose cached scores. Malformed evidence fails closed.
+- Unit coverage includes 51 candidates proving top-50 selection happens after refresh, stage/cache preservation, closed vacancies, unfinished and malformed profiles, and exclusion of raw profile payloads from results. PostgreSQL integration assertions added to the existing CI worker test.
+- Verification: 47 local unit tests, TypeScript and Workers build passed. Local HTTP smoke was not verified: the dev server reported ready on 8080 with a cloudflare:workers dependency-scan warning, but the separate request process could not connect. Current CI must verify browser/PostgreSQL integration. The preceding candidate-freshness commit `16ee8e5b` passed CI [35370554312](https://github.com/devacnt/UKTL/actions/runs/35370554312).
+- This does not populate every candidate/vacancy pair or provide bounded large-catalog refresh. Those, Claude matching/evaluation, orphan cleanup, real provider checks, HR/booking and operations/live acceptance remain open.
+- Implementation estimate remains approximately 60% (50–65% planning range). This small correctness checkpoint does not justify a new headline percentage. Stage 2 remains IN PROGRESS; no hosting or release acceptance claimed. Previous database synchronization remains deferred by owner instruction.
+
 ## Candidate match freshness and database scope
 
 - Owner decision: continue only on UKTL Supabase `fvkffdeindboirukscfq`; defer synchronization of the previous/Lovable database until the end of development. Its identification is not a current development blocker.

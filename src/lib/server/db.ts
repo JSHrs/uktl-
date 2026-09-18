@@ -521,33 +521,32 @@ export async function getMatchesForJob(
   Array<Match & { candidate: { id: string; name: string | null; headline: string | null } }>
 > {
   const res = await env.DB.prepare(
-    `SELECT m.*, c.name AS c_name, c.headline AS c_headline
+    `SELECT j.*, m.candidate_id, m.stage, m.stage_updated_at,
+            c.name AS c_name, c.headline AS c_headline, c.raw_profile AS current_profile
        FROM matches m JOIN candidates c ON c.id=m.candidate_id
-      WHERE m.job_id=? AND c.status='parsed'
-      ORDER BY m.score DESC
-      LIMIT 50`,
+       JOIN jobs j ON j.id=m.job_id
+      WHERE m.job_id=? AND c.status='parsed' AND c.raw_profile IS NOT NULL`,
   )
     .bind(jobId)
     .all<Record<string, unknown>>();
-  return (res.results ?? []).map((row) => ({
-    candidate_id: String(row.candidate_id),
-    job_id: String(row.job_id),
-    score: Number(row.score),
-    skills_overlap: Number(row.skills_overlap),
-    experience_fit: Number(row.experience_fit),
-    seniority_fit: Number(row.seniority_fit),
-    location_fit: Number(row.location_fit),
-    matched_skills: parseJsonArray<string>(row.matched_skills),
-    missing_skills: parseJsonArray<string>(row.missing_skills),
-    reasoning: String(row.reasoning ?? ""),
-    computed_at: Number(row.computed_at),
-    ...rowStage(row),
-    candidate: {
-      id: String(row.candidate_id),
-      name: (row.c_name as string | null) ?? null,
-      headline: (row.c_headline as string | null) ?? null,
-    },
-  }));
+  const computedAt = Date.now();
+  // Rank only after refreshing every existing pipeline row. A SQL LIMIT on
+  // cached scores could exclude today's strongest matches. Closed vacancies
+  // retain their staff pipeline for review; candidate discovery excludes them.
+  return (res.results ?? []).map(row => {
+    const profile = ParsedProfileSchema.parse(JSON.parse(String(row.current_profile)));
+    return {
+      ...scoreMatch(profile, profile.skills.map(skill => skill.skill), rowToJob(row)),
+      candidate_id: String(row.candidate_id),
+      computed_at: computedAt,
+      ...rowStage(row),
+      candidate: {
+        id: String(row.candidate_id),
+        name: (row.c_name as string | null) ?? null,
+        headline: (row.c_headline as string | null) ?? null,
+      },
+    };
+  }).sort((a,b) => b.score-a.score || a.candidate_id.localeCompare(b.candidate_id)).slice(0,50);
 }
 
 // ── Admin: FAQ topics ────────────────────────────────────────────────────────
