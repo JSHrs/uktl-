@@ -16,6 +16,13 @@ export const JobSchema = z.object({
   description: z.string().nullable().optional(),
   must_have_skills: z.array(z.string()).default([]),
   nice_to_have_skills: z.array(z.string()).default([]),
+  salary_min: z.number().nonnegative().nullable().optional(),
+  salary_max: z.number().nonnegative().nullable().optional(),
+  salary_currency: z.string().nullable().optional(),
+  salary_period: z.string().nullable().optional(),
+  source_url: z.string().nullable().optional(),
+  posted_date: z.string().nullable().optional(),
+  expiry_date: z.string().nullable().optional(),
   status: JobStatusEnum,
 });
 export type Job = z.infer<typeof JobSchema>;

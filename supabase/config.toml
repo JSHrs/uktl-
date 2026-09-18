@@ -82,3 +82,7 @@ enabled = false
 [auth.mfa.totp]
 enroll_enabled = true
 verify_enabled = true
+
+[functions.reed-sync]
+# Custom long secret is checked before work; this is a cron-only function.
+verify_jwt = false

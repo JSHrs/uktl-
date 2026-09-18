@@ -319,7 +319,7 @@ export async function getCandidate(
 
 export async function listJobs(env: AppEnv): Promise<Job[]> {
   const res = await env.DB.prepare(
-    `SELECT * FROM jobs WHERE status='open' ORDER BY created_at DESC`,
+    `SELECT * FROM jobs WHERE status='open' AND (expiry_date IS NULL OR expiry_date >= CAST(CURRENT_DATE AS TEXT)) ORDER BY created_at DESC`,
   ).all<Record<string, unknown>>();
   return (res.results ?? []).map(rowToJob);
 }
@@ -343,6 +343,10 @@ function rowToJob(row: Record<string, unknown>): Job {
     min_years_experience:
       row.min_years_experience != null ? Number(row.min_years_experience) : null,
     description: row.description,
+    salary_min: row.salary_min == null ? null : Number(row.salary_min),
+    salary_max: row.salary_max == null ? null : Number(row.salary_max),
+    salary_currency: row.salary_currency, salary_period: row.salary_period,
+    source_url: row.source_url, posted_date: row.posted_date, expiry_date: row.expiry_date,
     must_have_skills: parseJsonArray<string>(row.must_have_skills),
     nice_to_have_skills: parseJsonArray<string>(row.nice_to_have_skills),
     status: row.status,
@@ -426,7 +430,7 @@ export async function getMatchesForCandidate(
             j.must_have_skills AS j_must, j.nice_to_have_skills AS j_nice,
             j.status AS j_status, j.created_at AS j_created
        FROM matches m JOIN jobs j ON j.id=m.job_id JOIN candidates c ON c.id=m.candidate_id
-      WHERE m.candidate_id=? AND c.status='parsed' AND j.status='open'
+      WHERE m.candidate_id=? AND c.status='parsed' AND j.status='open' AND (j.expiry_date IS NULL OR j.expiry_date >= CAST(CURRENT_DATE AS TEXT))
       ORDER BY m.score DESC`,
   )
     .bind(candidateId)

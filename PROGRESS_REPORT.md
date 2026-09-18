@@ -1,5 +1,16 @@
 # Current stage checkpoint — 18 September 2026
 
+## Reed ingestion checkpoint
+
+- [x] Paginated search and full-detail retrieval; atomic source upserts preserve staff closure, curated requirements and vacancy IDs.
+- [x] Salary range/unit/currency and normalized dates; expiry filtering in candidate results and atomic interest writes.
+- [x] Construction/Technology selector, conservative role-title filtering and explicit partial/failure counts.
+- [x] Protected sync endpoint and Supabase Edge dispatcher prepared with a separate operator-only daily scheduling script. Nothing deployed or scheduled.
+- [x] Migration `20260918151920` applied; live rollback upsert check preserved staff closure; security advisor returned no findings.
+- [x] 40 local unit tests, TypeScript and production build passed. Actual PostgreSQL ingestion regression added to CI; this commit's CI is pending.
+- [ ] Full search coverage/cursor continuation, durable sync monitoring, match refresh and live Reed verification remain open. Bounded imports do not establish D4 completion. See REED_SYNC.md.
+- [ ] Stage 2 still requires Claude matching/evaluation, upload cleanup and deployed acceptance.
+
 ## Durable processing and profile correction checkpoint
 
 - [x] Durable CV job registration before object storage; queue activation failures recover after a grace period.

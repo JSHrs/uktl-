@@ -31,3 +31,7 @@ The administrator can process one due task at `/admin/processing` using their ve
 Use synthetic or approved anonymised examples until privacy checks pass: two Construction CVs and two Technology CVs. Verify extracted contact/sector, skills with years, work history and education; correct one entry and confirm the saved values persist. Confirm report recommendations are useful and factually grounded. Test a second CV upload, interests and undo on a phone. Record tester/date, expected/actual result, screenshots and blocking issues.
 
 Do not ask the owner to run these against an undeployed application. No Stage 2 completion claim until daily Reed sync, Claude matching/evaluation, cleanup strategy and all required deployed/UAT evidence pass.
+
+## Reed checkpoint acceptance
+
+Use REED_SYNC.md for configuration and activation. Verify both sectors against real provider data, salary units, date parsing, repeated-import updates, preserved staff closure and expired-interest rejection. Exercise malformed detail responses, partial searches and dispatch failures. Confirm cron execution AND the final HTTP/import result. The bounded importer is not a complete feed refresh; full coverage/resumption and match-cache refresh remain open implementation work.

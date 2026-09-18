@@ -9,7 +9,7 @@ export type SwipeHistoryEntry = {
 export async function saveCandidateDecision(env: AppEnv, userId: string, candidateId: string, jobId: string, action: SwipeAction) {
   const row = await env.DB.prepare(`INSERT INTO candidate_swipes (candidate_id,job_id,action,swiped_at)
     SELECT c.id,j.id,?,? FROM candidates c JOIN jobs j ON j.id=?
-    WHERE c.id=? AND c.auth_user_id=? AND j.status='open'
+    WHERE c.id=? AND c.auth_user_id=? AND j.status='open' AND (j.expiry_date IS NULL OR j.expiry_date >= CAST(CURRENT_DATE AS TEXT))
     ON CONFLICT(candidate_id,job_id) DO UPDATE SET action=excluded.action,
     swiped_at=CASE WHEN candidate_swipes.swiped_at >= excluded.swiped_at THEN candidate_swipes.swiped_at+1 ELSE excluded.swiped_at END
     RETURNING swiped_at`).bind(action,Date.now(),jobId,candidateId,userId).first<{swiped_at:number}>();

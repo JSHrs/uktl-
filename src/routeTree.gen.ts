@@ -30,6 +30,7 @@ import { Route as AppUploadRouteImport } from './routes/app/upload'
 import { Route as AppProfileRouteImport } from './routes/app/profile'
 import { Route as AppDiscoverRouteImport } from './routes/app/discover'
 import { Route as AppActivityRouteImport } from './routes/app/activity'
+import { Route as ApiReedSyncRouteImport } from './routes/api/reed-sync'
 import { Route as ApiMaintenanceRouteImport } from './routes/api/maintenance'
 import { Route as AdminProcessingRouteImport } from './routes/admin/processing'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
@@ -157,6 +158,11 @@ const AppActivityRoute = AppActivityRouteImport.update({
   path: '/activity',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiReedSyncRoute = ApiReedSyncRouteImport.update({
+  id: '/api/reed-sync',
+  path: '/api/reed-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMaintenanceRoute = ApiMaintenanceRouteImport.update({
   id: '/api/maintenance',
   path: '/api/maintenance',
@@ -279,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/admin/login': typeof AdminLoginRoute
   '/admin/processing': typeof AdminProcessingRoute
   '/api/maintenance': typeof ApiMaintenanceRoute
+  '/api/reed-sync': typeof ApiReedSyncRoute
   '/app/activity': typeof AppActivityRoute
   '/app/discover': typeof AppDiscoverRoute
   '/app/profile': typeof AppProfileRoute
@@ -321,6 +328,7 @@ export interface FileRoutesByTo {
   '/admin/login': typeof AdminLoginRoute
   '/admin/processing': typeof AdminProcessingRoute
   '/api/maintenance': typeof ApiMaintenanceRoute
+  '/api/reed-sync': typeof ApiReedSyncRoute
   '/app/activity': typeof AppActivityRoute
   '/app/discover': typeof AppDiscoverRoute
   '/app/profile': typeof AppProfileRoute
@@ -366,6 +374,7 @@ export interface FileRoutesById {
   '/admin/login': typeof AdminLoginRoute
   '/admin/processing': typeof AdminProcessingRoute
   '/api/maintenance': typeof ApiMaintenanceRoute
+  '/api/reed-sync': typeof ApiReedSyncRoute
   '/app/activity': typeof AppActivityRoute
   '/app/discover': typeof AppDiscoverRoute
   '/app/profile': typeof AppProfileRoute
@@ -412,6 +421,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/processing'
     | '/api/maintenance'
+    | '/api/reed-sync'
     | '/app/activity'
     | '/app/discover'
     | '/app/profile'
@@ -454,6 +464,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/processing'
     | '/api/maintenance'
+    | '/api/reed-sync'
     | '/app/activity'
     | '/app/discover'
     | '/app/profile'
@@ -498,6 +509,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/processing'
     | '/api/maintenance'
+    | '/api/reed-sync'
     | '/app/activity'
     | '/app/discover'
     | '/app/profile'
@@ -538,6 +550,7 @@ export interface RootRouteChildren {
   SectorsRoute: typeof SectorsRoute
   ServicesRoute: typeof ServicesRoute
   ApiMaintenanceRoute: typeof ApiMaintenanceRoute
+  ApiReedSyncRoute: typeof ApiReedSyncRoute
   ApiCvIdRoute: typeof ApiCvIdRoute
 }
 
@@ -689,6 +702,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/activity'
       preLoaderRoute: typeof AppActivityRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/api/reed-sync': {
+      id: '/api/reed-sync'
+      path: '/api/reed-sync'
+      fullPath: '/api/reed-sync'
+      preLoaderRoute: typeof ApiReedSyncRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/maintenance': {
       id: '/api/maintenance'
@@ -937,6 +957,7 @@ const rootRouteChildren: RootRouteChildren = {
   SectorsRoute: SectorsRoute,
   ServicesRoute: ServicesRoute,
   ApiMaintenanceRoute: ApiMaintenanceRoute,
+  ApiReedSyncRoute: ApiReedSyncRoute,
   ApiCvIdRoute: ApiCvIdRoute,
 }
 export const routeTree = rootRouteImport

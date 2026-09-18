@@ -5,16 +5,16 @@ import { sendNotificationEmail, deliverNotification } from "../src/lib/server/no
 import { databaseFixture } from "./database-fixture.ts";
 import { syncReedJobs } from "../src/lib/server/reed.ts";
 
-test("Reed sync counts inserted, duplicate and failed rows separately", async () => {
+test("Reed sync counts saved, duplicate and failed rows separately", async () => {
   const { db, env } = databaseFixture(); env.REED_API_KEY = "test";
   try {
-    globalThis.fetch = async () => new Response(JSON.stringify({ results: [
+    globalThis.fetch = async (url) => String(url).includes("/jobs/") ? Response.json({ jobTitle: String(url).endsWith("/11") ? "Software engineer" : null }) : new Response(JSON.stringify({ results: [
       { jobId: 11, jobTitle: "Test engineer" },
       { jobId: 11, jobTitle: "Duplicate" },
       { jobId: 12, jobTitle: null },
     ] }));
     const result = await syncReedJobs(env, { keywords: "test", sector: "technology", resultsToTake: 3 });
-    assert.deepEqual(result, { inserted: 1, skipped: 1, failed: 1, total: 3 });
+    assert.deepEqual(result, { saved: 1, skipped: 1, failed: 1, total: 3, partial: true });
   } finally { db.close(); }
 });
 

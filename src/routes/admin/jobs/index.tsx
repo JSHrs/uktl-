@@ -14,15 +14,21 @@ function AdminJobsList() {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState<{ inserted: number; skipped: number; failed: number } | null>(null);
+  const [syncResult, setSyncResult] = useState<{
+    saved: number;
+    skipped: number;
+    failed: number;
+    partial: boolean;
+  } | null>(null);
+  const [sector, setSector] = useState<"construction" | "technology">("construction");
 
   async function syncFromReed() {
     if (syncing) return;
     setSyncing(true);
     setSyncResult(null);
     try {
-      const result = await syncReedJobsFn({ data: { keywords: "", sector: "construction", resultsToTake: 50 } });
-      setSyncResult({ inserted: result.inserted, skipped: result.skipped, failed: result.failed });
+      const result = await syncReedJobsFn({ data: { keywords: "", sector, resultsToTake: 200 } });
+      setSyncResult(result);
       await router.invalidate();
     } catch (err) {
       alert(err instanceof Error ? err.message : "Reed sync failed");
@@ -49,6 +55,16 @@ function AdminJobsList() {
         sub={`${jobs.filter((j: Job) => j.status === "open").length} open · ${jobs.length} total`}
         actions={
           <div className="flex items-center gap-3">
+            <select
+              aria-label="Reed sector"
+              value={sector}
+              disabled={syncing}
+              onChange={(e) => setSector(e.target.value as "construction" | "technology")}
+              className="border border-rule rounded-md p-2 text-sm"
+            >
+              <option value="construction">Construction</option>
+              <option value="technology">Technology</option>
+            </select>
             <button
               onClick={syncFromReed}
               disabled={syncing}
@@ -68,9 +84,11 @@ function AdminJobsList() {
 
       {syncResult && (
         <div className="mb-4 px-4 py-3 rounded-md border border-accent/30 bg-accent-soft text-sm text-accent">
-          Reed sync complete — {syncResult.inserted} new mandate{syncResult.inserted !== 1 ? "s" : ""} imported
-          {syncResult.skipped > 0 ? `, ${syncResult.skipped} already existed` : ""}
+          Reed sync {syncResult.partial ? "partial" : "finished"} — {syncResult.saved} vacancies
+          saved or refreshed
+          {syncResult.skipped > 0 ? `, ${syncResult.skipped} outside sector or duplicate` : ""}
           {syncResult.failed > 0 ? `, ${syncResult.failed} failed — retry the sync` : ""}.
+          {syncResult.partial && " This is not a complete vacancy-pool refresh."}
         </div>
       )}
 
@@ -131,4 +149,3 @@ function AdminJobsList() {
     </>
   );
 }
-

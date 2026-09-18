@@ -1008,9 +1008,9 @@ export const adminGetAnalyticsFn = createServerFn({ method: "GET" }).handler(asy
 export const syncReedJobsFn = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) =>
     z.object({
-      keywords: z.string().default(""),
+      keywords: z.string().max(200).default(""),
       sector: z.enum(["construction", "technology"]).default("construction"),
-      resultsToTake: z.number().int().min(1).max(100).default(50),
+      resultsToTake: z.number().int().min(1).max(500).default(50),
     }).parse(raw),
   )
   .handler(async ({ data }) => {

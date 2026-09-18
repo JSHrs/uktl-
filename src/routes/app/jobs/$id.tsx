@@ -223,6 +223,8 @@ function JobDetailPage() {
               }
             />
             <Detail label="Location" value={job.location} />
+            <Detail label="Salary" value={job.salary_min != null || job.salary_max != null ? `${job.salary_currency ?? ""} ${job.salary_min ?? "—"} – ${job.salary_max ?? "—"} ${job.salary_period ?? "(period not supplied)"}`.trim() : "Not disclosed"} />
+            <Detail label="Closing date" value={job.expiry_date} />
             <Detail label="Sector" value={job.sector} />
             <Detail label="Status" value={<Pill tone="good">{job.status}</Pill>} />
           </div>
