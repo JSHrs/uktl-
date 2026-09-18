@@ -9,7 +9,10 @@
 - [x] Pointer cancellation no longer submits a swipe; vertical mobile scrolling and reduced-motion handling improved.
 - [x] Rules-based matching no longer awards missing-data defaults, duplicate-skill credit or broad geographic proximity bonuses. This is not the scoped Claude engine or a calibrated probability of success.
 - [x] Local verification: 30 unit tests, TypeScript, Workers build, targeted lint and whitespace checks passed.
-- [ ] Current commit's GitHub browser and PostgreSQL integration results: inspect CI after commit. Added actual bound-query PostgreSQL regression runner, restricted to disposable local CI.
+- [x] Recruitment commit `9d00a164` passed CI `35356211513`, including browser checks and actual bound-query PostgreSQL tests for decisions, ownership and undo. Authenticated live cases remain skipped.
+- [x] Follow-up: register each CV storage key before uploading bytes; a failed registration cannot create an untracked object. Failure-injection tests passed.
+- [x] Removed timer-driven fake upload progress and corrected the private-storage/Claude-processing wording.
+- [x] Follow-up local checks: 33 unit tests, TypeScript, Workers build and targeted lint passed. This follow-up requires its own CI before being treated as verified.
 - [ ] Durable CV queue/retries/orphan cleanup; editable extraction and versioned re-assessment.
 - [ ] Claude-backed matching/calibration and refreshed cached results; daily Reed Edge Function and expiry handling.
 - [ ] Deployed/mobile end-to-end acceptance after the owner connects hosting. No live recruitment completion claimed.

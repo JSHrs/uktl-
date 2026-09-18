@@ -12,20 +12,14 @@ export const Route = createFileRoute("/app/upload")({
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 const ACCEPT = ".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain";
 
-type Stage = "idle" | "uploading" | "parsing" | "matching" | "done" | "failed";
+type Stage = "idle" | "processing" | "done" | "failed";
 
 const STAGE_LABELS: Record<Stage, string> = {
   idle: "",
-  uploading: "Uploading to secure storage…",
-  parsing: "Claude is reading the CV…",
-  matching: "Scoring against open mandates…",
+  processing: "Uploading and assessing your CV…",
   done: "Done — redirecting…",
   failed: "Something went wrong",
 };
-
-function stagePercent(stage: Stage): number {
-  return { idle: 0, uploading: 20, parsing: 55, matching: 85, done: 100, failed: 0 }[stage];
-}
 
 function UploadPage() {
   const navigate = useNavigate();
@@ -69,18 +63,13 @@ function UploadPage() {
       return;
     }
     setError(null);
-    setStage("uploading");
+    setStage("processing");
 
-    // Simulate stage transitions while the server function runs
-    const parseTimer = setTimeout(() => setStage("parsing"), 1200);
-    const matchTimer = setTimeout(() => setStage("matching"), 8000);
 
     try {
       const fd = new FormData();
       fd.append("file", file);
       const result = await uploadAndParseCvFn({ data: fd });
-      clearTimeout(parseTimer);
-      clearTimeout(matchTimer);
 
       if (result.status === "failed") {
         const message = result.error ?? "CV parsing failed — check the file and try again.";
@@ -94,16 +83,12 @@ function UploadPage() {
       toast.success(`CV parsed — quality ${result.quality.score}/100`);
       await navigate({ to: "/app/candidates/$id", params: { id: result.id } });
     } catch (err) {
-      clearTimeout(parseTimer);
-      clearTimeout(matchTimer);
       const message = err instanceof Error ? err.message : String(err);
       setError(message);
       setStage("failed");
       toast.error(message);
     }
   }
-
-  const pct = stagePercent(stage);
 
   return (
     <>
@@ -153,13 +138,7 @@ function UploadPage() {
           {busy ? (
             <div className="space-y-4">
               <div className="font-display text-xl text-ink">{STAGE_LABELS[stage]}</div>
-              <div className="mx-auto w-48 h-1 bg-rule rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-ink rounded-full transition-all duration-700 ease-out"
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-              <div className="text-xs text-ink-mute">This usually takes 15–30 seconds</div>
+              <p role="status" className="text-xs text-ink-mute">Please keep this page open while processing finishes. We will show your results when they are ready.</p>
             </div>
           ) : file ? (
             <>
@@ -203,7 +182,7 @@ function UploadPage() {
         {/* Footer row */}
         <div className="mt-6 flex items-center justify-between gap-4">
           <p className="text-xs text-ink-mute max-w-[44ch]">
-            Files are stored privately in Cloudflare R2 and never shared. Processing is server-side only.
+            Files are kept in private storage. Claude processes your document to extract its contents and prepare your assessment.
           </p>
           <button
             type="submit"
@@ -223,10 +202,10 @@ function UploadPage() {
         </div>
         <ol className="space-y-3">
           {[
-            ["Store", "The CV file is stored privately in Cloudflare R2 — never accessible publicly."],
+            ["Store", "Your CV is stored privately and accessed through your account or authorised UKTL staff."],
             ["Extract", "Claude reads the document and outputs a strict JSON profile: identity, experience, skills, education."],
             ["Normalise", 'Skills are collapsed to a canonical taxonomy so "React.js" and "ReactJS" count as one.'],
-            ["Grade", "CV quality is scored 0–100 with concrete improvement notes for the consultant."],
+            ["Grade", "CV quality is scored 0–100 with specific improvement notes for you and the consultant."],
             ["Match", "The candidate is ranked against every open mandate and surfaced on the discovery dashboard."],
           ].map(([step, desc], i) => (
             <li key={step} className="flex gap-4 text-sm">

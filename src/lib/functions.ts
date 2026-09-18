@@ -1,3 +1,4 @@
+import { storeRegisteredCv } from "./server/upload-lifecycle";
 import { saveCandidateDecision, undoCandidateDecision, listCandidateDecisions, listJobInterests } from "./server/discovery";
 import { validateCvUpload } from "./server/upload-validation";
 import { createServerFn } from "@tanstack/react-start";
@@ -213,16 +214,12 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
     const id = newId();
     const r2Key = `cvs/${id}/${sanitiseFilename(file.name)}`;
 
-    await env.CV_BUCKET.put(r2Key, bytes, {
-      httpMetadata: { contentType: validated.contentType },
+    const stored = await storeRegisteredCv({
+      register: () => insertCandidateShell(env, { id, filename:file.name, r2Key, sizeBytes:bytes.byteLength, authUserId:session.userId }),
+      upload: () => env.CV_BUCKET.put(r2Key,bytes,{httpMetadata:{contentType:validated.contentType}}),
+      markFailed: () => markCandidateFailed(env,id,"Private upload did not complete. Please try again."),
     });
-    await insertCandidateShell(env, {
-      id,
-      filename: file.name,
-      r2Key,
-      sizeBytes: bytes.byteLength,
-      authUserId: session.userId,
-    });
+    if (!stored) return {id,status:"failed" as const,error:"Private upload did not complete. Please try again."};
     if (session.userId) {
       // Mirror the link onto the Supabase profile; candidates.auth_user_id is authoritative.
       try {
