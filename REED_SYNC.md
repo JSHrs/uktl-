@@ -1,6 +1,6 @@
 # Reed ingestion and daily activation
 
-Status: resumable implementation checkpoint; no scheduler or Edge Function deployed. The new `20260918154759_resumable_reed_sync` migration is prepared but NOT applied to production: automatic approval review rejected the production schema change under the staging-only constraint. Apply and verify it in isolated staging before deploying this revision. Hosting remains deferred. No live Reed call has been made for verification.
+Status: resumable implementation checkpoint; no scheduler or Edge Function deployed. Migration `20260918163142_resumable_reed_sync` is applied to UKTL following the owner’s explicit database-update instruction on 18 September 2026. Remote history and access restrictions were verified; security advisor returned no findings. Apply and verify it in isolated staging before deploying this revision. Hosting remains deferred. No live Reed call has been made for verification.
 
 The administrator chooses Construction or Technology. Imports fetch search pages (100/page) and then full job details. Existing source IDs are updated atomically without changing IDs, staff closure, curated requirements or consultant stages. Hidden salaries stay null; salary unit/currency are retained rather than assumed annual GBP. Invalid expiry values fail the record; normalised expiry dates exclude expired roles from matching/discovery and reject new interests. Staff status remains separate from expiry.
 

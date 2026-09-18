@@ -1,6 +1,6 @@
 # UKTL Supabase installation and recovery
 
-Target: `fvkffdeindboirukscfq` (UKTL). No database changes were made during the recovery session on 18 September 2026.
+Target: `fvkffdeindboirukscfq` (UKTL). Updated 18 September 2026 after explicit owner authorization to synchronize databases. All eight canonical migrations are applied to this verified target.
 
 ## Recovered migration history
 
@@ -11,10 +11,13 @@ The canonical `supabase/migrations` directory now contains the exact stored SQL 
 3. `20260918001950_uktl_recruitment_and_workflows`
 4. `20260918003021_uktl_explicit_backend_policies_and_constraints`
 5. `20260918112245_named_staff_access_and_mfa`
+6. `20260918145535_durable_cv_processing_and_revisions`
+7. `20260918151920_reed_vacancy_metadata`
+8. `20260918163142_resumable_reed_sync`
 
-The first remote migration combines the two original baseline migrations. Their original files are preserved unchanged under `supabase/legacy-migrations`, outside the CLI migration directory. Do not replay those legacy files or mark the five existing remote migrations as unapplied. No remote migration-history repair was performed.
+The first remote migration combines the two original baseline migrations. Their original files are preserved unchanged under `supabase/legacy-migrations`, outside the CLI migration directory. Do not replay those legacy files or mark the eight existing remote migrations as unapplied. No remote migration-history repair was performed.
 
-Before a future `db push`, explicitly link the correct project, inspect migration list, and inspect a dry run using the installed CLI's documented flags. The existing five migrations should be shown as already applied. Stop if they would be replayed. A full fresh replay is now a required GitHub CI job. Check its result for the current commit before pushing to another environment.
+Before a future `db push`, explicitly link the correct project, inspect migration list, and inspect a dry run using the installed CLI's documented flags. The existing eight migrations should be shown as already applied. Stop if they would be replayed. A full fresh replay is now a required GitHub CI job. Check its result for the current commit before pushing to another environment.
 
 Live metadata checks confirmed 29 recruitment tables, all 29 with RLS enabled, and private bucket `uktl-cvs`, limited to 10 MiB and PDF/DOCX/TXT. These are metadata checks, not complete security certification.
 
@@ -44,3 +47,9 @@ Partial upload/database failures can leave orphaned objects. Reconciliation, ful
 ## Stage 1 evidence
 
 The fifth migration was applied to the authorized project. `supabase/tests/staff_access.sql` passed on the live schema in a rollback transaction: admin/consultant separation, AAL1 denial, inactive/unverified/banned staff, factor removal, expired/revoked sessions, metadata spoofing, ownership and protected writes. Security advisor: no findings. This does not verify deployed Auth, SMTP or browser MFA. The manual staging workflow prepares isolated Supabase/Cloudflare deployment and rejects use of the production project; configure it using `STAGE_1_UAT.md`.
+
+## Second database reconciliation — blocked
+
+Lovable project UKTL (`b976b2a4-fea6-43dc-a8da-72d7238985c7`) reports its Cloud database disabled. This does not exclude an external Supabase connection. Its readable `wrangler.toml` contains placeholder URLs, `supabase/config.toml` uses only a local CLI project name, and the browser client reads environment variables. The connected Supabase account lists only UKTL; no second remote target was identifiable. The Lovable source at `b7969c11ba7003a68248678656f8126093720679` is older than the destination implementation.
+
+Required to finish: the external Supabase project reference and authorized access. Inspect existing schema, migrations and data before selecting compatible migrations; do not replay the baseline blindly. Do not enable a new Lovable Cloud database as a substitute. The original repository remains preserved. Source commits and database application are separate operations; updating main does not itself synchronize another database or Lovable project.
