@@ -7,7 +7,7 @@ Public website for UK Talent Link (executive search, HR consultancy, UK employme
 - **CV intake** — upload PDF, DOCX or TXT; the file is stored privately in R2, Claude extracts a structured profile, skills are normalised to a canonical taxonomy, the CV is graded 0–100 with a per-section breakdown and improvement report, and the candidate is scored against every open mandate.
 - **Mandates** — managed in the admin dashboard or synced from Reed.co.uk; re-matching runs when mandates change.
 - **Discover** — candidates swipe through matched vacancies ranked by fit.
-- **Candidate portal** — Supabase-backed accounts, profile editing, magic-link sign-in, CV linked to the account.
+- **Candidate portal** — Supabase-backed accounts, profile editing, password recovery, CV linked to the account.
 - **HR & employment law** — searchable FAQ topics (video-backed), Claude escalation grounded in ACAS guidance, consultation bookings with email notification.
 - **Admin** — FAQ topics, mandates, candidates, bookings log, analytics funnel.
 - **Contact** — enquiries are persisted and emailed to the team.
@@ -25,7 +25,7 @@ npx tsc --noEmit       # must be 0 errors
 npm run build          # must pass
 ```
 
-Admin dashboard: `/admin/login`. Configure `ADMIN_PASSWORD_HASH` and `JWT_SECRET`; missing secrets disable access. No demo credentials are accepted.
+Admin dashboard: `/admin/login`. Use a verified named Supabase staff account and authenticator (MFA). See **STAGE_1_UAT.md** for setup; shared-password cookies are no longer accepted.
 
 For a full local stack with D1 and R2, run under Wrangler and put secrets in `.dev.vars` (gitignored). See `DEPLOYMENT.md`.
 
@@ -37,7 +37,7 @@ For a full local stack with D1 and R2, run under Wrangler and put secrets in `.d
 | `npm run build` | Production build (`dist/`) |
 | `npm run lint` | ESLint (+ prettier rule — currently failing repo-wide on formatting) |
 | `npm run test:e2e` | Playwright suite in `e2e/` against `E2E_BASE_URL` |
-| `node scripts/hash-password.mjs` | Generate an `ADMIN_PASSWORD_HASH` |
+| `node scripts/prepare-staging.mjs` | Validate and prepare isolated Supabase staging deployment |
 
 ## Project layout
 

@@ -190,10 +190,10 @@ export function AdminField({
 }) {
   return (
     <div>
-      <label className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
-        {label}
+      <label className="block">
+        <span className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">{label}</span>
+        {children}
       </label>
-      {children}
       {hint && <p className="text-xs text-ink-mute mt-1">{hint}</p>}
     </div>
   );

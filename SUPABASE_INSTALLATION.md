@@ -12,9 +12,9 @@ The canonical `supabase/migrations` directory now contains the exact stored SQL 
 4. `20260918003021_uktl_explicit_backend_policies_and_constraints`
 5. `20260918112245_named_staff_access_and_mfa`
 
-The first remote migration combines the two original baseline migrations. Their original files are preserved unchanged under `supabase/legacy-migrations`, outside the CLI migration directory. Do not replay those legacy files or mark the four existing remote migrations as unapplied. No remote migration-history repair was performed.
+The first remote migration combines the two original baseline migrations. Their original files are preserved unchanged under `supabase/legacy-migrations`, outside the CLI migration directory. Do not replay those legacy files or mark the five existing remote migrations as unapplied. No remote migration-history repair was performed.
 
-Before a future `db push`, explicitly link the correct project, inspect migration list, and inspect a dry run using the installed CLI's documented flags. The existing four migrations should be shown as already applied. Stop if they would be replayed. A full fresh replay is now a required GitHub CI job. Check its result for the current commit before pushing to another environment.
+Before a future `db push`, explicitly link the correct project, inspect migration list, and inspect a dry run using the installed CLI's documented flags. The existing five migrations should be shown as already applied. Stop if they would be replayed. A full fresh replay is now a required GitHub CI job. Check its result for the current commit before pushing to another environment.
 
 Live metadata checks confirmed 29 recruitment tables, all 29 with RLS enabled, and private bucket `uktl-cvs`, limited to 10 MiB and PDF/DOCX/TXT. These are metadata checks, not complete security certification.
 

@@ -84,10 +84,10 @@ function RegisterPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
+          <label htmlFor="register-name" className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
             Full name
           </label>
-          <input
+          <input id="register-name"
             type="text"
             value={form.name}
             onChange={set("name")}
@@ -100,10 +100,10 @@ function RegisterPage() {
         </div>
 
         <div>
-          <label className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
+          <label htmlFor="register-email" className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
             Email
           </label>
-          <input
+          <input id="register-email"
             type="email"
             value={form.email}
             onChange={set("email")}
@@ -115,10 +115,10 @@ function RegisterPage() {
         </div>
 
         <div>
-          <label className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
-            Password <span className="normal-case tracking-normal font-sans text-[11px]">(min 8 chars)</span>
+          <label htmlFor="register-password" className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
+            Password <span className="normal-case tracking-normal font-sans text-[11px]">(min 12 chars)</span>
           </label>
-          <input
+          <input id="register-password"
             type="password"
             value={form.password}
             onChange={set("password")}
@@ -131,10 +131,10 @@ function RegisterPage() {
         </div>
 
         <div>
-          <label className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
+          <label htmlFor="register-confirm" className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
             Confirm password
           </label>
-          <input
+          <input id="register-confirm"
             type="password"
             value={form.confirm}
             onChange={set("confirm")}

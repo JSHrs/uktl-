@@ -3,7 +3,7 @@
 - Gate 0 PASS: recovered source transferred and old repository preserved.
 - Gate 1 IN PROGRESS: named Supabase staff authentication, mandatory MFA, real password recovery, user-scoped profile writes, authentication rate limits and staging preflight implemented. No shared admin-cookie fallback.
 - Applied migration `20260918112245_named_staff_access_and_mfa`; rollback policy tests passed on the target project. Security advisor: no findings.
-- Local: 22 unit tests passed; TypeScript/build passed; targeted lint passed. Current GitHub CI verification is pending this checkpoint's commit; older CI runs below do not verify these changes.
+- Local: 22 unit tests passed; TypeScript/build passed; targeted lint passed. Code commit `8a5ab095de3f51b9ca2158db51b98578da9e7f9a` passed CI run `35340244815`: 22 unit tests and 22 browser tests passed, 14 staging-credential cases skipped. The separate PostgreSQL 17 job passed clean migration replay and staff/ownership SQL tests. Final documentation/form-label follow-up verification is pending.
 - Prepared isolated staging deployment and authenticated test workflow; missing hosting/runtime configuration, SMTP, staging identities and user acceptance prevent Stage 1 completion.
 - Gates 2–4 not accepted. No deployment, end-to-end live provider verification or product-readiness claim.
 - Approved delivery scope is D1–D13 plus the priority hardening in DEVELOPMENT_GATES.md. Full client CRM/interview expansion is not an MVP prerequisite.
@@ -20,7 +20,7 @@ These are conditional planning allowances (12–20 focused working days total), 
 
 ---
 
-# UKTL / Talent Compass — recovery progress, 18 September 2026
+# Historical recovery checkpoint — superseded by the current status above
 
 ## Verified transfer
 

@@ -48,10 +48,10 @@ function LoginPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
+          <label htmlFor="login-email" className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
             Email
           </label>
-          <input
+          <input id="login-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -64,10 +64,10 @@ function LoginPage() {
         </div>
 
         <div>
-          <label className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
+          <label htmlFor="login-password" className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
             Password
           </label>
-          <input
+          <input id="login-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

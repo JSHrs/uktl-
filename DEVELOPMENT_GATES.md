@@ -8,7 +8,7 @@ Status: PASS. Full source transferred; old repository preserved; recovered Supab
 
 ## Gate 1 — accounts, roles and environments (D1; foundation of D12/D13)
 
-Status: IN PROGRESS.
+Status: IN PROGRESS. Implementation and automated checkpoint passed at `8a5ab095` / CI `35340244815`; live staging/email/MFA UAT still BLOCKED. The suite's 14 credential-dependent skips are not acceptance evidence.
 
 - Candidate registration, confirmation, login, refresh, logout and real password recovery.
 - Verified named Supabase staff membership; no shared-password fallback, metadata-based privilege or self-promotion.

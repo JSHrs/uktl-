@@ -8,7 +8,7 @@ export function validateStaging(env) {
   if (missing.length) throw new Error(`Missing staging configuration: ${missing.join(", ")}`);
   const supabase = new URL(env.SUPABASE_URL);
   const ref = supabase.hostname.split(".")[0];
-  if (!/^[a-z]{20}$/.test(ref) || supabase.hostname !== `${ref}.supabase.co` || supabase.protocol !== "https:" || ref === PRODUCTION_PROJECT) throw new Error("Staging requires a separate Supabase project");
+  if (!/^[a-z]{20}$/.test(ref) || supabase.hostname !== `${ref}.supabase.co` || supabase.protocol !== "https:" || supabase.pathname !== "/" || supabase.search || supabase.hash || supabase.username || supabase.password || ref === PRODUCTION_PROJECT) throw new Error("Staging requires a separate Supabase project");
   const origin = new URL(env.SITE_URL);
   if (origin.protocol !== "https:" || !/^uktl-staging\.[a-z0-9-]+\.workers\.dev$/.test(origin.hostname) || origin.pathname !== "/" || origin.search || origin.hash || origin.username || origin.password) throw new Error("SITE_URL must be the HTTPS uktl-staging Workers origin");
   const database = new URL(env.DATABASE_URL);
