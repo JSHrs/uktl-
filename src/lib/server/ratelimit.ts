@@ -14,6 +14,8 @@ export type RateLimitResult =
 export type RateLimitRule = { limit: number; windowMs: number };
 
 export const RATE_LIMITS = {
+  matchReview: { limit: 20, windowMs: 60 * 60 * 1000 },
+  matchRefresh: { limit: 60, windowMs: 60 * 60 * 1000 },
   uploadReconciliation: { limit: 12, windowMs: 60 * 60 * 1000 },
   /** Costly: two Anthropic calls per upload. */
   cvWorker: { limit: 60, windowMs: 60 * 60 * 1000 },

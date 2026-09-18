@@ -333,7 +333,7 @@ export async function getJob(env: AppEnv, id: string): Promise<Job | null> {
   return row ? rowToJob(row) : null;
 }
 
-function rowToJob(row: Record<string, unknown>): Job {
+export function rowToJob(row: Record<string, unknown>): Job {
   return JobSchema.parse({
     id: row.id,
     created_at: Number(row.created_at),

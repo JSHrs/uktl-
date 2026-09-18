@@ -1,4 +1,5 @@
 import {ProfileEditor} from "@/components/app/ProfileEditor";
+import {MatchEvidence} from "@/components/app/MatchEvidence";
 import { createFileRoute, Link, notFound, redirect, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -373,6 +374,7 @@ function CandidateDetailPage() {
                       {m.job.company ?? "Confidential"} · {m.job.location ?? ""}
                     </div>
                     <ScoreBar value={m.score} />
+                    <MatchEvidence candidateId={c.id} jobId={m.job_id} />
                     {m.missing_skills.length > 0 && (
                       <div className="mt-2 text-xs text-ink-mute">
                         Gaps: {m.missing_skills.slice(0, 3).join(", ")}

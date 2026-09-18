@@ -1,5 +1,12 @@
 # Current stage checkpoint — 18 September 2026
 
+## Stage 2 evidence review and bounded refresh
+
+- Administrator match refresh covers all current candidate/open-vacancy pairs in batches of 25 with a continuation cursor. Writes check and lock the original profile/vacancy snapshot; retries are idempotent and preserve consultant stages. A changed dataset can require a subsequent pass; this is not a scheduled full-index service.
+- Candidate/staff Claude review of curated essential criteria: complete criterion coverage, exact evidence quotations, unknowns instead of invented gaps, algorithm/model/date, input-fingerprinted caching and stale-result rejection. Direct identity/contact fields are omitted from the supplied evidence. Free-text work descriptions may still contain personal information. AI interpretations never alter rules-based ranking or make hiring decisions.
+- Local 53 unit tests, TypeScript and build passed. PostgreSQL snapshot/refresh/cache regression tests added; CI pending. Migration is prepared, not yet applied. Actual Claude evaluation on a human-reviewed dataset remains required; quote-presence checks do not prove semantic accuracy.
+- Stage 2 is NOT fully accepted: automatic cleanup needs an approved retention/recovery policy; real provider/staging tests, reviewed score/AI evaluation and malware/throughput acceptance remain. Rough implementation estimate is about 65%, not release readiness. Work continues into Stage 3 without claiming the Stage 2 acceptance gate is closed.
+
 ## Upload reconciliation inspection checkpoint
 
 - Administrator-only, rate-limited inspection on `/admin/processing` identifies up to 100 old unreferenced CV objects and 100 old candidate records missing object metadata. More-results flags prevent treating a truncated sample as complete.

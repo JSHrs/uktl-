@@ -62,6 +62,7 @@ import {resumeReedSync,reedSyncStates} from "./server/reed-sync";
 import { parseCv } from "./server/parse";
 import { scoreMatch } from "./server/match";
 import { inspectUploadReconciliation } from "./server/upload-reconciliation";
+import {assessMatchEvidence,refreshMatchBatch} from "./server/match-evidence";
 import { normaliseSkillList } from "./server/skills";
 import { anonymiseProfile } from "./server/anonymize";
 import { extractDocxText } from "./server/docx";
@@ -1084,6 +1085,21 @@ export const getCvQueueFn=createServerFn({method:"GET"}).handler(async()=>{
 });
 
 export const reedSyncStatesFn=createServerFn({method:"GET"}).handler(async()=>{await requireAdmin();return reedSyncStates(await getEnv());});
+
+export const assessMatchEvidenceFn=createServerFn({method:"POST"})
+ .inputValidator((raw:unknown)=>z.object({candidateId:z.string().min(1).max(100),jobId:z.string().min(1).max(100)}).strict().parse(raw))
+ .handler(async({data})=>{
+  const viewer=await requireViewer(),env=await getEnv();
+  const owner=await getCandidateAuthUserId(env,data.candidateId);
+  if(owner===undefined||!canAccessCandidate(viewer,owner))throw new Error('Profile unavailable');
+  await enforceRateLimit(env,'matchReview',viewer.userId!);
+  try{return await assessMatchEvidence(env,data.candidateId,data.jobId);}catch{throw new Error('Evidence review unavailable. Check that the profile is processed and essential vacancy requirements are configured, then retry.');}
+ });
+export const refreshMatchBatchFn=createServerFn({method:"POST"})
+ .inputValidator((raw:unknown)=>z.object({cursor:z.object({candidateId:z.string().max(100),jobId:z.string().max(100)}).optional()}).strict().parse(raw))
+ .handler(async({data})=>{await requireAdmin();const env=await getEnv();await enforceRateLimit(env,'matchRefresh','administrator');
+  try{return await refreshMatchBatch(env,data.cursor);}catch{throw new Error('Batch interrupted. Retry the same batch; existing consultant stages are preserved.');}
+ });
 
 export const inspectUploadsFn=createServerFn({method:"POST"})
   .inputValidator((raw:unknown)=>z.object({}).strict().parse(raw))
