@@ -1,0 +1,66 @@
+import { test, expect } from "./fixtures";
+
+test.describe("Admin authentication", () => {
+  test("redirects unauthenticated requests to login", async ({ page }) => {
+    await page.goto("/admin");
+    await expect(page).toHaveURL(/\/admin\/login/);
+  });
+
+  test("redirects unauthenticated /admin/faq to login", async ({ page }) => {
+    await page.goto("/admin/faq");
+    await expect(page).toHaveURL(/\/admin\/login/);
+  });
+
+  test("shows login form", async ({ page }) => {
+    await page.goto("/admin/login");
+    await expect(page.getByRole("heading", { name: /admin/i })).toBeVisible();
+    await expect(page.getByPlaceholder(/password/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /sign in/i })).toBeVisible();
+  });
+
+  test("rejects wrong password", async ({ page }) => {
+    await page.goto("/admin/login");
+    await page.getByPlaceholder(/password/i).fill("wrongpassword");
+    await page.getByRole("button", { name: /sign in/i }).click();
+    await expect(page.getByText(/invalid|not configured|login failed/i)).toBeVisible();
+    await expect(page).toHaveURL(/\/admin\/login/);
+  });
+
+  test("signs in with configured password and lands on overview", async ({ page }) => {
+    test.skip(!process.env.E2E_ADMIN_PASSWORD || !process.env.E2E_BASE_URL, "requires configured staging credentials");
+    await page.goto("/admin/login");
+    await page.getByPlaceholder(/password/i).fill(process.env.E2E_ADMIN_PASSWORD!);
+    await page.getByRole("button", { name: /sign in/i }).click();
+    await expect(page).toHaveURL(/\/admin\/?$/);
+    await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+  });
+
+  test("sign out returns to login page", async ({ page }) => {
+    test.skip(!process.env.E2E_ADMIN_PASSWORD || !process.env.E2E_BASE_URL, "requires configured staging credentials");
+    // Sign in first
+    await page.goto("/admin/login");
+    await page.getByPlaceholder(/password/i).fill(process.env.E2E_ADMIN_PASSWORD!);
+    await page.getByRole("button", { name: /sign in/i }).click();
+    await expect(page).toHaveURL(/\/admin\/?$/);
+
+    // Sign out
+    await page.getByRole("button", { name: /sign out/i }).click();
+    await expect(page).toHaveURL(/\/admin\/login/);
+  });
+
+  test("rejects the removed demo password", async ({ page }) => {
+    await page.goto("/admin/login");
+    await page.getByPlaceholder(/password/i).fill("admin123");
+    await page.getByRole("button", { name: /sign in/i }).click();
+    await expect(page.getByText(/invalid|not configured|login failed/i)).toBeVisible();
+    await expect(page).toHaveURL(/\/admin\/login/);
+  });
+
+  test("admin pages are not indexed by search engines", async ({ page }) => {
+    await page.goto("/admin/login");
+    const robots = await page.locator('meta[name="robots"]').getAttribute("content");
+    expect(robots).toMatch(/noindex/);
+    expect(robots).toMatch(/nofollow/);
+  });
+});
+
