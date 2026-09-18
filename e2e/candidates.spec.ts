@@ -1,10 +1,9 @@
+import { hasStaffCredentials, signInStaff } from "./staff-login";
 import { test, expect, type Page } from "./fixtures";
 
 async function signInAsAdmin(page: Page) {
-  test.skip(!process.env.E2E_ADMIN_PASSWORD || !process.env.E2E_BASE_URL, "requires configured staging credentials");
-  await page.goto("/admin/login");
-  await page.getByPlaceholder(/password/i).fill(process.env.E2E_ADMIN_PASSWORD!);
-  await page.getByRole("button", { name: /sign in/i }).click();
+  test.skip(!hasStaffCredentials, "requires named staging staff credentials and enrolled MFA");
+  await signInStaff(page);
   await expect(page).toHaveURL(/\/admin\/?$/);
 }
 

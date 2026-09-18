@@ -25,8 +25,8 @@ function RegisterPage() {
       setError("Passwords do not match.");
       return;
     }
-    if (form.password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    if (form.password.length < 12) {
+      setError("Password must be at least 12 characters.");
       return;
     }
     setLoading(true);
@@ -123,7 +123,7 @@ function RegisterPage() {
             value={form.password}
             onChange={set("password")}
             required
-            minLength={8}
+            minLength={12}
             autoComplete="new-password"
             placeholder="••••••••"
             className="w-full border border-rule rounded-md px-4 py-3 text-sm bg-paper text-ink placeholder:text-ink-mute focus:outline-none focus:border-ink transition-colors"

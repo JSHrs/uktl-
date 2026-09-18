@@ -9,6 +9,7 @@ export const Route = createFileRoute("/admin/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -18,13 +19,13 @@ function LoginPage() {
     setBusy(true);
     setError(null);
     try {
-      const result = await adminLoginFn({ data: { password } });
+      const result = await adminLoginFn({ data: { email, password } });
       if (!result.ok) {
         setError(result.error ?? "Invalid password");
         setBusy(false);
         return;
       }
-      await navigate({ to: "/admin" });
+      await navigate({ to: "/auth/security" });
     } catch {
       setError("Login failed. Please try again.");
       setBusy(false);
@@ -44,15 +45,19 @@ function LoginPage() {
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4">
+          <div><label htmlFor="staff-email" className="block text-sm mb-2">Staff email</label>
+            <input id="staff-email" type="email" autoComplete="username" required autoFocus value={email} onChange={e => setEmail(e.target.value)} placeholder="Staff email" className="w-full border border-rule rounded px-4 py-2.5" />
+          </div>
           <div>
-            <label className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
+            <label htmlFor="staff-password" className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
               Password
             </label>
             <input
+              id="staff-password"
               type="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoFocus
               required
               className="w-full border border-rule rounded px-4 py-2.5 text-sm bg-paper text-ink focus:outline-none focus:border-ink transition-colors"
               placeholder="Admin password"
@@ -67,7 +72,7 @@ function LoginPage() {
 
           <button
             type="submit"
-            disabled={busy || !password}
+            disabled={busy || !password || !email}
             className="w-full text-[13px] py-2.5 border border-ink bg-ink text-paper rounded-full disabled:opacity-40 hover:opacity-90 transition-opacity"
           >
             {busy ? "Verifying…" : "Sign in"}

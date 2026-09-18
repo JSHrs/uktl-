@@ -47,3 +47,19 @@ jobs:
           path: playwright-report
           retention-days: 7
 
+
+  postgres-policies:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.117.0
+      - name: Start isolated local Supabase and replay migrations
+        run: supabase start
+      - name: Staff authorization and ownership regression
+        run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -v ON_ERROR_STOP=1 -f supabase/tests/staff_access.sql
+      - name: Stop isolated database
+        if: always()
+        run: supabase stop --no-backup

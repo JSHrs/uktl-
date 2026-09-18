@@ -61,9 +61,12 @@ wrangler.toml          the ONLY Wrangler config (never add wrangler.json/jsonc �
 
 ## Auth model
 
-- **Admin:** password checked against `ADMIN_PASSWORD_HASH` (PBKDF2-SHA256, salt `uktl-admin-salt-v1`, 100k iterations, `scripts/hash-password.mjs`). Session is an HMAC-signed `admin_session` httpOnly cookie (`JWT_SECRET`, 8h). `isAdminRequest()` in `src/lib/server/viewer.ts` is the single check.
-- **No demo credentials:** `ADMIN_PASSWORD_HASH` and `JWT_SECRET` are mandatory. Missing bindings or secrets disable admin access. Tokens validate signature, version and bounded numeric expiration. Login is rate-limited through D1.
-- **Candidates:** Supabase Auth. `functions.ts` signs in server-side and stores `sb-access-token` / `sb-refresh-token` httpOnly cookies; `getCandidateSession()` validates users with `getUser`, refreshes expired/missing access cookies using the refresh token, and persists rotated tokens. Email links (magic link, sign-up confirmation) redirect to `/auth/callback`, which posts the URL-fragment tokens to `candidateSessionFromTokensFn`. `SITE_URL` must be set and allow-listed in Supabase Auth → Redirect URLs.
+- Staff use named Supabase Auth accounts. `recruitment.staff_users` is authoritative; user metadata never grants staff rights. Every privileged server action checks current membership, a verified email, a live Auth session and MFA through `get_my_staff_access`.
+- Admins manage content and operations. Consultants read recruitment records and update match stages; candidate deletion and content management remain admin-only.
+- `/admin/login` authenticates email/password; `/auth/security` enrolls/verifies TOTP. No shared-password cookie fallback exists. Legacy `auth.ts` and its regression tests are historical and are not used by current staff authorization.
+- Candidates use server-verified Supabase sessions in httpOnly cookies. Profile edits use their own RLS client. Callback tokens are verified by Auth; recovery links lead to `/auth/reset`, update the password and revoke sessions.
+- Configure the exact HTTPS `SITE_URL` + `/auth/callback` in Supabase Auth. Resend SMTP handles Auth email. Provider credentials stay in server secrets.
+- Stage 1 and subsequent release requirements are in `DEVELOPMENT_GATES.md`; skipped authenticated tests never pass a stage.
 
 ## Data model (D1)
 
@@ -81,14 +84,14 @@ wrangler.toml          the ONLY Wrangler config (never add wrangler.json/jsonc �
 
 ## Known gaps (not bugs — unbuilt)
 
-Charts on the analytics page (Recharts installed, unused) · Calendly embed on the HR answer page · scheduled Reed sync (manual button only) · candidate email outreach · CSV export · dark palette (`@custom-variant dark` exists, no tokens) · client portal · GDPR delete/export tooling · named admin users with audit trail.
+Charts on the analytics page (Recharts installed, unused) · Calendly embed on the HR answer page · scheduled Reed sync (manual button only) · candidate email outreach · CSV export · dark palette (`@custom-variant dark` exists, no tokens) · client portal · GDPR delete/export tooling · comprehensive staff audit trail.
 
 
 ## Launch hardening verification
 
 - `npm run test:unit` runs Node 24 regression tests (including actual SQLite migration replay).
 - CI runs regression tests, typecheck, Workers build and Playwright.
-- Set `E2E_BASE_URL`, `E2E_ADMIN_PASSWORD`, and `E2E_HAS_DB=1` only against disposable staging data. Authenticated browser tests skip without configured credentials; no test bypass is present in production code.
+- Set `E2E_BASE_URL`, `E2E_ADMIN_EMAIL`, `E2E_ADMIN_PASSWORD`, `E2E_ADMIN_TOTP_SECRET`, and `E2E_HAS_DB=1` only against disposable staging data. Authenticated browser tests skip without configured credentials; no test bypass is present in production code.
 - Rate limits are persisted in D1 migration 0009 and fail closed. Anonymous IP limits rely only on Cloudflare's overwritten `cf-connecting-ip`; missing headers share a conservative bucket.
 - Notifications persist sent/failed/skipped/sending state and use stable provider idempotency keys. Admin retry is limited to records under 23h old; old or interrupted sends require provider-log reconciliation before any manual resend.
 - Never log provider response bodies containing candidate information or credentials.

@@ -75,3 +75,41 @@ export async function clearSessionCookies(): Promise<void> {
   await deleteCookie(REFRESH_COOKIE, { path: "/" });
 }
 
+
+export async function createAuthClient(): Promise<SupabaseClient> {
+  const env = await getEnv();
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw new Error("Authentication is not configured");
+  return createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    global: { fetch: (input, init) => fetch(input, { ...init, signal: AbortSignal.timeout(15000) }) },
+  });
+}
+/** User-scoped client; cookie claims alone never authorize access. */
+export async function getAuthenticatedSupabase() {
+  const access_token = getCookie(ACCESS_COOKIE);
+  const refresh_token = getCookie(REFRESH_COOKIE);
+  if (!refresh_token) throw new Error("Please sign in to continue");
+  const client = await createAuthClient();
+  const { data, error } = access_token
+    ? await client.auth.setSession({ access_token, refresh_token })
+    : await client.auth.refreshSession({ refresh_token });
+  if (error || !data.session) throw new Error("Please sign in again");
+  const verified = await client.auth.getUser(data.session.access_token);
+  if (verified.error || !verified.data.user) throw new Error("Please sign in again");
+  if (data.session.access_token !== access_token || data.session.refresh_token !== refresh_token) {
+    await setSessionCookies(data.session.access_token, data.session.refresh_token, data.session.expires_in);
+  }
+  return { client, user: verified.data.user, session: data.session };
+}
+export async function revokeCurrentSession(): Promise<void> {
+  try {
+    if (getCookie(REFRESH_COOKIE)) {
+      const { client } = await getAuthenticatedSupabase();
+      const { error } = await client.auth.signOut({ scope: "local" });
+      if (error) throw new Error("Session revocation failed. Please try again.");
+    }
+  } finally {
+    await clearSessionCookies();
+    deleteCookie("admin_session", { path: "/" });
+  }
+}

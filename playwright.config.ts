@@ -16,7 +16,7 @@ export default defineConfig({
 
   use: {
     baseURL,
-    trace: "on-first-retry",
+    trace: process.env.E2E_ADMIN_TOTP_SECRET ? "off" : "on-first-retry",
     screenshot: "only-on-failure",
     ...(executablePath ? { launchOptions: { executablePath } } : {}),
   },

@@ -20,6 +20,9 @@ export const RATE_LIMITS = {
   aiEscalation: { limit: 20, windowMs: 60 * 60 * 1000 },
   /** Credential stuffing defence. */
   adminLogin: { limit: 20, windowMs: 15 * 60 * 1000 },
+  authAccount: { limit: 20, windowMs: 15 * 60 * 1000 },
+  authRecovery: { limit: 5, windowMs: 60 * 60 * 1000 },
+  staffMfa: { limit: 20, windowMs: 15 * 60 * 1000 },
   /** Public forms — spam defence. */
   publicForm: { limit: 10, windowMs: 60 * 60 * 1000 },
   /** Outbound Reed sync (admin-triggered but bulk). */

@@ -1,6 +1,6 @@
 import { validateCvUpload } from "./server/upload-validation";
 import { createServerFn } from "@tanstack/react-start";
-import { setCookie, deleteCookie, getRequestHeader } from "@tanstack/start-server-core";
+import { getRequestHeader } from "@tanstack/start-server-core";
 import { z } from "zod";
 
 import { getEnv } from "./server/env";
@@ -43,12 +43,12 @@ import {
   type FaqTopicInput,
   type JobInput,
 } from "./server/db";
-import { SESSION_COOKIE, createSessionToken, verifyPassword } from "./server/auth";
+import { hasStaffAccess, readStaffAccess } from "./server/staff-access";
 import {
   canAccessCandidate,
-  getJwtSecret,
+  getStaffAccess,
+  requireStaff,
   getViewer,
-  isAdminRequest,
   requireAdmin,
   requireViewer,
 } from "./server/viewer";
@@ -83,7 +83,7 @@ export const getViewerFn = createServerFn({ method: "GET" }).handler(async () =>
 export const listCandidatesFn = createServerFn({ method: "GET" }).handler(
   async () => {
     const viewer = await getViewer();
-    const scope = viewer.isAdmin ? {} : viewer.userId ? { authUserId: viewer.userId } : null;
+    const scope = viewer.isStaff ? {} : viewer.userId ? { authUserId: viewer.userId } : null;
     if (!scope) return [];
     try {
       const env = await getEnv();
@@ -150,8 +150,8 @@ export const getJobDetailFn = createServerFn({ method: "GET" })
       const job = await getJob(env, data.id);
       if (!job) return null;
       // Pipeline rows carry candidate names — consultants only.
-      const matches = viewer.isAdmin ? await getMatchesForJob(env, data.id) : [];
-      return { job, matches, canManage: viewer.isAdmin };
+      const matches = viewer.isStaff ? await getMatchesForJob(env, data.id) : [];
+      return { job, matches, canManage: !!viewer.isStaff };
     } catch {
       throw new Error("Data is temporarily unavailable. Please try again.");
     }
@@ -162,7 +162,7 @@ export const setMatchStageFn = createServerFn({ method: "POST" })
     z.object({ candidateId: z.string(), jobId: z.string(), stage: MatchStageEnum }).parse(raw),
   )
   .handler(async ({ data }) => {
-    await requireAdmin();
+    await requireStaff();
     const env = await getEnv();
     const changed = await setMatchStage(env, data.candidateId, data.jobId, data.stage);
     if (!changed) throw new Error("Match not found");
@@ -511,35 +511,73 @@ function sanitiseFilename(name: string): string {
 // ── Admin auth ───────────────────────────────────────────────────────────────
 
 export const adminLoginFn = createServerFn({ method: "POST" })
-  .inputValidator((raw: unknown) => z.object({ password: z.string().min(1).max(1024) }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ email: z.string().email().max(254), password: z.string().min(1).max(1024) }).parse(raw))
   .handler(async ({ data }) => {
-    let env: Awaited<ReturnType<typeof getEnv>>;
-    let secret: string;
-    try {
-      env = await getEnv();
-      secret = getJwtSecret(env);
-      if (!env.ADMIN_PASSWORD_HASH) throw new Error("Admin access is not configured");
-    } catch {
-      return { ok: false as const, error: "Admin access is not configured" };
-    }
-    // Only trust Cloudflare's overwritten edge header; never forwarded client IDs.
+    const { createAuthClient, setSessionCookies } = await import("./supabase");
+    const env = await getEnv();
     await enforceRateLimit(env, "adminLogin", getRequestHeader("cf-connecting-ip") ?? "unknown");
-    const hash = env.ADMIN_PASSWORD_HASH;
-    const valid = await verifyPassword(data.password, hash);
-    if (!valid) return { ok: false as const, error: "Invalid password" };
-    const token = await createSessionToken(secret);
-    setCookie(SESSION_COOKIE, token, { httpOnly: true, secure: true, sameSite: "strict", maxAge: 8 * 3600, path: "/" });
+    const client = await createAuthClient();
+    const { data: signed, error } = await client.auth.signInWithPassword(data);
+    if (error || !signed.session) return { ok: false as const, error: "Invalid staff credentials" };
+    const verified = await client.auth.getUser(signed.session.access_token);
+    const access = verified.data.user?.email_confirmed_at ? await readStaffAccess(client) : null;
+    if (!access?.role) {
+      await client.auth.signOut({ scope: "local" });
+      return { ok: false as const, error: "Invalid staff credentials" };
+    }
+    await setSessionCookies(signed.session.access_token, signed.session.refresh_token, signed.session.expires_in);
     return { ok: true as const };
   });
-
-export const adminSessionFn = createServerFn({ method: "GET" }).handler(async () => ({
-  valid: await isAdminRequest(),
-}));
-
+export const adminSessionFn = createServerFn({ method: "GET" }).handler(async () => {
+  const access = await getStaffAccess();
+  return { valid: hasStaffAccess(access), role: access.role, mfaRequired: !!access.role && !access.mfa_verified };
+});
 export const adminLogoutFn = createServerFn({ method: "POST" }).handler(async () => {
-  deleteCookie(SESSION_COOKIE, { path: "/" });
+  const { revokeCurrentSession } = await import("./supabase");
+  await revokeCurrentSession();
   return { ok: true };
 });
+export const staffMfaStatusFn = createServerFn({ method: "GET" }).handler(async () => {
+  const { getAuthenticatedSupabase } = await import("./supabase");
+  const { client } = await getAuthenticatedSupabase();
+  const access = await readStaffAccess(client);
+  if (!access.role) throw new Error("Active staff membership required");
+  const { data, error } = await client.auth.mfa.listFactors();
+  if (error) throw new Error("Unable to load authentication factors");
+  return { ...access, factors: data.totp.filter(f => f.status === "verified").map(f => ({ id: f.id, name: f.friendly_name ?? "Authenticator" })) };
+});
+export const staffMfaEnrollFn = createServerFn({ method: "POST" }).handler(async () => {
+  const { getAuthenticatedSupabase } = await import("./supabase");
+  const { client, user } = await getAuthenticatedSupabase();
+  if (!(await readStaffAccess(client)).role) throw new Error("Active staff membership required");
+  await enforceRateLimit(await getEnv(), "staffMfa", user.id);
+  const factors = await client.auth.mfa.listFactors();
+  if (factors.error) throw new Error("Unable to load authentication factors");
+  if (factors.data.totp.some(f => f.status === "verified")) throw new Error("Use your existing authenticator. Contact the account owner if it is lost.");
+  for (const factor of factors.data.all.filter(f => f.factor_type === "totp" && f.status === "unverified")) {
+    const result = await client.auth.mfa.unenroll({ factorId: factor.id });
+    if (result.error) throw new Error("Unable to restart authenticator setup");
+  }
+  const { data, error } = await client.auth.mfa.enroll({ factorType: "totp", friendlyName: "UKTL staff" });
+  if (error) throw new Error("Unable to enroll authenticator");
+  return { id: data.id, qrCode: data.totp.qr_code, secret: data.totp.secret };
+});
+export const staffMfaVerifyFn = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) => z.object({ factorId: z.string().uuid(), code: z.string().regex(/^\d{6}$/) }).parse(raw))
+  .handler(async ({ data }) => {
+    const { getAuthenticatedSupabase, setSessionCookies } = await import("./supabase");
+    const { client, user } = await getAuthenticatedSupabase();
+    if (!(await readStaffAccess(client)).role) throw new Error("Active staff membership required");
+    await enforceRateLimit(await getEnv(), "staffMfa", user.id);
+    const { data: challenge, error: challengeError } = await client.auth.mfa.challenge({ factorId: data.factorId });
+    if (challengeError) throw new Error("Unable to challenge authenticator");
+    const { data: session, error } = await client.auth.mfa.verify({ factorId: data.factorId, challengeId: challenge.id, code: data.code });
+    if (error) throw new Error("Invalid or expired authentication code");
+    await setSessionCookies(session.access_token, session.refresh_token, session.expires_in);
+    const access = await readStaffAccess(client);
+    if (!hasStaffAccess(access)) throw new Error("Staff access could not be verified");
+    return { role: access.role };
+  });
 
 // ── Admin: FAQ topics ────────────────────────────────────────────────────────
 
@@ -688,7 +726,7 @@ export const candidateRegisterFn = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) =>
     z.object({
       email: z.string().email(),
-      password: z.string().min(8),
+      password: z.string().min(12).max(128),
       name: z.string().min(1),
     }).parse(raw),
   )
@@ -696,6 +734,7 @@ export const candidateRegisterFn = createServerFn({ method: "POST" })
     const { setSessionCookies } = await import("./supabase");
     const { createClient } = await import("@supabase/supabase-js");
     const env = await getEnv();
+    await enforceRateLimit(env, "authAccount", getRequestHeader("cf-connecting-ip") ?? "unknown");
     if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw new Error("Supabase not configured");
     const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
     const { data: authData, error } = await client.auth.signUp({
@@ -721,6 +760,7 @@ export const candidateLoginFn = createServerFn({ method: "POST" })
     const { setSessionCookies } = await import("./supabase");
     const { createClient } = await import("@supabase/supabase-js");
     const env = await getEnv();
+    await enforceRateLimit(env, "authAccount", getRequestHeader("cf-connecting-ip") ?? "unknown");
     if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw new Error("Supabase not configured");
     const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
     const { data: authData, error } = await client.auth.signInWithPassword({ email: data.email, password: data.password });
@@ -730,8 +770,8 @@ export const candidateLoginFn = createServerFn({ method: "POST" })
   });
 
 export const candidateLogoutFn = createServerFn({ method: "POST" }).handler(async () => {
-  const { clearSessionCookies } = await import("./supabase");
-  await clearSessionCookies();
+  const { revokeCurrentSession } = await import("./supabase");
+  await revokeCurrentSession();
   return { ok: true };
 });
 
@@ -745,6 +785,7 @@ export const candidateMagicLinkFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { createClient } = await import("@supabase/supabase-js");
     const env = await getEnv();
+    await enforceRateLimit(env, "authRecovery", getRequestHeader("cf-connecting-ip") ?? "unknown");
     if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw new Error("Supabase not configured");
     const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
     const { error } = await client.auth.signInWithOtp({
@@ -776,12 +817,14 @@ export const candidateSessionFromTokensFn = createServerFn({ method: "POST" })
     if (error || !authData.session || !authData.user) {
       throw new Error(error?.message ?? "This sign-in link is invalid or has expired");
     }
+    const verified = await client.auth.getUser(authData.session.access_token);
+    if (verified.error || !verified.data.user) throw new Error("This sign-in link is invalid or has expired");
     await setSessionCookies(
       authData.session.access_token,
       authData.session.refresh_token,
-      authData.session.expires_in ?? data.expires_in ?? 3600,
+      authData.session.expires_in,
     );
-    return { userId: authData.user.id, email: authData.user.email ?? null };
+    return { userId: verified.data.user.id, email: verified.data.user.email ?? null };
   });
 
 type ProfileRow = {
@@ -795,13 +838,13 @@ type ProfileRow = {
 };
 
 export const getCandidateProfileFn = createServerFn({ method: "GET" }).handler(async () => {
-  const { getCandidateSession, getSupabaseAdmin } = await import("./supabase");
+  const { getCandidateSession, getAuthenticatedSupabase } = await import("./supabase");
   const session = await getCandidateSession();
   if (!session.userId) return { profile: null, session: null };
 
   let profile: ProfileRow | null = null;
   try {
-    const admin = await getSupabaseAdmin();
+    const { client: admin } = await getAuthenticatedSupabase();
     const { data } = await admin.from("profiles").select("*").eq("id", session.userId).single();
     profile = (data as ProfileRow | null) ?? null;
   } catch { /* service role not configured */ }
@@ -837,12 +880,12 @@ export const updateCandidateProfileFn = createServerFn({ method: "POST" })
     }).parse(raw),
   )
   .handler(async ({ data }) => {
-    const { getCandidateSession, getSupabaseAdmin } = await import("./supabase");
+    const { getCandidateSession, getAuthenticatedSupabase } = await import("./supabase");
     const session = await getCandidateSession();
     if (!session.userId) throw new Error("Not authenticated");
-    const admin = await getSupabaseAdmin();
+    const { client: admin } = await getAuthenticatedSupabase();
     const { error } = await admin.from("profiles")
-      .update({ ...data, updated_at: new Date().toISOString() })
+      .update(data)
       .eq("id", session.userId);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -971,3 +1014,28 @@ export const syncReedJobsFn = createServerFn({ method: "POST" })
     return syncReedJobs(env, data);
   });
 
+
+export const candidateResetRequestFn = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) => z.object({ email: z.string().email().max(254) }).parse(raw))
+  .handler(async ({ data }) => {
+    const { createAuthClient } = await import("./supabase");
+    const env = await getEnv();
+    await enforceRateLimit(env, "authRecovery", getRequestHeader("cf-connecting-ip") ?? "unknown");
+    const client = await createAuthClient();
+    const { error } = await client.auth.resetPasswordForEmail(data.email, { redirectTo: authCallbackUrl(env) });
+    if (error) throw new Error("Recovery is temporarily unavailable. Please try again later.");
+    return { ok: true };
+  });
+export const candidateSetPasswordFn = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) => z.object({ password: z.string().min(12).max(128) }).parse(raw))
+  .handler(async ({ data }) => {
+    const { getAuthenticatedSupabase, clearSessionCookies } = await import("./supabase");
+    const { client, user } = await getAuthenticatedSupabase();
+    await enforceRateLimit(await getEnv(), "authRecovery", user.id);
+    const { error } = await client.auth.updateUser({ password: data.password });
+    if (error) throw new Error("Password change failed. Use a new recovery link or complete MFA if required.");
+    const revoked = await client.auth.signOut({ scope: "global" });
+    await clearSessionCookies();
+    if (revoked.error) throw new Error("Password changed, but session revocation failed. Please contact support.");
+    return { ok: true };
+  });

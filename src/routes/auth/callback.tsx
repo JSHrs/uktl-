@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { candidateSessionFromTokensFn } from "@/lib/functions";
 
@@ -12,9 +12,14 @@ function CallbackPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
+  const started = useRef(false);
   useEffect(() => {
+    if (started.current) return;
+    started.current = true;
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const query = new URLSearchParams(window.location.search);
+    window.history.replaceState(null, "", window.location.pathname);
+    const recovery = hash.get("type") === "recovery";
     const described = hash.get("error_description") ?? query.get("error_description");
     if (described) {
       setError(described);
@@ -37,7 +42,7 @@ function CallbackPage() {
     })
       .then(() => {
         window.history.replaceState(null, "", window.location.pathname);
-        router.navigate({ to: "/app/profile" });
+        router.navigate({ to: recovery ? "/auth/reset" : "/app/profile" });
       })
       .catch((err: unknown) =>
         setError(err instanceof Error ? err.message : "Sign-in failed. Request a new link."),

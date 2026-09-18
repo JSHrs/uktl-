@@ -1,3 +1,25 @@
+# Current stage checkpoint — 18 September 2026
+
+- Gate 0 PASS: recovered source transferred and old repository preserved.
+- Gate 1 IN PROGRESS: named Supabase staff authentication, mandatory MFA, real password recovery, user-scoped profile writes, authentication rate limits and staging preflight implemented. No shared admin-cookie fallback.
+- Applied migration `20260918112245_named_staff_access_and_mfa`; rollback policy tests passed on the target project. Security advisor: no findings.
+- Local: 22 unit tests passed; TypeScript/build passed; targeted lint passed. Current GitHub CI verification is pending this checkpoint's commit; older CI runs below do not verify these changes.
+- Prepared isolated staging deployment and authenticated test workflow; missing hosting/runtime configuration, SMTP, staging identities and user acceptance prevent Stage 1 completion.
+- Gates 2–4 not accepted. No deployment, end-to-end live provider verification or product-readiness claim.
+- Approved delivery scope is D1–D13 plus the priority hardening in DEVELOPMENT_GATES.md. Full client CRM/interview expansion is not an MVP prerequisite.
+
+| Stage | Planning allowance | Completion gate |
+|---|---|---|
+| 0 Source recovery | Complete | Verified destination tree and passing baseline CI |
+| 1 Accounts and environments | 2–3 working days including live checks | Named roles/MFA, recovery email, staging and user isolation accepted |
+| 2 Recruitment D2–D6 | 4–6 working days | Real upload/edit/score/sync/match/interest journeys accepted |
+| 3 HR and booking D7–D11 | 3–5 working days | Reviewed content, sourced escalation and verified bookings accepted |
+| 4 Operations and release D12–D13 | 3–6 working days | Privacy/restore/load checks, full UAT, production smoke tests |
+
+These are conditional planning allowances (12–20 focused working days total), not an autonomous background schedule or a promised launch date. Missing provider access, content and reviewer availability extend elapsed time. See STAGE_1_UAT.md for the immediate owner actions and tests.
+
+---
+
 # UKTL / Talent Compass — recovery progress, 18 September 2026
 
 ## Verified transfer

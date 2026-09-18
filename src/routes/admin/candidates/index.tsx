@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { adminDeleteCandidateFn, listCandidatesFn } from "@/lib/functions";
 import type { CandidateRow } from "@/lib/server/db";
-import { AdminHeader, AdminTable, AdminTr, AdminTd, AdminBtn } from "../../admin";
+import { Route as AdminRoute, AdminHeader, AdminTable, AdminTr, AdminTd, AdminBtn } from "../../admin";
 import { ScoreBar, StatusPill } from "@/components/app/AppLayout";
 
 export const Route = createFileRoute("/admin/candidates/")({
@@ -12,6 +12,7 @@ export const Route = createFileRoute("/admin/candidates/")({
 
 function AdminCandidatesList() {
   const candidates = Route.useLoaderData();
+  const { staffRole } = AdminRoute.useRouteContext();
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -88,13 +89,13 @@ function AdminCandidatesList() {
                 <StatusPill status={c.status} />
               </AdminTd>
               <AdminTd className="text-right">
-                <AdminBtn
+                {staffRole === "admin" && <AdminBtn
                   variant="danger"
                   onClick={() => deleteCandidate(c.id, c.name)}
                   disabled={busy === c.id}
                 >
                   Delete
-                </AdminBtn>
+                </AdminBtn>}
               </AdminTd>
             </AdminTr>
           ))}

@@ -1,3 +1,4 @@
+import { hasStaffCredentials, signInStaff } from "./staff-login";
 import { test, expect, type Page } from "./fixtures";
 
 // Creating/editing/deleting rows needs Cloudflare D1. Set E2E_HAS_DB=1 when
@@ -5,16 +6,14 @@ import { test, expect, type Page } from "./fixtures";
 const HAS_DB = !!process.env.E2E_HAS_DB;
 
 async function signInAndGoToMandates(page: Page) {
-  await page.goto("/admin/login");
-  await page.getByPlaceholder(/password/i).fill(process.env.E2E_ADMIN_PASSWORD!);
-  await page.getByRole("button", { name: /sign in/i }).click();
+  await signInStaff(page);
   await expect(page).toHaveURL(/\/admin\/?$/);
   await page.getByRole("navigation").getByRole("link", { name: "Mandates", exact: true }).click();
   await expect(page).toHaveURL(/\/admin\/jobs/);
 }
 
 test.describe.serial("Admin — mandate management", () => {
-  test.skip(!process.env.E2E_ADMIN_PASSWORD || !process.env.E2E_BASE_URL, "requires configured staging credentials");
+  test.skip(!hasStaffCredentials, "requires named staging staff credentials and enrolled MFA");
   test("mandates list page loads", async ({ page }) => {
     await signInAndGoToMandates(page);
     await expect(page.getByRole("heading", { name: /mandate/i })).toBeVisible();

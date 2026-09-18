@@ -20,6 +20,8 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AuthSecurityRouteImport } from './routes/auth/security'
+import { Route as AuthResetRouteImport } from './routes/auth/reset'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthForgotRouteImport } from './routes/auth/forgot'
@@ -101,6 +103,16 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const AuthSecurityRoute = AuthSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthResetRoute = AuthResetRouteImport.update({
+  id: '/reset',
+  path: '/reset',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
   id: '/register',
@@ -254,6 +266,8 @@ export interface FileRoutesByFullPath {
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/auth/reset': typeof AuthResetRoute
+  '/auth/security': typeof AuthSecurityRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/admin/faq/$id': typeof AdminFaqIdRoute
@@ -291,6 +305,8 @@ export interface FileRoutesByTo {
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/auth/reset': typeof AuthResetRoute
+  '/auth/security': typeof AuthSecurityRoute
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
   '/admin/faq/$id': typeof AdminFaqIdRoute
@@ -331,6 +347,8 @@ export interface FileRoutesById {
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
+  '/auth/reset': typeof AuthResetRoute
+  '/auth/security': typeof AuthSecurityRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
   '/admin/faq/$id': typeof AdminFaqIdRoute
@@ -372,6 +390,8 @@ export interface FileRouteTypes {
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/register'
+    | '/auth/reset'
+    | '/auth/security'
     | '/admin/'
     | '/app/'
     | '/admin/faq/$id'
@@ -409,6 +429,8 @@ export interface FileRouteTypes {
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/register'
+    | '/auth/reset'
+    | '/auth/security'
     | '/admin'
     | '/app'
     | '/admin/faq/$id'
@@ -448,6 +470,8 @@ export interface FileRouteTypes {
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/register'
+    | '/auth/reset'
+    | '/auth/security'
     | '/admin/'
     | '/app/'
     | '/admin/faq/$id'
@@ -558,6 +582,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/auth/security': {
+      id: '/auth/security'
+      path: '/security'
+      fullPath: '/auth/security'
+      preLoaderRoute: typeof AuthSecurityRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/reset': {
+      id: '/auth/reset'
+      path: '/reset'
+      fullPath: '/auth/reset'
+      preLoaderRoute: typeof AuthResetRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/auth/register': {
       id: '/auth/register'
@@ -811,6 +849,8 @@ interface AuthRouteChildren {
   AuthForgotRoute: typeof AuthForgotRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
+  AuthResetRoute: typeof AuthResetRoute
+  AuthSecurityRoute: typeof AuthSecurityRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
@@ -818,6 +858,8 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthForgotRoute: AuthForgotRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
+  AuthResetRoute: AuthResetRoute,
+  AuthSecurityRoute: AuthSecurityRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)

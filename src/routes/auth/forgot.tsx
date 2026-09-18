@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { candidateMagicLinkFn } from "@/lib/functions";
+import { candidateResetRequestFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/auth/forgot")({
   component: ForgotPage,
@@ -17,7 +17,7 @@ function ForgotPage() {
     setError(null);
     setLoading(true);
     try {
-      await candidateMagicLinkFn({ data: { email } });
+      await candidateResetRequestFn({ data: { email } });
       setSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send link. Please try again.");
@@ -34,7 +34,7 @@ function ForgotPage() {
         </div>
         <h2 className="font-display font-light text-2xl tracking-[-0.02em] mb-3">Link sent</h2>
         <p className="text-sm text-ink-soft leading-relaxed">
-          If an account exists for <strong className="text-ink">{email}</strong>, you'll receive a sign-in link shortly.
+          If an account exists for <strong className="text-ink">{email}</strong>, you'll receive a password-reset link shortly.
         </p>
         <Link
           to="/auth/login"
@@ -59,16 +59,17 @@ function ForgotPage() {
           Reset password
         </h1>
         <p className="text-sm text-ink-soft mt-2">
-          Enter your email and we'll send a magic sign-in link.
+          Enter your email and we'll send a password-reset link.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
+          <label htmlFor="recovery-email" className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
             Email address
           </label>
           <input
+            id="recovery-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -91,7 +92,7 @@ function ForgotPage() {
           disabled={loading}
           className="w-full py-3 bg-ink text-paper text-sm rounded-md hover:opacity-90 transition-opacity disabled:opacity-50"
         >
-          {loading ? "Sending…" : "Send sign-in link"}
+          {loading ? "Sending…" : "Send password-reset link"}
         </button>
       </form>
 

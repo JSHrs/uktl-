@@ -10,9 +10,12 @@ export const Route = createFileRoute("/admin")({
     ],
   }),
   beforeLoad: async ({ location }) => {
-    if (location.pathname.startsWith("/admin/login")) return;
-    const { valid } = await adminSessionFn();
-    if (!valid) throw redirect({ to: "/admin/login" });
+    if (location.pathname.startsWith("/admin/login")) return { staffRole: null };
+    const access = await adminSessionFn();
+    if (access.mfaRequired) throw redirect({ to: "/auth/security" });
+    if (!access.valid) throw redirect({ to: "/admin/login" });
+    if (access.role === "consultant" && !location.pathname.startsWith("/admin/candidates")) throw redirect({ to: "/admin/candidates" });
+    return { staffRole: access.role };
   },
   errorComponent: DataError,
   component: AdminLayout,
@@ -30,6 +33,8 @@ const NAV = [
 
 function AdminLayout() {
   const router = useRouter();
+  const { staffRole } = Route.useRouteContext();
+  if (router.state.location.pathname.startsWith("/admin/login")) return <Outlet />;
 
   async function logout() {
     await adminLogoutFn();
@@ -47,7 +52,7 @@ function AdminLayout() {
           <div className="font-display font-light text-lg mt-0.5 text-ink">Admin</div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-0.5">
-          {NAV.map((item) => (
+          {NAV.filter(item => staffRole === "admin" || item.to === "/admin/candidates").map((item) => (
             <Link
               key={item.to}
               to={item.to}

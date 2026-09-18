@@ -1,3 +1,4 @@
+import { hasStaffCredentials, signInStaff } from "./staff-login";
 import { test, expect } from "./fixtures";
 
 test.describe("Admin authentication", () => {
@@ -20,6 +21,7 @@ test.describe("Admin authentication", () => {
 
   test("rejects wrong password", async ({ page }) => {
     await page.goto("/admin/login");
+    await page.getByLabel("Staff email").fill("invalid@example.invalid");
     await page.getByPlaceholder(/password/i).fill("wrongpassword");
     await page.getByRole("button", { name: /sign in/i }).click();
     await expect(page.getByText(/invalid|not configured|login failed/i)).toBeVisible();
@@ -27,20 +29,16 @@ test.describe("Admin authentication", () => {
   });
 
   test("signs in with configured password and lands on overview", async ({ page }) => {
-    test.skip(!process.env.E2E_ADMIN_PASSWORD || !process.env.E2E_BASE_URL, "requires configured staging credentials");
-    await page.goto("/admin/login");
-    await page.getByPlaceholder(/password/i).fill(process.env.E2E_ADMIN_PASSWORD!);
-    await page.getByRole("button", { name: /sign in/i }).click();
+    test.skip(!hasStaffCredentials, "requires named staging staff credentials and enrolled MFA");
+    await signInStaff(page);
     await expect(page).toHaveURL(/\/admin\/?$/);
     await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
   });
 
   test("sign out returns to login page", async ({ page }) => {
-    test.skip(!process.env.E2E_ADMIN_PASSWORD || !process.env.E2E_BASE_URL, "requires configured staging credentials");
+    test.skip(!hasStaffCredentials, "requires named staging staff credentials and enrolled MFA");
     // Sign in first
-    await page.goto("/admin/login");
-    await page.getByPlaceholder(/password/i).fill(process.env.E2E_ADMIN_PASSWORD!);
-    await page.getByRole("button", { name: /sign in/i }).click();
+    await signInStaff(page);
     await expect(page).toHaveURL(/\/admin\/?$/);
 
     // Sign out
@@ -50,6 +48,7 @@ test.describe("Admin authentication", () => {
 
   test("rejects the removed demo password", async ({ page }) => {
     await page.goto("/admin/login");
+    await page.getByLabel("Staff email").fill("invalid@example.invalid");
     await page.getByPlaceholder(/password/i).fill("admin123");
     await page.getByRole("button", { name: /sign in/i }).click();
     await expect(page.getByText(/invalid|not configured|login failed/i)).toBeVisible();
