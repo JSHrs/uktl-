@@ -1,16 +1,24 @@
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { adminDeleteJobFn, adminListJobsFn, syncReedJobsFn } from "@/lib/functions";
+import {
+  adminDeleteJobFn,
+  adminListJobsFn,
+  syncReedJobsFn,
+  reedSyncStatesFn,
+} from "@/lib/functions";
 import type { Job } from "@/lib/schemas/job";
 import { AdminHeader, AdminTable, AdminTr, AdminTd, AdminBtn } from "../../admin";
 
 export const Route = createFileRoute("/admin/jobs/")({
-  loader: async () => adminListJobsFn(),
+  loader: async () => {
+    const [jobs, syncs] = await Promise.all([adminListJobsFn(), reedSyncStatesFn()]);
+    return { jobs, syncs };
+  },
   component: AdminJobsList,
 });
 
 function AdminJobsList() {
-  const jobs = Route.useLoaderData();
+  const { jobs, syncs } = Route.useLoaderData();
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
@@ -70,7 +78,7 @@ function AdminJobsList() {
               disabled={syncing}
               className="text-[12px] px-4 py-2 border border-rule text-ink-soft rounded-full hover:border-ink hover:text-ink transition-colors disabled:opacity-40"
             >
-              {syncing ? "Syncing…" : "Sync from Reed"}
+              {syncing ? "Syncing…" : "Continue Reed sync"}
             </button>
             <Link
               to="/admin/jobs/new"
@@ -82,13 +90,46 @@ function AdminJobsList() {
         }
       />
 
+      {syncs.length > 0 && (
+        <section aria-label="Vacancy sync progress" className="mb-5 grid gap-3 sm:grid-cols-2">
+          {syncs.map((sync) => (
+            <div key={sync.sector} className="rounded-md border border-rule p-4 text-sm">
+              <p className="font-medium capitalize">
+                {sync.sector}: {sync.status}
+              </p>
+              <p>
+                {sync.saved_count} saves · {sync.skipped_count} excluded or duplicate results
+              </p>
+              {sync.status !== "complete" && (
+                <p>
+                  Search {sync.query_index + 1} · next result {sync.result_offset + 1} · attempt{" "}
+                  {sync.attempts}/3
+                </p>
+              )}
+              {sync.completed_at && (
+                <p>Last cycle finished: {new Date(sync.completed_at).toISOString()}</p>
+              )}
+              {sync.last_error && (
+                <p role="status" className="mt-2 text-ink-soft">
+                  {sync.last_error}
+                </p>
+              )}
+              {sync.status === "failed" && (
+                <p>Select this sector and continue to retry the saved position.</p>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
+
       {syncResult && (
         <div className="mb-4 px-4 py-3 rounded-md border border-accent/30 bg-accent-soft text-sm text-accent">
           Reed sync {syncResult.partial ? "partial" : "finished"} — {syncResult.saved} vacancies
           saved or refreshed
           {syncResult.skipped > 0 ? `, ${syncResult.skipped} outside sector or duplicate` : ""}
           {syncResult.failed > 0 ? `, ${syncResult.failed} failed — retry the sync` : ""}.
-          {syncResult.partial && " This is not a complete vacancy-pool refresh."}
+          {syncResult.partial &&
+            " Progress is saved; continue this sector to process the next batch."}
         </div>
       )}
 

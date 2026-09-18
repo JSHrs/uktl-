@@ -7,6 +7,8 @@ export type ReedSyncResult = {
   failed: number;
   total: number;
   partial: boolean;
+  nextOffset?: number;
+  exhausted?: boolean;
 };
 const sectorTitles = {
   construction:
@@ -17,7 +19,12 @@ const sectorTitles = {
 // Conservative title evidence: a company description mentioning technology or
 // construction is not enough to classify an unrelated vacancy into that sector.
 export function matchesReedSector(title: string, sector: ReedSector) {
-  return sectorTitles[sector].test(title);
+  const technology =
+    sectorTitles.technology.test(title) &&
+    !/\b(property|land|real estate|business|sales)\s+developer\b/i.test(title);
+  return sector === "technology"
+    ? technology
+    : sectorTitles.construction.test(title) && !technology;
 }
 export function reedDate(value: unknown): string | null {
   if (typeof value !== "string" || !value.trim()) return null;
@@ -74,10 +81,14 @@ export function normaliseReedJob(raw: Record<string, unknown>, id: number, secto
   };
 }
 export type ReedVacancy = NonNullable<ReturnType<typeof normaliseReedJob>>;
-export async function saveReedJob(env: AppEnv, job: ReedVacancy) {
+export async function saveReedJob(
+  env: AppEnv,
+  job: ReedVacancy,
+  guard?: () => D1PreparedStatement,
+) {
   // Conflict target matches the existing partial unique index. Never overwrite
   // staff status, curated skill requirements or consultant pipeline records.
-  const result = await env.DB.prepare(
+  const statement = env.DB.prepare(
     `INSERT INTO jobs
     (id,created_at,title,company,location,sector,description,must_have_skills,nice_to_have_skills,status,source,source_id,source_url,posted_date,expiry_date,salary_min,salary_max,salary_currency,salary_period)
     VALUES (?,?,?,?,?,?,?,'[]','[]','open','reed',?,?,?,?,?,?,?,?)
@@ -87,31 +98,31 @@ export async function saveReedJob(env: AppEnv, job: ReedVacancy) {
       posted_date=COALESCE(excluded.posted_date,jobs.posted_date),expiry_date=excluded.expiry_date,
       salary_min=excluded.salary_min,salary_max=excluded.salary_max,
       salary_currency=excluded.salary_currency,salary_period=excluded.salary_period`,
-  )
-    .bind(
-      `job_${crypto.randomUUID().replace(/-/g, "")}`,
-      Date.now(),
-      job.title,
-      job.company,
-      job.location,
-      job.sector,
-      job.description,
-      job.sourceId,
-      job.sourceUrl,
-      job.posted,
-      job.expiry,
-      job.salaryMin,
-      job.salaryMax,
-      job.salaryCurrency,
-      job.salaryPeriod,
-    )
-    .run();
+  ).bind(
+    `job_${crypto.randomUUID().replace(/-/g, "")}`,
+    Date.now(),
+    job.title,
+    job.company,
+    job.location,
+    job.sector,
+    job.description,
+    job.sourceId,
+    job.sourceUrl,
+    job.posted,
+    job.expiry,
+    job.salaryMin,
+    job.salaryMax,
+    job.salaryCurrency,
+    job.salaryPeriod,
+  );
+  const result = guard ? (await env.DB.batch([guard(), statement]))[1] : await statement.run();
   if (!result.success) throw new Error("Vacancy save failed");
 }
 
 export async function syncReedJobs(
   env: AppEnv,
   data: { keywords: string; sector: ReedSector; resultsToTake: number },
+  progress?: { offset: number; save: (job: ReedVacancy) => Promise<void> },
 ): Promise<ReedSyncResult> {
   if (!env.REED_API_KEY) throw new Error("REED_API_KEY not configured");
   if (
@@ -121,6 +132,8 @@ export async function syncReedJobs(
     !(data.sector in sectorTitles)
   )
     throw new Error("Invalid sync request");
+  if (progress && (!Number.isSafeInteger(progress.offset) || progress.offset < 0))
+    throw new Error("Invalid cursor");
   const started = Date.now();
   const headers = {
     Authorization: `Basic ${btoa(`${env.REED_API_KEY}:`)}`,
@@ -137,8 +150,13 @@ export async function syncReedJobs(
   };
   const result: ReedSyncResult = { saved: 0, skipped: 0, failed: 0, total: 0, partial: false };
   const seen = new Set<number>();
-  for (let offset = 0; offset < data.resultsToTake; ) {
-    const take = Math.min(100, data.resultsToTake - offset);
+  const end = (progress?.offset ?? 0) + data.resultsToTake;
+  if (progress) {
+    result.nextOffset = progress.offset;
+    result.exhausted = false;
+  }
+  for (let offset = progress?.offset ?? 0; offset < end; ) {
+    const take = Math.min(100, end - offset);
     const params = new URLSearchParams({
       keywords:
         data.keywords.trim() || (data.sector === "construction" ? "construction" : "software"),
@@ -167,10 +185,15 @@ export async function syncReedJobs(
       const id = raw?.jobId;
       if (!Number.isSafeInteger(id) || id <= 0) {
         result.failed++;
+        if (progress) {
+          result.partial = true;
+          return result;
+        }
         continue;
       }
       if (seen.has(id)) {
         result.skipped++;
+        if (progress) result.nextOffset!++;
         continue;
       }
       seen.add(id);
@@ -190,21 +213,29 @@ export async function syncReedJobs(
         );
         if (!job) {
           result.skipped++;
+          if (progress) result.nextOffset!++;
           continue;
         }
-        await saveReedJob(env, job);
+        await (progress ? progress.save(job) : saveReedJob(env, job));
         result.saved++;
+        if (progress) result.nextOffset!++;
       } catch {
         result.failed++;
+        if (progress) {
+          result.partial = true;
+          return result;
+        }
       }
     }
     offset += body.results.length;
     if (
       body.results.length < take ||
       (Number.isSafeInteger(body.totalResults) && offset >= body.totalResults)
-    )
+    ) {
+      if (progress) result.exhausted = true;
       break;
-    if (offset >= data.resultsToTake) result.partial = true;
+    }
+    if (offset >= end) result.partial = true;
   }
   result.partial ||= result.failed > 0;
   return result;

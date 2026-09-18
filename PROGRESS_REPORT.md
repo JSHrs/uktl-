@@ -1,5 +1,14 @@
 # Current stage checkpoint — 18 September 2026
 
+## Resumable Reed checkpoint
+
+- [x] Durable query/cursor progress, broader controlled search sets, lease-fenced writes, expiry/recovery and three-attempt retry cap implemented.
+- [x] Admin progress/failure visibility and explicit retry; HTTP 202 distinguishes ongoing work from completed cycles.
+- [x] Prepared continuation schedule processes batches every ten minutes and idles after a cycle completes for the UTC day. Nothing deployed or activated.
+- [x] Local 42 unit tests, TypeScript and production build passed. Isolated PostgreSQL lease/authorization and actual resume/retry integration added to CI; this revision's CI is pending.
+- [ ] Migration `20260918154759_resumable_reed_sync` is NOT applied to production. Automatic approval review rejected that production schema mutation under the staging-only constraint. It must be applied to isolated staging before deploying this revision.
+- [ ] Real provider coverage/quotas, alert delivery, match refresh, Claude matching/evaluation and upload cleanup remain. D4 and Stage 2 are not accepted.
+
 ## Reed ingestion checkpoint
 
 - [x] Paginated search and full-detail retrieval; atomic source upserts preserve staff closure, curated requirements and vacancy IDs.
@@ -8,7 +17,8 @@
 - [x] Protected sync endpoint and Supabase Edge dispatcher prepared with a separate operator-only daily scheduling script. Nothing deployed or scheduled.
 - [x] Migration `20260918151920` applied; live rollback upsert check preserved staff closure; security advisor returned no findings.
 - [x] Implementation `332f9dc8bef56542b93066c8e75fbc0a1db13c87` passed [CI 35362865124](https://github.com/devacnt/UKTL/actions/runs/35362865124): 40 unit tests, 25 browser checks, TypeScript/build, fresh PostgreSQL migration replay and actual Reed/CV-worker/discovery integration. Fourteen staging-credential cases remain skipped. A new unauthorized-dispatch browser test exposed error-ordering; corrected and passed both locally and in final CI. Provider responses in automated ingestion tests are synthetic, not live Reed verification.
-- [ ] Full search coverage/cursor continuation, durable sync monitoring, match refresh and live Reed verification remain open. Bounded imports do not establish D4 completion. See REED_SYNC.md.
+- [x] Cursor continuation and durable progress monitoring are implemented in the newer checkpoint above.
+- [ ] Reviewed search coverage, match refresh and live Reed verification remain open; D4 is not accepted. See REED_SYNC.md.
 - [ ] Stage 2 still requires Claude matching/evaluation, upload cleanup and deployed acceptance.
 
 ## Durable processing and profile correction checkpoint

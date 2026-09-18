@@ -26,6 +26,11 @@ test("Reed dates reject invalid calendars and distinguish UK day/month; sector f
     1,
     "technology",
   )!;
+  assert.equal(normaliseReedJob({ jobTitle: "Property developer" }, 2, "technology"), null);
+  assert.equal(
+    normaliseReedJob({ jobTitle: "Construction software developer" }, 3, "construction"),
+    null,
+  );
   assert.equal(j.salaryMin, null);
   assert.equal(j.sourceUrl, null);
   assert.equal(
@@ -154,4 +159,70 @@ test("daily dispatcher fails closed, refuses unsafe origins and attempts both se
     503,
   );
   assert.equal(calls, 2);
+});
+
+test("a resumable page starts at its saved offset and advances only through processed records", async () => {
+  const { db, env } = databaseFixture();
+  env.REED_API_KEY = "test-only";
+  const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async (input) => {
+      const u = new URL(String(input));
+      if (u.pathname.endsWith("/search")) {
+        assert.equal(u.searchParams.get("resultsToSkip"), "20");
+        return Response.json({ results: [{ jobId: 21 }, { jobId: 22 }], totalResults: 22 });
+      }
+      return Response.json({ jobTitle: "Software engineer" });
+    };
+    let saves = 0;
+    const result = await syncReedJobs(
+      env,
+      { sector: "technology", keywords: "software", resultsToTake: 10 },
+      {
+        offset: 20,
+        save: async () => {
+          saves++;
+        },
+      },
+    );
+    assert.equal(result.nextOffset, 22);
+    assert.equal(result.exhausted, true);
+    assert.equal(saves, 2);
+    const failed = await syncReedJobs(
+      env,
+      { sector: "technology", keywords: "software", resultsToTake: 10 },
+      {
+        offset: 20,
+        save: async () => {
+          throw new Error("write rejected");
+        },
+      },
+    );
+    assert.equal(failed.nextOffset, 20);
+    assert.equal(failed.failed, 1);
+    assert.equal(failed.exhausted, false);
+  } finally {
+    globalThis.fetch = original;
+    db.close();
+  }
+});
+test("daily dispatcher distinguishes ongoing accepted work from a completed cycle", async () => {
+  const token = "x".repeat(40);
+  const request = () =>
+    new Request("https://example.invalid", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  const pending = await handleReedSync(
+    request(),
+    { token, origin: "https://app.invalid" },
+    async () => Response.json({ status: "pending" }, { status: 202 }),
+  );
+  assert.equal(pending.status, 202);
+  const complete = await handleReedSync(
+    request(),
+    { token, origin: "https://app.invalid" },
+    async () => Response.json({ status: "complete" }),
+  );
+  assert.equal(complete.status, 200);
 });

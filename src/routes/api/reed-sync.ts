@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { getEnv } from "@/lib/server/env";
 import { validMaintenanceSecret } from "@/lib/server/processing";
 import { enforceRateLimit } from "@/lib/server/ratelimit";
-import { syncReedJobs } from "@/lib/server/reed";
+import { resumeReedSync } from "@/lib/server/reed-sync";
 export const Route = createFileRoute("/api/reed-sync")({
   server: {
     handlers: {
@@ -20,10 +20,10 @@ export const Route = createFileRoute("/api/reed-sync")({
           const { sector } = await request.json();
           if (sector !== "construction" && sector !== "technology")
             return new Response("Invalid sector", { status: 400 });
-          await enforceRateLimit(env, "reedSync", "admin");
-          const result = await syncReedJobs(env, { sector, keywords: "", resultsToTake: 200 });
+          await enforceRateLimit(env, "reedSync", `scheduled:${sector}`);
+          const result = await resumeReedSync(env, sector);
           return Response.json(result, {
-            status: result.partial ? 503 : 200,
+            status: result.failed ? 503 : result.partial ? 202 : 200,
             headers: { "Cache-Control": "no-store" },
           });
         } catch {

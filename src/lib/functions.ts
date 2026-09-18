@@ -58,6 +58,7 @@ import {
 import { enforceRateLimit } from "./server/ratelimit";
 import { deliverNotification } from "./server/notify";
 import { syncReedJobs } from "./server/reed";
+import {resumeReedSync,reedSyncStates} from "./server/reed-sync";
 import { parseCv } from "./server/parse";
 import { scoreMatch } from "./server/match";
 import { normaliseSkillList } from "./server/skills";
@@ -1017,7 +1018,7 @@ export const syncReedJobsFn = createServerFn({ method: "POST" })
     await requireAdmin();
     const env = await getEnv();
     await enforceRateLimit(env, "reedSync", "admin");
-    return syncReedJobs(env, data);
+    return env.DATA_BACKEND === "supabase" ? resumeReedSync(env,data.sector,true) : syncReedJobs(env,data);
   });
 
 
@@ -1080,3 +1081,5 @@ export const getCvQueueFn=createServerFn({method:"GET"}).handler(async()=>{
   return (await env.DB.prepare("SELECT id,candidate_id,kind,status,attempts,available_at,last_error,updated_at FROM processing_jobs WHERE kind IN ('parse','match') ORDER BY updated_at DESC LIMIT 100")
     .all<{id:string;candidate_id:string;kind:string;status:string;attempts:number;available_at:number;last_error:string|null;updated_at:number}>()).results??[];
 });
+
+export const reedSyncStatesFn=createServerFn({method:"GET"}).handler(async()=>{await requireAdmin();return reedSyncStates(await getEnv());});

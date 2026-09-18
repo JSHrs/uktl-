@@ -39,15 +39,24 @@ export async function handleReedSync(
             headers: { Authorization: `Bearer ${env.token}`, "Content-Type": "application/json" },
             body: JSON.stringify({ sector }),
           });
-          return { sector, ok: response.ok };
+          const body = await response.json();
+          const status = typeof body?.status === "string" ? body.status : "unknown";
+          return { sector, ok: response.ok, status };
         } catch {
-          return { sector, ok: false };
+          return { sector, ok: false, status: "unavailable" };
         }
       }),
     );
     return Response.json(
       { results },
-      { status: results.every((r) => r.ok) ? 200 : 503, headers: noStore },
+      {
+        status: results.some((r) => !r.ok)
+          ? 503
+          : results.every((r) => r.status === "complete")
+            ? 200
+            : 202,
+        headers: noStore,
+      },
     );
   } catch {
     return Response.json(
