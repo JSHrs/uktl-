@@ -49,5 +49,4 @@ See **DEPLOYMENT.md** (Cloudflare infrastructure, migrations, secrets, Supabase 
 
 ## Status
 
-Merged to `main` and building cleanly as of September 2026. Open items are listed under "Known gaps" in CLAUDE.md.
-
+Recovered into `devacnt/UKTL` on 18 September 2026. See **PROGRESS_REPORT.md** for verified deliverables and missing local-only work, and **SUPABASE_INSTALLATION.md** for the recovered migration history and runtime configuration. The application has not been deployed or verified as 75% complete. Production now selects the Supabase adapter; default and staging configuration still require explicit setup.

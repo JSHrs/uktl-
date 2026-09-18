@@ -20,12 +20,22 @@ function decodeEntities(s: string): string {
 export function extractDocxText(bytes: ArrayBuffer): string {
   let files: Record<string, Uint8Array>;
   try {
-    files = unzipSync(new Uint8Array(bytes));
+    if (bytes.byteLength > 10 * 1024 * 1024) throw new Error();
+    let entries = 0;
+    files = unzipSync(new Uint8Array(bytes), {
+      filter(entry) {
+        if (++entries > 2048) throw new Error();
+        if (entry.name !== "word/document.xml") return false;
+        if (entry.originalSize > 4 * 1024 * 1024) throw new Error();
+        return true;
+      },
+    });
   } catch {
     throw new Error("File is not a valid DOCX document");
   }
   const document = files["word/document.xml"];
   if (!document) throw new Error("File is not a valid DOCX document");
+  if (document.byteLength > 4 * 1024 * 1024) throw new Error("DOCX text is too large");
 
   // Visible text lives only in <w:t>; everything between tags is markup whitespace.
   let text = "";

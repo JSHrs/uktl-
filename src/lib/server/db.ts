@@ -508,8 +508,9 @@ export async function recordSwipe(
   action: "interested" | "dismissed",
 ): Promise<void> {
   await env.DB.prepare(
-    `INSERT OR REPLACE INTO candidate_swipes (candidate_id, job_id, action, swiped_at)
-     VALUES (?, ?, ?, ?)`,
+    `INSERT INTO candidate_swipes (candidate_id, job_id, action, swiped_at)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(candidate_id,job_id) DO UPDATE SET action=excluded.action, swiped_at=excluded.swiped_at`,
   )
     .bind(candidateId, jobId, action, Date.now())
     .run();
@@ -869,4 +870,3 @@ function parseJsonNullable<T>(raw: unknown): T | null {
     return null;
   }
 }
-

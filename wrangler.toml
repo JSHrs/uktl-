@@ -70,7 +70,7 @@ SITE_URL          = "https://talent-compass-staging.REPLACE_WITH_WORKERS_SUBDOMA
 # ── Environment: production ───────────────────────────────────────────────────
 [env.production]
 name = "talent-compass-production"
-route = { pattern = "talent-compass.cranbrooklegal.com/*", zone_name = "cranbrooklegal.com" }
+
 
 [[env.production.d1_databases]]
 binding = "DB"
@@ -87,7 +87,8 @@ directory = "dist/client"
 binding = "ASSETS"
 
 [env.production.vars]
-SUPABASE_URL      = "https://REPLACE_WITH_SUPABASE_PROJECT_REF.supabase.co"
+DATA_BACKEND = "supabase"
+SUPABASE_URL      = "https://fvkffdeindboirukscfq.supabase.co"
 SUPABASE_ANON_KEY = "REPLACE_WITH_SUPABASE_ANON_KEY"
 CALENDLY_URL      = ""
-SITE_URL          = "https://talent-compass.cranbrooklegal.com"
+SITE_URL          = "" # Configure the verified production origin before deployment

@@ -2,7 +2,12 @@
 // `cloudflare:workers` is only resolvable inside the Workers runtime, so we
 // dynamic-import it. Non-Workers environments will throw a clear error.
 
+import { createPostgresDatabase } from "./postgres";
+import { createPrivateCvStorage } from "./storage";
+
 export type AppEnv = {
+  DATA_BACKEND?: "d1" | "supabase";
+  DATABASE_URL?: string;
   DB: D1Database;
   CV_BUCKET: R2Bucket;
   AI: Ai;
@@ -35,7 +40,7 @@ export async function getEnv(): Promise<AppEnv> {
     const mod = (await import("cloudflare:workers")) as unknown as {
       env: AppEnv;
     };
-    cached = mod.env;
+    cached = configureBackend(mod.env);
     return cached;
   } catch (err) {
     throw new Error(
@@ -43,6 +48,27 @@ export async function getEnv(): Promise<AppEnv> {
         String(err),
     );
   }
+}
+
+export function configureBackend(env: AppEnv): AppEnv {
+  if (env.DATA_BACKEND !== "supabase") return env;
+  let database: D1Database | undefined;
+  let storage: R2Bucket | undefined;
+  return {
+    ...env,
+    // Resolve credentials on use: missing data credentials must not prevent
+    // Supabase sign-in or turn into a silent fallback to the legacy database.
+    get DB() {
+      if (!env.DATABASE_URL) throw new Error("DATABASE_URL is not configured");
+      return (database ??= createPostgresDatabase(env.DATABASE_URL));
+    },
+    get CV_BUCKET() {
+      if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+        throw new Error("Private CV storage is not configured");
+      }
+      return (storage ??= createPrivateCvStorage(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY));
+    },
+  };
 }
 
 // D1 types shim — avoids needing @cloudflare/workers-types as a dep for

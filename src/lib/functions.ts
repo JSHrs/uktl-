@@ -1,3 +1,4 @@
+import { validateCvUpload } from "./server/upload-validation";
 import { createServerFn } from "@tanstack/react-start";
 import { setCookie, deleteCookie, getRequestHeader } from "@tanstack/start-server-core";
 import { z } from "zod";
@@ -200,16 +201,19 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
     try {
       env = await getEnv();
     } catch {
-      throw new Error("CV processing is unavailable here — Cloudflare D1 and R2 bindings are not configured");
+      throw new Error("CV processing is unavailable — runtime bindings are not configured");
     }
     await enforceRateLimit(env, "cvUpload", viewer.userId ?? "admin");
     if (!env.ANTHROPIC_API_KEY) throw new Error("CV processing is not configured");
     const bytes = await file.arrayBuffer();
+    const validated = validateCvUpload(file.name, bytes);
+    // Reject malformed/oversized DOCX content before writing a private object.
+    const docxText = validated.kind === "docx" ? extractDocxText(bytes) : null;
     const id = newId();
     const r2Key = `cvs/${id}/${sanitiseFilename(file.name)}`;
 
     await env.CV_BUCKET.put(r2Key, bytes, {
-      httpMetadata: { contentType: file.type || "application/octet-stream" },
+      httpMetadata: { contentType: validated.contentType },
     });
     await insertCandidateShell(env, {
       id,
@@ -231,13 +235,13 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
     await markCandidateParsing(env, id);
 
     try {
-      const isPdf = file.type === "application/pdf" || lower.endsWith(".pdf");
-      const isDocx = file.type === DOCX_MIME || lower.endsWith(".docx");
+      const isPdf = validated.kind === "pdf";
+      const isDocx = validated.kind === "docx";
       const parseInput = isPdf
         ? ({ kind: "pdf", bytes, filename: file.name } as const)
         : ({
             kind: "text",
-            text: isDocx ? extractDocxText(bytes) : new TextDecoder().decode(bytes),
+            text: isDocx ? docxText! : new TextDecoder().decode(bytes),
             filename: file.name,
           } as const);
 
