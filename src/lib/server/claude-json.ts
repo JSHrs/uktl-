@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import {boundedText} from './bounded-response.ts';
 export async function claudeJson<T>(args:{apiKey?:string;model?:string;system:string;input:unknown;schema:z.ZodType<T>;maxTokens?:number}):Promise<T>{
  if(!args.apiKey)throw new Error('AI service is not configured');
  const input=JSON.stringify(args.input);
@@ -9,7 +10,7 @@ export async function claudeJson<T>(args:{apiKey?:string;model?:string;system:st
    headers:{'x-api-key':args.apiKey,'anthropic-version':'2023-06-01','content-type':'application/json'},
    body:JSON.stringify({model:args.model??'claude-sonnet-4-6',max_tokens:args.maxTokens??3000,system:args.system,messages:[{role:'user',content:input}]})});
   if(!response.ok)throw new Error('Provider unavailable');
-  const raw=await response.text();if(raw.length>100000)throw new Error('Response too large');
+  const raw=await boundedText(response,100000);
   const body=JSON.parse(raw);
   if(body.stop_reason!=='end_turn'||!Array.isArray(body.content))throw new Error('Incomplete response');
   const text=body.content.filter((c:{type:string})=>c.type==='text').map((c:{text:string})=>c.text).join('');

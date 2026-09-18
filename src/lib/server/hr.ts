@@ -2,6 +2,8 @@ import { z } from "zod";
 import type { AppEnv } from "./env";
 import { listFaqTopics, type FaqTopic } from "./db.ts";
 import { claudeJson } from "./claude-json.ts";
+import { boundedText } from "./bounded-response.ts";
+export { boundedText } from "./bounded-response.ts";
 export const HR_DISCLAIMER =
   "General information, not legal advice. Source excerpts may not cover your circumstances or later legal changes. For decisions or deadlines, consult a qualified employment adviser.";
 export type HrJourney = {
@@ -100,30 +102,6 @@ export function approvedSourceUrl(raw: string) {
   )
     throw new Error("Use an exact HTTPS ACAS guidance page");
   return u.href;
-}
-export async function boundedText(response: Response, max: number) {
-  if (!response.body) throw new Error("Empty response");
-  const reader = response.body.getReader();
-  let size = 0;
-  const chunks: Uint8Array[] = [];
-  try {
-    while (true) {
-      const next = await reader.read();
-      if (next.done) break;
-      size += next.value.byteLength;
-      if (size > max) throw new Error("Response too large");
-      chunks.push(next.value);
-    }
-  } finally {
-    await reader.cancel();
-  }
-  const buffer = new Uint8Array(size);
-  let offset = 0;
-  for (const chunk of chunks) {
-    buffer.set(chunk, offset);
-    offset += chunk.length;
-  }
-  return new TextDecoder().decode(buffer);
 }
 export function sourceText(html: string) {
   const main = /<main\b[^>]*>([\s\S]*?)<\/main>/i.exec(html)?.[1];

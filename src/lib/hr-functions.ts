@@ -244,7 +244,7 @@ export const reviewVideoFn = createServerFn({ method: "POST" })
         transcript: z.string().trim().min(20).max(50000),
         videoKey: z
           .string()
-          .regex(/^videos\/[a-zA-Z0-9_./-]+$/)
+          .regex(/^videos\/[a-zA-Z0-9_./-]+\.(mp4|webm)$/)
           .max(300),
         captionsKey: z
           .string()
@@ -261,10 +261,23 @@ export const reviewVideoFn = createServerFn({ method: "POST" })
     const row = await (
       await getEnv()
     ).DB.prepare(
-      "UPDATE faq_topics SET transcript=?,video_key=?,captions_key=?,reviewed_at=? WHERE id=? RETURNING id",
+      `UPDATE faq_topics SET transcript=?,video_key=?,captions_key=?,reviewed_at=? WHERE id=?
+       AND EXISTS(SELECT 1 FROM storage.objects WHERE bucket_id='uktl-videos' AND name=?)
+       AND EXISTS(SELECT 1 FROM storage.objects WHERE bucket_id='uktl-videos' AND name=?) RETURNING id`,
     )
-      .bind(data.transcript, data.videoKey, data.captionsKey, Date.now(), data.id)
+      .bind(
+        data.transcript,
+        data.videoKey,
+        data.captionsKey,
+        Date.now(),
+        data.id,
+        data.videoKey,
+        data.captionsKey,
+      )
       .first();
-    if (!row) throw new Error("Topic unavailable");
+    if (!row)
+      throw new Error(
+        "Topic or uploaded video/captions unavailable. Upload both assets before approval.",
+      );
     return { ok: true };
   });

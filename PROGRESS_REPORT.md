@@ -1,6 +1,14 @@
 # Current stage checkpoint — 18 September 2026
 
-## Stage 3 implementation checkpoint (verification in progress)
+## Verified combined checkpoint and current database
+
+- Commit `369ad88b8fcb14f930e07a438e2d629585b32648` passed [CI 35396364849](https://github.com/devacnt/UKTL/actions/runs/35396364849): 58 unit tests, 25 browser checks, TypeScript/build and all isolated PostgreSQL migration/policy/worker/HR/booking integrations. Fourteen credential-dependent browser tests remain skipped and are not acceptance evidence.
+- Applied CI-tested migrations to current UKTL only: `20260918212558_matching_evidence_and_refresh` and `20260918212609_hr_journeys_and_verified_bookings`. Local filenames reflect actual remote migration versions; SQL is unchanged. All five new private tables have RLS and deny anonymous/authenticated direct reads. Match-snapshot function execution is denied to those roles. `uktl-videos` is private with bounded video/VTT uploads. Security advisor returned no findings.
+- Follow-up hardening includes bounded streaming AI responses, approval requiring existing video/caption object metadata, account appointment retrieval, extra reschedule/email-mismatch/privacy regressions and the compatible Seroval update from 1.5.2 to 1.6.7 for [GHSA-mv8w-475r-vwqw](https://github.com/advisories/GHSA-mv8w-475r-vwqw). Only that dependency lock entry was changed; unrelated lockfile churn was excluded. Final follow-up CI pending.
+- Approximate overall implementation completion: **75% (70–80% range)**, not a measured task ratio, calibrated forecast or release-readiness score. Earlier percentages below are historical checkpoints.
+- **Neither Stage 2 nor Stage 3 is fully accepted.** Remaining work includes approved retention/recovery and malware strategy, safe orphan cleanup, human-reviewed CV/match and HR evaluation, approved videos/captions, real provider configuration, isolated staging journeys and Stage 4 privacy/operations/UAT. Hosting remains deferred; no deployment, paid AI calls, scheduler activation or third-party messages performed. Previous Lovable Supabase synchronization remains deferred by the owner.
+
+## Stage 3 implementation checkpoint (historical pre-CI notes)
 
 - Private owner-scoped HR questions/history, revision-safe resolution/context/answers, opaque-ID URLs, token-based FAQ alternatives and exact published/reviewed topic links.
 - Private video bucket migration, signed playback, captions/transcript review controls and per-user/topic/day play deduplication. No video content produced or approved automatically.

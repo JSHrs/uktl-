@@ -5,6 +5,27 @@ import { requireViewer, requireAdmin } from "./server/viewer";
 import { getCandidateSession } from "./supabase";
 import { enforceRateLimit } from "./server/ratelimit";
 import { createBookingIntent, bookingIntentStatus, deliverBookingEvent } from "./server/calendly";
+export const myBookingsFn = createServerFn({ method: "GET" }).handler(async () => {
+  const viewer = await requireViewer();
+  return (
+    (
+      await (
+        await getEnv()
+      ).DB.prepare(
+        `SELECT id,status,starts_at,ends_at,cancel_url,reschedule_url FROM bookings WHERE auth_user_id=? AND provider_invitee_uri IS NOT NULL ORDER BY provider_updated_at DESC,id LIMIT 25`,
+      )
+        .bind(viewer.userId!)
+        .all<{
+          id: string;
+          status: string;
+          starts_at: number;
+          ends_at: number;
+          cancel_url: string | null;
+          reschedule_url: string | null;
+        }>()
+    ).results ?? []
+  );
+});
 export const createBookingIntentFn = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) =>
     z

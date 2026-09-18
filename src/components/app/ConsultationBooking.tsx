@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { createBookingIntentFn, bookingIntentStatusFn } from "@/lib/booking-functions";
+import {
+  createBookingIntentFn,
+  bookingIntentStatusFn,
+  myBookingsFn,
+} from "@/lib/booking-functions";
 export function ConsultationBooking({ queryId }: { queryId?: string }) {
   const [intent, setIntent] = useState<{ id: string; url: string } | null>(null),
     [bookings, setBookings] = useState<Awaited<ReturnType<typeof bookingIntentStatusFn>>>([]),
@@ -30,9 +34,24 @@ export function ConsultationBooking({ queryId }: { queryId?: string }) {
       setBusy(false);
     }
   }
+  async function history() {
+    setBusy(true);
+    setError("");
+    try {
+      setBookings(await myBookingsFn());
+      setChecked(true);
+    } catch {
+      setError("Sign in to load your verified appointments.");
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <section className="border border-rule rounded p-5 space-y-4">
       <h2 className="text-xl">Consult a qualified adviser</h2>
+      <button disabled={busy} className="underline" onClick={history}>
+        Load your latest 25 verified appointments
+      </button>
       <p className="text-sm">
         Scheduling is provided by Calendly. Opening it shares browser information with Calendly;
         your HR question is not sent. Use the email of your signed-in account to link the

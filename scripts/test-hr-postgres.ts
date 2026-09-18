@@ -232,6 +232,72 @@ try {
     assert.equal(metrics.ai_queries, 1);
     assert.equal(metrics.resolved_queries, 1);
     assert.equal(metrics.converted_queries, 0);
+    // A real reschedule is a new invitee, not a browser-side edit of the old row.
+    const replacementUri = `${eventUri}/invitees/${crypto.randomUUID()}`;
+    globalThis.fetch = async (input) =>
+      String(input) === replacementUri
+        ? Response.json({
+            resource: {
+              ...fixture(),
+              uri: replacementUri,
+              old_invitee: inviteeUri,
+              updated_at: new Date(time + 2000).toISOString(),
+            },
+          })
+        : Response.json({
+            resource: {
+              uri: eventUri,
+              event_type: env.CALENDLY_EVENT_TYPE_URI,
+              start_time: new Date(time + 172800000).toISOString(),
+              end_time: new Date(time + 176400000).toISOString(),
+            },
+          });
+    await processCalendlyWebhook(
+      env,
+      JSON.stringify({ event: "invitee.created", payload: { uri: replacementUri } }),
+    );
+    assert.equal((await bookingIntentStatus(env, user, intent.id)).length, 2);
+    assert.equal(
+      (
+        await tx`SELECT old_invitee_uri FROM bookings WHERE provider_invitee_uri=${replacementUri}`
+      )[0].old_invitee_uri,
+      inviteeUri,
+    );
+    assert.equal(
+      (await getAdminAnalytics(env)).converted_queries,
+      1,
+      "one question counted once across appointments",
+    );
+    // Matching a guessed email without the correct provider-tracked intent is insufficient.
+    const unlinkedUri = `${eventUri}/invitees/${crypto.randomUUID()}`;
+    globalThis.fetch = async (input) =>
+      String(input) === unlinkedUri
+        ? Response.json({
+            resource: { ...fixture(), uri: unlinkedUri, email: "different@example.invalid" },
+          })
+        : Response.json({
+            resource: {
+              uri: eventUri,
+              event_type: env.CALENDLY_EVENT_TYPE_URI,
+              start_time: new Date(time + 86400000).toISOString(),
+              end_time: new Date(time + 90000000).toISOString(),
+            },
+          });
+    await processCalendlyWebhook(
+      env,
+      JSON.stringify({ event: "invitee.created", payload: { uri: unlinkedUri } }),
+    );
+    assert.equal(
+      (await tx`SELECT auth_user_id FROM bookings WHERE provider_invitee_uri=${unlinkedUri}`)[0]
+        .auth_user_id,
+      null,
+    );
+    assert.equal((await bookingIntentStatus(env, user, intent.id)).length, 2);
+    await tx`UPDATE faq_topics SET title='Changed after review' WHERE id=${topic}`;
+    assert.equal(
+      (await tx`SELECT reviewed_at FROM faq_topics WHERE id=${topic}`)[0].reviewed_at,
+      null,
+    );
     for (const table of ["hr_sources", "faq_plays", "booking_intents", "booking_events"]) {
       const grants =
         await tx`SELECT has_table_privilege('anon',${"recruitment." + table},'SELECT') AS a,has_table_privilege('authenticated',${"recruitment." + table},'SELECT') AS u`;

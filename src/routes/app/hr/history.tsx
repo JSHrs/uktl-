@@ -1,8 +1,12 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { getViewerFn } from "@/lib/functions";
 import { listHrHistoryFn } from "@/lib/hr-functions";
 import { DataError } from "@/components/app/DataError";
 export const Route = createFileRoute("/app/hr/history")({
+  beforeLoad: async () => {
+    if (!(await getViewerFn()).userId) throw redirect({ to: "/auth/login" });
+  },
   loader: () => listHrHistoryFn({ data: {} }),
   errorComponent: DataError,
   component: History,

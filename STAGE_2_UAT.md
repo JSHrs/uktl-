@@ -1,5 +1,13 @@
 # Stage 2 recruitment verification
 
+## Latest implementation coverage — 18 September 2026
+
+Bounded administrator refresh now persists up to 25 current profile/open-vacancy pairs per action, preserving pipeline stages and rejecting changed snapshots. A cursor continues the pass; a changing dataset can require another pass. Claude evidence review covers curated essential requirements, validates exact quotations, labels missing evidence as unknown and caches by profile/job/model/version. It does not alter rankings or decide hiring. Automated fixtures cover Construction/Technology examples but are not a client-approved evaluation set.
+
+Matching migration `20260918212558` is applied to the current UKTL Supabase after [CI 35396364849](https://github.com/devacnt/UKTL/actions/runs/35396364849) passed. Anonymous/candidate function/table access is denied; no live Claude call or scheduler activation occurred.
+
+Additional live tests: edit a vacancy during review and ensure stale results fail; repeat an unchanged review and verify cache reuse; refresh the full match catalog in batches; confirm consultant stages survive; review quoted evidence for relevance, fairness and unknown handling on two Construction and two Technology CVs. Agree expected scores before evaluating. Metadata-only orphan inspection is available; deletion is not authorized by an inspection result. Retention/recovery policy and malware/large-file/throughput acceptance remain release dependencies.
+
 ## Development checkpoint: durable CV processing and corrections
 
 Implemented: private upload registration plus durable task before storage, delayed recovery if activation is interrupted, three bounded attempts, 15-minute leases, stale-result fencing, optimistic profile revision checks, editable extraction, refreshed assessment, candidate status display, administrator queue and secret-protected maintenance endpoint. No live provider or deployed browser acceptance is claimed.

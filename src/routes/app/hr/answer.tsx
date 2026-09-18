@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import { createFileRoute, Link, useRouter, redirect } from "@tanstack/react-router";
+import { getViewerFn } from "@/lib/functions";
 import { z } from "zod";
 import { getHrAnswerFn, saveHrResolutionFn, answerHrQuestionFn } from "@/lib/hr-functions";
 import { HrVideo } from "@/components/app/HrVideo";
@@ -11,6 +12,9 @@ export const Route = createFileRoute("/app/hr/answer")({
       .object({ id: z.string().max(100).optional(), topic: z.string().max(100).optional() })
       .parse(s),
   loaderDeps: ({ search }) => search,
+  beforeLoad: async ({ search }) => {
+    if (search.id && !(await getViewerFn()).userId) throw redirect({ to: "/auth/login" });
+  },
   loader: ({ deps }) => getHrAnswerFn({ data: deps }),
   errorComponent: DataError,
   component: Answer,
@@ -21,6 +25,10 @@ function Answer() {
   const [context, setContext] = useState(journey?.additional_context ?? ""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  useEffect(() => {
+    setContext(journey?.additional_context ?? "");
+    setError("");
+  }, [journey?.id]);
   const saved = journey?.ai_response ? parseAnswer(journey.ai_response) : null;
   async function resolve(
     resolution: "yes" | "partly" | "no" | null,
@@ -168,7 +176,7 @@ function Answer() {
           </Link>
         </p>
       )}
-      <ConsultationBooking queryId={journey?.id} />
+      <ConsultationBooking key={journey?.id ?? "public"} queryId={journey?.id} />
     </div>
   );
 }
