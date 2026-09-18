@@ -7,6 +7,8 @@ The owner will connect Cloudflare through Lovable later. Continue GitHub develop
 
 The approved scope is D1–D13. Full client CRM and interview-management expansion are not release prerequisites. A stage is accepted only when its code, automated, live-system and user gates pass. A skipped or unexecuted required test is BLOCKED, never PASS. No stage percentage substitutes for evidence.
 
+Database scope: continue development on UKTL Supabase only; the owner deferred the previous/Lovable database synchronization until development is complete. Candidate-facing rules-based match freshness is implemented; persisted staff-wide refresh and Claude evaluation remain open. The rough implementation estimate is about 60% (50–65% range), not a release-acceptance percentage.
+
 ## Gate 0 — source and scope baseline
 
 Status: PASS. Full source transferred; old repository preserved; recovered Supabase migration history reconciled. Baseline and foundation CI passed. Current requirements are the user's 13-deliverable MVP and the approved priority improvements.

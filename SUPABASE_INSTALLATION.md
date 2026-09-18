@@ -50,6 +50,8 @@ The fifth migration was applied to the authorized project. `supabase/tests/staff
 
 ## Second database reconciliation — blocked
 
+Owner update: defer this synchronization until the end of development. Work continues exclusively on UKTL `fvkffdeindboirukscfq`; the previous database is not a development blocker. The identification/access requirements below still apply when synchronization resumes.
+
 Lovable project UKTL (`b976b2a4-fea6-43dc-a8da-72d7238985c7`) reports its Cloud database disabled. This does not exclude an external Supabase connection. Its readable `wrangler.toml` contains placeholder URLs, `supabase/config.toml` uses only a local CLI project name, and the browser client reads environment variables. The connected Supabase account lists only UKTL; no second remote target was identifiable. The Lovable source at `b7969c11ba7003a68248678656f8126093720679` is older than the destination implementation.
 
 Required to finish: the external Supabase project reference and authorized access. Inspect existing schema, migrations and data before selecting compatible migrations; do not replay the baseline blindly. Do not enable a new Lovable Cloud database as a substitute. The original repository remains preserved. Source commits and database application are separate operations; updating main does not itself synchronize another database or Lovable project.

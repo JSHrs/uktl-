@@ -1,5 +1,14 @@
 # Current stage checkpoint — 18 September 2026
 
+## Candidate match freshness and database scope
+
+- Owner decision: continue only on UKTL Supabase `fvkffdeindboirukscfq`; defer synchronization of the previous/Lovable database until the end of development. Its identification is not a current development blocker.
+- Candidate detail and discovery now calculate rules-based scores from the current parsed profile and all current open/unexpired vacancies in one database statement snapshot. Newly imported jobs no longer require a previously cached match row, and edited requirements do not reuse old scores.
+- Reads do not write matches, change consultant stages or invoke AI. Unfinished/missing profiles yield no results; invalid profiles fail closed. Current salary/source metadata is retained.
+- Local verification: 45 unit tests, TypeScript and Workers build passed. A read-only EXPLAIN confirmed the query is valid on current UKTL schema. PostgreSQL integration assertions cover edited requirements, new vacancies and preserved pipeline stages; current CI must verify them. No schema migration or application deployment required/performed for this change.
+- Remaining matching scope: staff-wide persisted match refresh, bounded large-catalog processing, Claude-supported assessment and reviewed evaluation/calibration. This is not completion of D4/D5 or live acceptance.
+- Planning estimate: approximately 60% of scoped implementation (rough range 50–65%), not measured task-count completion or launch readiness. Foundations are largely implemented, recruitment is advanced but incomplete, and HR/booking plus operational/privacy work remain substantial. Only Gate 0 is fully accepted; Gates 1–4 still require their stated evidence.
+
 ## Resumable Reed checkpoint
 
 - [x] Durable query/cursor progress, broader controlled search sets, lease-fenced writes, expiry/recovery and three-attempt retry cap implemented.

@@ -1,6 +1,8 @@
 import { normaliseSkill } from "./skills.ts";
 import type { AppEnv } from "./env";
 import type { ParsedProfile, QualityAssessment } from "../schemas/profile";
+import { ParsedProfileSchema } from "../schemas/profile.ts";
+import { scoreMatch } from "./match.ts";
 import { JobSchema, type Job, type Match, type MatchScore, type MatchStage } from "../schemas/job.ts";
 
 export type CandidateRow = {
@@ -424,46 +426,31 @@ export async function getMatchesForCandidate(
   candidateId: string,
 ): Promise<Array<Match & { job: Job }>> {
   const res = await env.DB.prepare(
-    `SELECT m.*, j.title AS j_title, j.company AS j_company, j.location AS j_location,
-            j.sector AS j_sector, j.seniority AS j_seniority,
-            j.min_years_experience AS j_min_years, j.description AS j_description,
-            j.must_have_skills AS j_must, j.nice_to_have_skills AS j_nice,
-            j.status AS j_status, j.created_at AS j_created
-       FROM matches m JOIN jobs j ON j.id=m.job_id JOIN candidates c ON c.id=m.candidate_id
-      WHERE m.candidate_id=? AND c.status='parsed' AND j.status='open' AND (j.expiry_date IS NULL OR j.expiry_date >= CAST(CURRENT_DATE AS TEXT))
-      ORDER BY m.score DESC`,
+    `SELECT j.*, c.raw_profile AS current_profile, m.stage, m.stage_updated_at
+       FROM candidates c JOIN jobs j ON j.status='open'
+       LEFT JOIN matches m ON m.candidate_id=c.id AND m.job_id=j.id
+      WHERE c.id=? AND c.status='parsed' AND c.raw_profile IS NOT NULL
+        AND (j.expiry_date IS NULL OR j.expiry_date >= CAST(CURRENT_DATE AS TEXT))`,
   )
     .bind(candidateId)
     .all<Record<string, unknown>>();
-  return (res.results ?? []).map((row) => ({
-    candidate_id: String(row.candidate_id),
-    job_id: String(row.job_id),
-    score: Number(row.score),
-    skills_overlap: Number(row.skills_overlap),
-    experience_fit: Number(row.experience_fit),
-    seniority_fit: Number(row.seniority_fit),
-    location_fit: Number(row.location_fit),
-    matched_skills: parseJsonArray<string>(row.matched_skills),
-    missing_skills: parseJsonArray<string>(row.missing_skills),
-    reasoning: String(row.reasoning ?? ""),
-    computed_at: Number(row.computed_at),
-    ...rowStage(row),
-    job: JobSchema.parse({
-      id: row.job_id,
-      created_at: Number(row.j_created),
-      title: row.j_title,
-      company: row.j_company,
-      location: row.j_location,
-      sector: row.j_sector,
-      seniority: row.j_seniority,
-      min_years_experience:
-        row.j_min_years != null ? Number(row.j_min_years) : null,
-      description: row.j_description,
-      must_have_skills: parseJsonArray<string>(row.j_must),
-      nice_to_have_skills: parseJsonArray<string>(row.j_nice),
-      status: row.j_status,
-    }),
-  }));
+  const rows = res.results ?? [];
+  if (!rows.length) return [];
+  // One statement snapshots the current profile, vacancies and pipeline stages.
+  // Never fall back to cached scores for invalid or unfinished profiles.
+  const profile = ParsedProfileSchema.parse(JSON.parse(String(rows[0].current_profile)));
+  const skills = profile.skills.map(skill => skill.skill);
+  const computedAt = Date.now();
+  return rows.map(row => {
+    const job = rowToJob(row);
+    return {
+      ...scoreMatch(profile, skills, job),
+      candidate_id: candidateId,
+      computed_at: computedAt,
+      ...rowStage(row),
+      job,
+    };
+  }).sort((a,b) => b.score-a.score || b.job.created_at-a.job.created_at || a.job_id.localeCompare(b.job_id));
 }
 
 // ── FAQ Topics ───────────────────────────────────────────────────────────────
