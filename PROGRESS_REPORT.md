@@ -7,7 +7,7 @@
 - [x] Construction/Technology selector, conservative role-title filtering and explicit partial/failure counts.
 - [x] Protected sync endpoint and Supabase Edge dispatcher prepared with a separate operator-only daily scheduling script. Nothing deployed or scheduled.
 - [x] Migration `20260918151920` applied; live rollback upsert check preserved staff closure; security advisor returned no findings.
-- [x] 40 local unit tests, TypeScript and production build passed. Actual PostgreSQL ingestion regression added to CI; this commit's CI is pending.
+- [x] Implementation `332f9dc8bef56542b93066c8e75fbc0a1db13c87` passed [CI 35362865124](https://github.com/devacnt/UKTL/actions/runs/35362865124): 40 unit tests, 25 browser checks, TypeScript/build, fresh PostgreSQL migration replay and actual Reed/CV-worker/discovery integration. Fourteen staging-credential cases remain skipped. A new unauthorized-dispatch browser test exposed error-ordering; corrected and passed both locally and in final CI. Provider responses in automated ingestion tests are synthetic, not live Reed verification.
 - [ ] Full search coverage/cursor continuation, durable sync monitoring, match refresh and live Reed verification remain open. Bounded imports do not establish D4 completion. See REED_SYNC.md.
 - [ ] Stage 2 still requires Claude matching/evaluation, upload cleanup and deployed acceptance.
 
