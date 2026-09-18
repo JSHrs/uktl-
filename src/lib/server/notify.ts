@@ -136,10 +136,10 @@ export function bookingEmail(b: {
   topic_area?: string | null;
 }): Email {
   return {
-    subject: `New consultation booking — ${b.contact_name}`,
+    subject: `Consultation request — ${b.contact_name}`,
     replyTo: b.contact_email,
     text:
-      `New consultation booking received.\n\nName: ${b.contact_name}\n` +
+      `Consultation request received; no appointment is confirmed.\n\nName: ${b.contact_name}\n` +
       `Email: ${b.contact_email}\nTopic: ${b.topic_area ?? "Not specified"}\n`,
   };
 }

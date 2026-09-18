@@ -17,7 +17,7 @@ function AnalyticsPage() {
 
   const conversionRate =
     data.total_queries > 0
-      ? Math.round((data.total_bookings / data.total_queries) * 100)
+      ? Math.round((data.converted_queries / data.total_queries) * 100)
       : null;
 
   return (
@@ -37,7 +37,7 @@ function AnalyticsPage() {
 
       <h2 className="font-display font-light text-xl tracking-[-0.02em] mb-4">HR module</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-        <Tile label="FAQ video views" value={data.total_faq_views} />
+        <Tile label="Recorded FAQ plays" value={data.total_faq_views} />
         <Tile label="Questions submitted" value={data.total_queries} />
         <Tile
           label="Resolution rate"
@@ -47,21 +47,21 @@ function AnalyticsPage() {
         <Tile
           label="Booking conversions"
           value={conversionRate != null ? `${conversionRate}%` : "—"}
-          subtext={`${data.total_bookings} booking${data.total_bookings !== 1 ? "s" : ""} total`}
+          subtext={`${data.converted_queries} questions linked to ${data.total_bookings} currently confirmed appointments`}
         />
       </div>
 
       <div className="border border-rule rounded-md overflow-hidden">
         <div className="px-5 py-3.5 border-b border-rule bg-paper-deep">
           <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-ink-mute">
-            Funnel — HR module
+            HR outcomes — overlapping counts, not sequential funnel steps
           </span>
         </div>
         <div className="p-5">
           <FunnelBar label="Questions submitted" value={data.total_queries} max={data.total_queries} />
-          <FunnelBar label="Resolved by video" value={data.resolved_queries} max={data.total_queries} />
-          <FunnelBar label="Escalated to AI" value={data.resolved_queries} max={data.total_queries} note="estimated" />
-          <FunnelBar label="Booked consultation" value={data.total_bookings} max={data.total_queries} />
+          <FunnelBar label="User-marked resolved" value={data.resolved_queries} max={data.total_queries} />
+          <FunnelBar label="Saved AI responses" value={data.ai_queries} max={data.total_queries} />
+          <FunnelBar label="Linked confirmed booking" value={data.converted_queries} max={data.total_queries} />
         </div>
       </div>
     </>

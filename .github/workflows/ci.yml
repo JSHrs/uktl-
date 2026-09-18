@@ -77,6 +77,8 @@ jobs:
         run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -v ON_ERROR_STOP=1 -f supabase/tests/reed_sync.sql
       - name: Actual resumable Reed worker
         run: node scripts/test-reed-resume-postgres.ts
+      - name: HR journeys and verified booking PostgreSQL integration
+        run: node scripts/test-hr-postgres.ts
       - name: Stop isolated database
         if: always()
         run: supabase stop --no-backup

@@ -32,8 +32,10 @@ import { Route as AppDiscoverRouteImport } from './routes/app/discover'
 import { Route as AppActivityRouteImport } from './routes/app/activity'
 import { Route as ApiReedSyncRouteImport } from './routes/api/reed-sync'
 import { Route as ApiMaintenanceRouteImport } from './routes/api/maintenance'
+import { Route as ApiCalendlyWebhookRouteImport } from './routes/api/calendly-webhook'
 import { Route as AdminProcessingRouteImport } from './routes/admin/processing'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminHrRouteImport } from './routes/admin/hr'
 import { Route as AdminEnquiriesRouteImport } from './routes/admin/enquiries'
 import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
@@ -45,6 +47,7 @@ import { Route as AdminFaqIndexRouteImport } from './routes/admin/faq/index'
 import { Route as AdminCandidatesIndexRouteImport } from './routes/admin/candidates/index'
 import { Route as AppJobsIdRouteImport } from './routes/app/jobs/$id'
 import { Route as AppHrLibraryRouteImport } from './routes/app/hr/library'
+import { Route as AppHrHistoryRouteImport } from './routes/app/hr/history'
 import { Route as AppHrAnswerRouteImport } from './routes/app/hr/answer'
 import { Route as AppCandidatesIdRouteImport } from './routes/app/candidates/$id'
 import { Route as ApiCvIdRouteImport } from './routes/api/cv/$id'
@@ -168,6 +171,11 @@ const ApiMaintenanceRoute = ApiMaintenanceRouteImport.update({
   path: '/api/maintenance',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCalendlyWebhookRoute = ApiCalendlyWebhookRouteImport.update({
+  id: '/api/calendly-webhook',
+  path: '/api/calendly-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminProcessingRoute = AdminProcessingRouteImport.update({
   id: '/processing',
   path: '/processing',
@@ -176,6 +184,11 @@ const AdminProcessingRoute = AdminProcessingRouteImport.update({
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminHrRoute = AdminHrRouteImport.update({
+  id: '/hr',
+  path: '/hr',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminEnquiriesRoute = AdminEnquiriesRouteImport.update({
@@ -233,6 +246,11 @@ const AppHrLibraryRoute = AppHrLibraryRouteImport.update({
   path: '/hr/library',
   getParentRoute: () => AppRoute,
 } as any)
+const AppHrHistoryRoute = AppHrHistoryRouteImport.update({
+  id: '/hr/history',
+  path: '/hr/history',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppHrAnswerRoute = AppHrAnswerRouteImport.update({
   id: '/hr/answer',
   path: '/hr/answer',
@@ -282,8 +300,10 @@ export interface FileRoutesByFullPath {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/enquiries': typeof AdminEnquiriesRoute
+  '/admin/hr': typeof AdminHrRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/processing': typeof AdminProcessingRoute
+  '/api/calendly-webhook': typeof ApiCalendlyWebhookRoute
   '/api/maintenance': typeof ApiMaintenanceRoute
   '/api/reed-sync': typeof ApiReedSyncRoute
   '/app/activity': typeof AppActivityRoute
@@ -305,6 +325,7 @@ export interface FileRoutesByFullPath {
   '/api/cv/$id': typeof ApiCvIdRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/hr/answer': typeof AppHrAnswerRoute
+  '/app/hr/history': typeof AppHrHistoryRoute
   '/app/hr/library': typeof AppHrLibraryRoute
   '/app/jobs/$id': typeof AppJobsIdRoute
   '/admin/candidates/': typeof AdminCandidatesIndexRoute
@@ -325,8 +346,10 @@ export interface FileRoutesByTo {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/enquiries': typeof AdminEnquiriesRoute
+  '/admin/hr': typeof AdminHrRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/processing': typeof AdminProcessingRoute
+  '/api/calendly-webhook': typeof ApiCalendlyWebhookRoute
   '/api/maintenance': typeof ApiMaintenanceRoute
   '/api/reed-sync': typeof ApiReedSyncRoute
   '/app/activity': typeof AppActivityRoute
@@ -348,6 +371,7 @@ export interface FileRoutesByTo {
   '/api/cv/$id': typeof ApiCvIdRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/hr/answer': typeof AppHrAnswerRoute
+  '/app/hr/history': typeof AppHrHistoryRoute
   '/app/hr/library': typeof AppHrLibraryRoute
   '/app/jobs/$id': typeof AppJobsIdRoute
   '/admin/candidates': typeof AdminCandidatesIndexRoute
@@ -371,8 +395,10 @@ export interface FileRoutesById {
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/enquiries': typeof AdminEnquiriesRoute
+  '/admin/hr': typeof AdminHrRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/processing': typeof AdminProcessingRoute
+  '/api/calendly-webhook': typeof ApiCalendlyWebhookRoute
   '/api/maintenance': typeof ApiMaintenanceRoute
   '/api/reed-sync': typeof ApiReedSyncRoute
   '/app/activity': typeof AppActivityRoute
@@ -394,6 +420,7 @@ export interface FileRoutesById {
   '/api/cv/$id': typeof ApiCvIdRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/hr/answer': typeof AppHrAnswerRoute
+  '/app/hr/history': typeof AppHrHistoryRoute
   '/app/hr/library': typeof AppHrLibraryRoute
   '/app/jobs/$id': typeof AppJobsIdRoute
   '/admin/candidates/': typeof AdminCandidatesIndexRoute
@@ -418,8 +445,10 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/bookings'
     | '/admin/enquiries'
+    | '/admin/hr'
     | '/admin/login'
     | '/admin/processing'
+    | '/api/calendly-webhook'
     | '/api/maintenance'
     | '/api/reed-sync'
     | '/app/activity'
@@ -441,6 +470,7 @@ export interface FileRouteTypes {
     | '/api/cv/$id'
     | '/app/candidates/$id'
     | '/app/hr/answer'
+    | '/app/hr/history'
     | '/app/hr/library'
     | '/app/jobs/$id'
     | '/admin/candidates/'
@@ -461,8 +491,10 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/bookings'
     | '/admin/enquiries'
+    | '/admin/hr'
     | '/admin/login'
     | '/admin/processing'
+    | '/api/calendly-webhook'
     | '/api/maintenance'
     | '/api/reed-sync'
     | '/app/activity'
@@ -484,6 +516,7 @@ export interface FileRouteTypes {
     | '/api/cv/$id'
     | '/app/candidates/$id'
     | '/app/hr/answer'
+    | '/app/hr/history'
     | '/app/hr/library'
     | '/app/jobs/$id'
     | '/admin/candidates'
@@ -506,8 +539,10 @@ export interface FileRouteTypes {
     | '/admin/analytics'
     | '/admin/bookings'
     | '/admin/enquiries'
+    | '/admin/hr'
     | '/admin/login'
     | '/admin/processing'
+    | '/api/calendly-webhook'
     | '/api/maintenance'
     | '/api/reed-sync'
     | '/app/activity'
@@ -529,6 +564,7 @@ export interface FileRouteTypes {
     | '/api/cv/$id'
     | '/app/candidates/$id'
     | '/app/hr/answer'
+    | '/app/hr/history'
     | '/app/hr/library'
     | '/app/jobs/$id'
     | '/admin/candidates/'
@@ -549,6 +585,7 @@ export interface RootRouteChildren {
   ReachRoute: typeof ReachRoute
   SectorsRoute: typeof SectorsRoute
   ServicesRoute: typeof ServicesRoute
+  ApiCalendlyWebhookRoute: typeof ApiCalendlyWebhookRoute
   ApiMaintenanceRoute: typeof ApiMaintenanceRoute
   ApiReedSyncRoute: typeof ApiReedSyncRoute
   ApiCvIdRoute: typeof ApiCvIdRoute
@@ -717,6 +754,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMaintenanceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/calendly-webhook': {
+      id: '/api/calendly-webhook'
+      path: '/api/calendly-webhook'
+      fullPath: '/api/calendly-webhook'
+      preLoaderRoute: typeof ApiCalendlyWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/processing': {
       id: '/admin/processing'
       path: '/processing'
@@ -729,6 +773,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/admin/login'
       preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/hr': {
+      id: '/admin/hr'
+      path: '/hr'
+      fullPath: '/admin/hr'
+      preLoaderRoute: typeof AdminHrRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/enquiries': {
@@ -808,6 +859,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHrLibraryRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/hr/history': {
+      id: '/app/hr/history'
+      path: '/hr/history'
+      fullPath: '/app/hr/history'
+      preLoaderRoute: typeof AppHrHistoryRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/hr/answer': {
       id: '/app/hr/answer'
       path: '/hr/answer'
@@ -864,6 +922,7 @@ interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminBookingsRoute: typeof AdminBookingsRoute
   AdminEnquiriesRoute: typeof AdminEnquiriesRoute
+  AdminHrRoute: typeof AdminHrRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminProcessingRoute: typeof AdminProcessingRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -880,6 +939,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminBookingsRoute: AdminBookingsRoute,
   AdminEnquiriesRoute: AdminEnquiriesRoute,
+  AdminHrRoute: AdminHrRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminProcessingRoute: AdminProcessingRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -902,6 +962,7 @@ interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
   AppCandidatesIdRoute: typeof AppCandidatesIdRoute
   AppHrAnswerRoute: typeof AppHrAnswerRoute
+  AppHrHistoryRoute: typeof AppHrHistoryRoute
   AppHrLibraryRoute: typeof AppHrLibraryRoute
   AppJobsIdRoute: typeof AppJobsIdRoute
   AppCandidatesIndexRoute: typeof AppCandidatesIndexRoute
@@ -917,6 +978,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
   AppCandidatesIdRoute: AppCandidatesIdRoute,
   AppHrAnswerRoute: AppHrAnswerRoute,
+  AppHrHistoryRoute: AppHrHistoryRoute,
   AppHrLibraryRoute: AppHrLibraryRoute,
   AppJobsIdRoute: AppJobsIdRoute,
   AppCandidatesIndexRoute: AppCandidatesIndexRoute,
@@ -956,6 +1018,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReachRoute: ReachRoute,
   SectorsRoute: SectorsRoute,
   ServicesRoute: ServicesRoute,
+  ApiCalendlyWebhookRoute: ApiCalendlyWebhookRoute,
   ApiMaintenanceRoute: ApiMaintenanceRoute,
   ApiReedSyncRoute: ApiReedSyncRoute,
   ApiCvIdRoute: ApiCvIdRoute,

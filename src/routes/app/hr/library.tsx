@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/app/AppLayout";
-import { listFaqTopicsFn } from "@/lib/functions";
+import { publicVideoTopicsFn } from "@/lib/hr-functions";
+import { DataError } from '@/components/app/DataError';
 import type { FaqTopic } from "@/lib/server/db";
 
 export const Route = createFileRoute("/app/hr/library")({
-  loader: async () => listFaqTopicsFn({ data: {} }),
+  loader: async () => publicVideoTopicsFn(),
+  errorComponent: DataError,
   component: LibraryPage,
 });
 
@@ -138,7 +140,7 @@ function VideoCard({ topic }: { topic: FaqTopic }) {
   return (
     <Link
       to="/app/hr/answer"
-      search={{ q: topic.title, category: topic.category }}
+      search={{ topic: topic.id }}
       className="group border border-rule rounded-md overflow-hidden hover:border-ink transition-colors bg-paper flex flex-col"
     >
       {/* Thumbnail / placeholder */}
@@ -180,7 +182,7 @@ function VideoCard({ topic }: { topic: FaqTopic }) {
           </span>
         </div>
         <div className="font-mono text-[10px] text-ink-mute">
-          {topic.view_count.toLocaleString()} views
+          {topic.view_count.toLocaleString()} recorded signed-in plays
         </div>
       </div>
     </Link>

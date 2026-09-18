@@ -47,7 +47,7 @@ export async function assessMatchEvidence(env:AppEnv,candidateId:string,jobId:st
   input:{requirements,evidence}});
  const result:EvidenceReview={version:MATCH_REVIEW_VERSION,model,assessedAt:Date.now(),requirements:validateMatchReview(raw,requirements,evidence),notice:'AI evidence interpretation, not a hiring decision or probability. Quotations are checked for presence, not semantic correctness. Human review required. Rules-based ranking is unchanged.'};
  await env.DB.batch([guard(env,row),env.DB.prepare(`INSERT INTO match_evidence(candidate_id,job_id,fingerprint,assessment,created_at) VALUES (?,?,?,?::jsonb,?)
- ON CONFLICT(candidate_id,job_id) DO UPDATE SET fingerprint=excluded.fingerprint,assessment=excluded.assessment,created_at=excluded.created_at`).bind(candidateId,jobId,fingerprint,JSON.stringify(result),result.assessedAt)]);
+ ON CONFLICT(candidate_id,job_id) DO UPDATE SET fingerprint=excluded.fingerprint,assessment=excluded.assessment,created_at=excluded.created_at`).bind(candidateId,jobId,fingerprint,result,result.assessedAt)]);
  return result;
 }
 export type MatchCursor={candidateId:string;jobId:string};

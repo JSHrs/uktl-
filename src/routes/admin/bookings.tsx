@@ -8,14 +8,19 @@ import {
 } from "@/routes/admin";
 import { adminListBookingsFn } from "@/lib/functions";
 import type { BookingRow } from "@/lib/server/db";
+import {useState} from 'react';
+import {useRouter} from '@tanstack/react-router';
+import {bookingDeliveryEventsFn,retryBookingEventFn} from '@/lib/booking-functions';
 
 export const Route = createFileRoute("/admin/bookings")({
-  loader: () => adminListBookingsFn(),
+  loader: async () => ({bookings:await adminListBookingsFn(),events:await bookingDeliveryEventsFn()}),
   component: BookingsPage,
 });
 
 function BookingsPage() {
-  const bookings = Route.useLoaderData();
+  const {bookings,events} = Route.useLoaderData(),router=useRouter();
+  const [busy,setBusy]=useState(false),[error,setError]=useState('');
+  async function retry(id:string){setBusy(true);setError('');try{await retryBookingEventFn({data:{id}});await router.invalidate();}catch{setError('Delivery state could not be updated. Check provider logs before retrying.');}finally{setBusy(false);}}
 
   return (
     <>
@@ -30,7 +35,7 @@ function BookingsPage() {
         </div>
       ) : (
         <AdminTable
-          head={["Name", "Email", "Phone", "Topic", "Status", "Date"]}
+          head={["Name", "Email", "Phone", "Topic", "Status", "Appointment / request date"]}
         >
           {bookings.map((b: BookingRow) => (
             <AdminTr key={b.id}>
@@ -44,15 +49,16 @@ function BookingsPage() {
               <AdminTd className="text-ink-soft">{b.topic_area ?? "—"}</AdminTd>
               <AdminTd>
                 <StatusBadge status={b.status} />
-                  <NotificationStatus kind="bookings" id={b.id} status={b.notification_status} createdAt={b.created_at} />
+                  {b.provider_invitee_uri?<p className="text-xs">Provider verified · {b.intent_id?'account linked':'unlinked — reconcile manually'}{b.old_invitee_uri?' · rescheduled from an earlier appointment':''}</p>:<NotificationStatus kind="bookings" id={b.id} status={b.notification_status} createdAt={b.created_at} />}
               </AdminTd>
               <AdminTd className="text-ink-mute tabular-nums text-xs">
-                {formatDate(b.created_at)}
+                {b.starts_at?new Date(Number(b.starts_at)).toLocaleString():`Request: ${formatDate(Number(b.created_at))}`}
               </AdminTd>
             </AdminTr>
           ))}
         </AdminTable>
       )}
+      <section className="mt-8 space-y-4"><h2 className="text-xl">Verified-event email delivery</h2><p className="text-sm">One durable notification per provider state. Failed/skipped events can be retried within 23 hours. Interrupted sends and older events require Resend log reconciliation to avoid duplicates. Appointment status is independent of email delivery.</p>{error&&<p role="alert">{error}</p>}{events.map(e=><div key={e.id} className="border border-rule p-3 text-sm"><p>{e.booking_id} · {e.delivery_status} · {e.attempts} attempts</p>{e.last_error&&<p>{e.last_error}</p>}{['pending','failed','skipped'].includes(e.delivery_status)&&Number(e.created_at)>Date.now()-23*3600000&&<button disabled={busy} className="underline" onClick={()=>retry(e.id)}>Retry notification</button>}</div>)}</section>
     </>
   );
 }
@@ -78,4 +84,3 @@ function formatDate(ts: number): string {
     year: "numeric",
   });
 }
-

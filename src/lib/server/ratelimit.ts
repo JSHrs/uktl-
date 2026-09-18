@@ -14,6 +14,10 @@ export type RateLimitResult =
 export type RateLimitRule = { limit: number; windowMs: number };
 
 export const RATE_LIMITS = {
+  hrQuestion: { limit: 30, windowMs: 60 * 60 * 1000 },
+  hrSource: { limit: 20, windowMs: 60 * 60 * 1000 },
+  videoPlay: { limit: 100, windowMs: 60 * 60 * 1000 },
+  bookingIntent: { limit: 10, windowMs: 60 * 60 * 1000 },
   matchReview: { limit: 20, windowMs: 60 * 60 * 1000 },
   matchRefresh: { limit: 60, windowMs: 60 * 60 * 1000 },
   uploadReconciliation: { limit: 12, windowMs: 60 * 60 * 1000 },

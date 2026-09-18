@@ -29,6 +29,9 @@ export type AppEnv = {
   RESEND_API_KEY?: string;
   // Calendly embed URL (set by client)
   CALENDLY_URL?: string;
+  CALENDLY_API_TOKEN?: string;
+  CALENDLY_WEBHOOK_SECRET?: string;
+  CALENDLY_EVENT_TYPE_URI?: string;
   // Public origin of this deployment; used to build Supabase email redirect URLs
   SITE_URL?: string;
 };

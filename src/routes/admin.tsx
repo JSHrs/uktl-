@@ -24,6 +24,7 @@ export const Route = createFileRoute("/admin")({
 const NAV = [
   { to: "/admin", label: "Overview", exact: true },
   { to: "/admin/faq", label: "FAQ Topics" },
+  { to: "/admin/hr", label: "HR content review" },
   { to: "/admin/jobs", label: "Mandates" },
   { to: "/admin/candidates", label: "Candidates" },
   { to: "/admin/bookings", label: "Bookings" },
@@ -208,4 +209,3 @@ export const textareaCls =
 
 export const selectCls =
   "w-full border border-rule rounded px-3 py-2 text-sm bg-paper text-ink focus:outline-none focus:border-ink transition-colors";
-

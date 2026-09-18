@@ -456,6 +456,8 @@ export async function getMatchesForCandidate(
 // ── FAQ Topics ───────────────────────────────────────────────────────────────
 
 export type FaqTopic = {
+  transcript?: string|null;
+  reviewed_at?: number|null;
   id: string;
   title: string;
   category: string;
@@ -488,6 +490,8 @@ export async function incrementFaqView(env: AppEnv, id: string): Promise<void> {
 
 function rowToFaqTopic(row: Record<string, unknown>): FaqTopic {
   return {
+    transcript: (row.transcript as string|null)??null,
+    reviewed_at: row.reviewed_at==null?null:Number(row.reviewed_at),
     id: String(row.id),
     title: String(row.title),
     category: String(row.category),
@@ -655,6 +659,10 @@ export async function deleteJob(env: AppEnv, id: string): Promise<void> {
 // ── Bookings ─────────────────────────────────────────────────────────────────
 
 export type BookingRow = {
+  provider_invitee_uri?: string | null;
+  starts_at?: number | null;
+  old_invitee_uri?: string | null;
+  intent_id?: string | null;
   notification_status: string;
   id: string;
   created_at: number;
@@ -789,13 +797,15 @@ export async function getAdminAnalytics(env: AppEnv): Promise<{
   total_queries: number;
   resolved_queries: number;
   total_bookings: number;
+  ai_queries: number;
+  converted_queries: number;
 }> {
   const [candidates, jobs, faqViews, queries, bookings] = await env.DB.batch([
     env.DB.prepare(`SELECT COUNT(*) as n, SUM(CASE WHEN status='parsed' THEN 1 ELSE 0 END) as parsed, AVG(CASE WHEN quality_score IS NOT NULL THEN quality_score END) as avg_score FROM candidates`),
     env.DB.prepare(`SELECT COUNT(*) as n, SUM(CASE WHEN status='open' THEN 1 ELSE 0 END) as open FROM jobs`),
     env.DB.prepare(`SELECT COALESCE(SUM(view_count),0) as total FROM faq_topics`),
-    env.DB.prepare(`SELECT COUNT(*) as n, SUM(resolved) as resolved FROM hr_queries`),
-    env.DB.prepare(`SELECT COUNT(*) as n FROM bookings`),
+    env.DB.prepare(`SELECT COUNT(*) as n, SUM(resolved) as resolved, SUM(CASE WHEN ai_response IS NOT NULL THEN 1 ELSE 0 END) as ai FROM hr_queries`),
+    env.DB.prepare(env.DATA_BACKEND==='supabase'?`SELECT COUNT(*) as n, COUNT(DISTINCT i.query_id) AS converted FROM bookings b LEFT JOIN booking_intents i ON i.id=b.intent_id WHERE b.provider_invitee_uri IS NOT NULL AND b.status='confirmed'`:`SELECT COUNT(*) as n, 0 AS converted FROM bookings WHERE status='confirmed'`),
   ]);
   const c = (candidates.results?.[0] ?? {}) as Record<string, number | null>;
   const j = (jobs.results?.[0] ?? {}) as Record<string, number>;
@@ -812,6 +822,8 @@ export async function getAdminAnalytics(env: AppEnv): Promise<{
     total_queries: Number(q.n ?? 0),
     resolved_queries: Number(q.resolved ?? 0),
     total_bookings: Number(b.n ?? 0),
+    ai_queries: Number(q.ai ?? 0),
+    converted_queries: Number(b.converted ?? 0),
   };
 }
 

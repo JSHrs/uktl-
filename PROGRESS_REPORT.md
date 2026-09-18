@@ -1,5 +1,15 @@
 # Current stage checkpoint — 18 September 2026
 
+## Stage 3 implementation checkpoint (verification in progress)
+
+- Private owner-scoped HR questions/history, revision-safe resolution/context/answers, opaque-ID URLs, token-based FAQ alternatives and exact published/reviewed topic links.
+- Private video bucket migration, signed playback, captions/transcript review controls and per-user/topic/day play deduplication. No video content produced or approved automatically.
+- Allowlisted, bounded ACAS retrieval; administrator approval tied to source hash; withdrawal on reimport, 30-day retrieval/review window, literal-quote checks, uncertainty and enforced disclaimer. Source selection is AI-assisted; human legal/content evaluation remains mandatory.
+- Calendly embed opt-in, private booking intents, raw-body HMAC verification with timestamp tolerance, API-verified event type/invitee/times, idempotent state transitions, cancellation/reschedule linkage, durable notification outbox and honest delivery states. Browser messages never confirm appointments.
+- Actual resolution/AI/linked-booking analytics replace estimated funnel values. Test fixtures are synthetic and make no external provider calls.
+- Local 58 unit tests, TypeScript and build passed before the final review edits. Full PostgreSQL/CI verification is pending; both new migrations are prepared and not yet applied. Stage 2 CI `35394347949` identified double-encoded JSONB cached assessments; binding the structured object fixes the defect and must pass rerun.
+- Stages 2 and 3 remain OPEN for live/provider and human acceptance. See STAGE_2_UAT.md and STAGE_3_UAT.md. No deployment, scheduler activation, live provider messages, old-database updates or service purchase occurred.
+
 ## Stage 2 evidence review and bounded refresh
 
 - Administrator match refresh covers all current candidate/open-vacancy pairs in batches of 25 with a continuation cursor. Writes check and lock the original profile/vacancy snapshot; retries are idempotent and preserve consultant stages. A changed dataset can require a subsequent pass; this is not a scheduled full-index service.
