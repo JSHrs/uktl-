@@ -32,6 +32,18 @@ Use synthetic or approved anonymised examples until privacy checks pass: two Con
 
 Do not ask the owner to run these against an undeployed application. No Stage 2 completion claim until daily Reed sync, Claude matching/evaluation, cleanup strategy and all required deployed/UAT evidence pass.
 
+## Upload reconciliation inspection acceptance
+
+Read-only metadata inspection is implemented on `/admin/processing`; automatic deletion and repair remain unimplemented. Use disposable staging objects, never real candidate CVs, for these checks.
+
+- [ ] A verified MFA administrator can inspect; a consultant, candidate and signed-out caller cannot invoke the inspection server function.
+- [ ] A synthetic object older than 24 hours with no current candidate or CV-version reference appears as an unreferenced object ID, without exposing its filename/path or bytes.
+- [ ] A current candidate reference or historical CV-version reference prevents an orphan finding. A recently created or recently updated object is excluded.
+- [ ] An old candidate missing object metadata appears only when no pending/running processing task exists. Recent candidate writes are excluded.
+- [ ] More than 100 findings display an explicit additional-results warning. Empty results are not represented as proof of file integrity; file-content and complete-inventory verification remain separate.
+- [ ] Database/storage permission failures display unavailable rather than a clean report; repeated inspection is rate-limited. Inspecting changes no CV object, candidate, version or processing task (only the request-rate counter changes).
+- [ ] Before implementing cleanup, define retention/approval rules, reference/lease rechecks, recoverability and audit logging. Storage mutations must use the Storage API, not metadata-table DELETE statements.
+
 ## Reed checkpoint acceptance
 
 Use REED_SYNC.md for configuration and activation. Verify both sectors against real provider data, salary units, date parsing, repeated-import updates, preserved staff closure and expired-interest rejection. Exercise malformed detail responses, partial searches and dispatch failures. Confirm cron execution AND the final HTTP/import result. Apply the resumable migration to isolated staging first. Interrupt and reclaim a worker; prove stale workers cannot write and a retry resumes its saved cursor. Verify pause after three failures, explicit admin retry, all configured queries finishing, and same-day idling. Review search coverage and batch capacity against real Reed data; match-cache refresh remains open implementation work.
