@@ -5,7 +5,7 @@
 - [x] Durable query/cursor progress, broader controlled search sets, lease-fenced writes, expiry/recovery and three-attempt retry cap implemented.
 - [x] Admin progress/failure visibility and explicit retry; HTTP 202 distinguishes ongoing work from completed cycles.
 - [x] Prepared continuation schedule processes batches every ten minutes and idles after a cycle completes for the UTC day. Nothing deployed or activated.
-- [x] Local 42 unit tests, TypeScript and production build passed. Isolated PostgreSQL lease/authorization and actual resume/retry integration added to CI; this revision's CI is pending.
+- [x] Implementation `cf52067e002d37301351692448ee09ca18039823` passed [CI 35365478142](https://github.com/devacnt/UKTL/actions/runs/35365478142): 42 unit tests, 25 browser checks, TypeScript/build, fresh migration replay, lease/authorization SQL and actual resumable-worker PostgreSQL integration. Fourteen credential-dependent browser cases remain skipped. Provider responses were synthetic; this is not deployed acceptance.
 - [ ] Migration `20260918154759_resumable_reed_sync` is NOT applied to production. Automatic approval review rejected that production schema mutation under the staging-only constraint. It must be applied to isolated staging before deploying this revision.
 - [ ] Real provider coverage/quotas, alert delivery, match refresh, Claude matching/evaluation and upload cleanup remain. D4 and Stage 2 are not accepted.
 
