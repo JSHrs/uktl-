@@ -47,7 +47,7 @@ User test: two representative Construction CVs and two Technology CVs, correctio
 
 ## Gate 3 — HR, videos and consultations (D7–D11)
 
-Implementation checkpoint: `369ad88b` / [CI 35396364849](https://github.com/devacnt/UKTL/actions/runs/35396364849) PASSED. Private journeys/history, reviewed-source excerpts, video review/playback, verified Calendly state/outbox and real analytics are implemented. Migration `20260918212609` is applied to UKTL; new tables deny anonymous/candidate direct access, private video bucket confirmed, security advisor clean. This is database/configuration evidence, not deployed behavior. Latest hardening/security regression additions require their own final CI result in PROGRESS_REPORT.md. Live/user acceptance remains OPEN; see STAGE_3_UAT.md.
+Implementation checkpoint: `1603ab58` / [CI 35397232760](https://github.com/devacnt/UKTL/actions/runs/35397232760) PASSED, including final privacy/rescheduling/security regressions. Private journeys/history, reviewed-source excerpts, video review/playback, verified Calendly state/outbox and real analytics are implemented. Migration `20260918212609` is applied to UKTL; new tables deny anonymous/candidate direct access, private video bucket confirmed, database security advisor clean. This is database/configuration evidence, not deployed behavior. Application dependency audit still has non-critical advisories requiring release review. Live/user acceptance remains OPEN; see STAGE_3_UAT.md.
 
 - Questions, FAQ selection, resolution and AI answers persist per user. Sensitive question text is not embedded in URLs.
 - Structured FAQ lookup, selectable low-confidence alternatives, exact video links and published-only public library.

@@ -1,6 +1,6 @@
 # Stage 3 — HR, video and consultation acceptance
 
-Status: implementation under automated verification; **live acceptance OPEN**. Do not use real employee cases or candidate records until staging isolation, Auth redirects, email recovery and staff MFA checks pass. No provider subscription, secret setup, content approval or deployment is implied by a successful build.
+Status: implementation passed [CI 35397232760](https://github.com/devacnt/UKTL/actions/runs/35397232760) at `1603ab58`; **live acceptance OPEN**. Current UKTL schema migration `20260918212609` is applied, but no staging deployment or real provider journey was verified. Do not use real employee cases or candidate records until staging isolation, Auth redirects, email recovery and staff MFA checks pass. No provider subscription, secret setup, content approval or deployment is implied by a successful build.
 
 ## Operator setup (not performed automatically)
 
