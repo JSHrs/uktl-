@@ -1,5 +1,7 @@
 # UKTL development and release gates
 
+20 September acceptance decision: Gates 2 and 3 remain BLOCKED for the missing live/provider/content/policy evidence listed in ACCEPTANCE_REVIEW.md. The owner requested Stage 4 only after their acceptance; it has not been advanced. A staging configuration defect was corrected without deploying. Implementation remains approximately 75%; do not convert that estimate into an acceptance claim.
+
 ## Hosting decision — 18 September 2026
 
 The owner will connect Cloudflare through Lovable later. Continue GitHub development without waiting for hosting, runtime secrets or Stage 1 live UAT. Implementation phases may advance after their automated checks pass; deployed acceptance remains OPEN until tested. Revisit the connection when the application is ready for integrated staging tests, and again before production release. No Lovable credits are authorized or needed for the current coding work.

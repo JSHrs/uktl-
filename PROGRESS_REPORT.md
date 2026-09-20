@@ -1,4 +1,10 @@
-# Current stage checkpoint — 18 September 2026
+# Current stage checkpoint — 20 September 2026
+
+## Stage 2/3 acceptance recheck
+
+- Acceptance remains BLOCKED; Stage 4 has not been advanced because the owner requested it only after both stages are accepted. See ACCEPTANCE_REVIEW.md for fresh evidence, owners of missing inputs and the path to production. Overall implementation estimate remains approximately 75%.
+- Current UKTL is healthy with 10 migrations and no database security-advisor findings. Aggregate counts show 0 approved HR sources, 0 reviewed published videos/video objects and 0 provider-verified bookings. Only current UKTL is exposed by the authorized Supabase connection. No manually dispatched GitHub workflow run was returned; recent CV-worker schedules are skipped. No live hosting/provider success is claimed.
+- Fixed missing Calendly verifier configuration in the staging workflow/deployment builder. Provider prerequisites now fail closed before acceptance deployment, with token/signing secret kept server-only. 60 local unit tests passed; final CI pending. No deployment, provider calls/messages, database mutation, old-database change or service purchase performed.
 
 ## Verified combined checkpoint and current database
 

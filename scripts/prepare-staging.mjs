@@ -24,20 +24,34 @@ export function validateStaging(env) {
   }
   return { ref, origin: origin.origin };
 }
-export function prepareStaging(env) {
+export function validateAcceptanceProviders(env) {
+  const required = ["ANTHROPIC_API_KEY", "RESEND_API_KEY", "REED_API_KEY", "CRON_SECRET", "CALENDLY_URL", "CALENDLY_API_TOKEN", "CALENDLY_WEBHOOK_SECRET", "CALENDLY_EVENT_TYPE_URI"];
+  const missing = required.filter(key => !env[key] || /REPLACE_WITH/.test(env[key]));
+  if (missing.length) throw new Error(`Missing acceptance provider configuration: ${missing.join(", ")}`);
+  if (env.CRON_SECRET.length < 32) throw new Error("CRON_SECRET must contain at least 32 characters");
+  const calendly = new URL(env.CALENDLY_URL);
+  if (calendly.protocol !== "https:" || calendly.hostname !== "calendly.com" || calendly.port || calendly.username || calendly.password || calendly.search || calendly.hash || !/^\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+\/?$/.test(calendly.pathname)) throw new Error("CALENDLY_URL must be an exact HTTPS scheduling URL");
+  if (!/^https:\/\/api\.calendly\.com\/event_types\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(env.CALENDLY_EVENT_TYPE_URI)) throw new Error("CALENDLY_EVENT_TYPE_URI must identify the intended Calendly event type");
+}
+export function buildStagingDeployment(env) {
   const checked = validateStaging(env);
-  mkdirSync(".deploy", { recursive: true, mode: 0o700 });
+  validateAcceptanceProviders(env);
   const config = {
     name: "uktl-staging", account_id: env.CLOUDFLARE_ACCOUNT_ID,
     main: resolve("dist/server/index.mjs"), no_bundle: true,
     compatibility_date: "2025-09-24", compatibility_flags: ["nodejs_compat"],
     rules: [{type:"ESModule",globs:["**/*.mjs","**/*.js"]}],
     assets: {directory:resolve("dist/client"),binding:"ASSETS"}, workers_dev:true,
-    vars: {DATA_BACKEND:"supabase",SUPABASE_URL:env.SUPABASE_URL,SUPABASE_ANON_KEY:env.SUPABASE_ANON_KEY,SITE_URL:checked.origin,CALENDLY_URL:env.CALENDLY_URL || ""},
+    vars: {DATA_BACKEND:"supabase",SUPABASE_URL:env.SUPABASE_URL,SUPABASE_ANON_KEY:env.SUPABASE_ANON_KEY,SITE_URL:checked.origin,CALENDLY_URL:env.CALENDLY_URL,CALENDLY_EVENT_TYPE_URI:env.CALENDLY_EVENT_TYPE_URI},
     observability: {enabled:true},
   };
   const secrets = {};
-  for (const key of ["DATABASE_URL","SUPABASE_SERVICE_ROLE_KEY","ANTHROPIC_API_KEY","RESEND_API_KEY","REED_API_KEY","CRON_SECRET"]) if (env[key]) secrets[key] = env[key];
+  for (const key of ["DATABASE_URL","SUPABASE_SERVICE_ROLE_KEY","ANTHROPIC_API_KEY","RESEND_API_KEY","REED_API_KEY","CRON_SECRET","CALENDLY_API_TOKEN","CALENDLY_WEBHOOK_SECRET"]) secrets[key] = env[key];
+  return {config,secrets};
+}
+export function prepareStaging(env) {
+  const {config,secrets}=buildStagingDeployment(env);
+  mkdirSync(".deploy", { recursive: true, mode: 0o700 });
   writeFileSync(".deploy/staging.json",JSON.stringify(config,null,2),{mode:0o600});
   writeFileSync(".deploy/secrets.json",JSON.stringify(secrets),{mode:0o600});
   console.log("Staging configuration validated; private deployment files prepared.");
