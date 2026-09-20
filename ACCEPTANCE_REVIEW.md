@@ -24,7 +24,7 @@
 
 The staging workflow previously supplied only `CALENDLY_URL`; it omitted the API token, webhook signing secret and event-type URI required by the implemented verifier. The deployment builder now passes those settings, keeps the token/signing secret server-only and excludes browser-test credentials. Acceptance preflight requires all integration settings and validates Calendly URLs plus the maintenance-secret length. Missing configuration fails before deployment. Configuration presence does not prove valid credentials or successful provider behavior.
 
-Local validation: 60 unit tests passed, including missing-provider rejection, secret separation and exclusion of test credentials. Final CI evidence is recorded in PROGRESS_REPORT.md. No workflow was dispatched and no application was deployed.
+Validation: commit `e0c20c15e2a51e17d22175655be77c11d7207f40` passed [CI 35497942842](https://github.com/devacnt/UKTL/actions/runs/35497942842): 60 unit tests, 28 browser checks, TypeScript/build and PostgreSQL integration suites. Fourteen credential-dependent cases remain skipped. New regressions verify missing-provider rejection, secret separation and exclusion of test credentials. No staging workflow was dispatched and no application was deployed.
 
 ## Remaining path to production after Stage 2/3 acceptance
 
@@ -34,4 +34,4 @@ Local validation: 60 unit tests passed, including missing-provider rejection, se
 4. **Deferred synchronization:** identify and authorize the previous Lovable Supabase at development end, compare its existing schema and reconcile it safely. Do not overwrite it or assume it matches current UKTL.
 5. **Production deployment:** deploy the accepted revision, run production smoke checks with authorized test data, verify monitoring and retain rollback evidence. No production-ready declaration before these pass.
 
-Last recorded dependency audit (18 September, not rerun here): 0 critical, 11 high, 6 moderate, 2 low findings; these still require review/remediation. A clean Supabase database advisor does not clear application dependencies.
+Fresh dependency audit on 20 September (`npm audit --omit=dev`): 0 critical, 11 high, 6 moderate, 2 low findings; these still require review/remediation. A clean Supabase database advisor does not clear application dependencies.
