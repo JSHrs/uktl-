@@ -36,7 +36,7 @@ DECLARE row_data jsonb; actor uuid; BEGIN
  actor:=nullif(current_setting('uktl.actor_id',true),'')::uuid;
  INSERT INTO recruitment.audit_events(actor_user_id,actor_kind,action,entity_type,entity_id)
  VALUES(actor,CASE WHEN actor IS NULL THEN 'system' ELSE 'user' END,lower(TG_OP),TG_TABLE_NAME,
- COALESCE(row_data->>'id',row_data->>'user_id',(row_data->>'candidate_id')||':'||(row_data->>'job_id'),'unknown'));
+ COALESCE(row_data->>'id',row_data->>'request_id',row_data->>'user_id',(row_data->>'candidate_id')||':'||(row_data->>'job_id'),'unknown'));
  RETURN CASE WHEN TG_OP='DELETE' THEN OLD ELSE NEW END;
 END $$;
 REVOKE ALL ON FUNCTION recruitment.audit_mutation() FROM PUBLIC,anon,authenticated;

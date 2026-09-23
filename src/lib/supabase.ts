@@ -43,7 +43,12 @@ export async function getCandidateSession(): Promise<{
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
     const { resolveCandidateSession } = await import("./server/candidate-session");
-    return await resolveCandidateSession(client.auth, accessToken, refreshToken, setSessionCookies);
+    const session = await resolveCandidateSession(client.auth, accessToken, refreshToken, setSessionCookies);
+    if (session.userId && env.DATA_BACKEND === "supabase") {
+      const blocked = await env.DB.prepare("SELECT 1 FROM account_erasures WHERE target_user_id=?::uuid").bind(session.userId).first();
+      if (blocked) return { userId: null, email: null };
+    }
+    return session;
   } catch {
     return { userId: null, email: null };
   }

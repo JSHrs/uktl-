@@ -67,7 +67,7 @@ export async function operationsSnapshot(env: AppEnv) {
       "SELECT model,purpose,status,COUNT(*)::int AS calls,SUM(input_tokens)::text AS input_tokens,SUM(output_tokens)::text AS output_tokens,SUM(cache_read_tokens)::text AS cache_read_tokens,SUM(cache_write_tokens)::text AS cache_write_tokens FROM ai_usage WHERE created_at>? GROUP BY model,purpose,status ORDER BY model,purpose,status",
     ).bind(now - 86400000),
     env.DB.prepare(
-      "SELECT id,user_id,kind,status,created_at,updated_at FROM privacy_requests WHERE status IN ('pending','reviewing') ORDER BY created_at LIMIT 100",
+      "SELECT p.id,COALESCE(p.user_id,e.target_user_id) AS user_id,p.kind,p.status,p.created_at,p.updated_at FROM privacy_requests p LEFT JOIN account_erasures e ON e.request_id=p.id WHERE p.status IN ('pending','reviewing') ORDER BY p.created_at LIMIT 100",
     ),
     env.DB.prepare(
       "SELECT COUNT(*)::int AS failed FROM booking_events WHERE delivery_status IN ('failed','skipped')",

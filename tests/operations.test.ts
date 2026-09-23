@@ -184,3 +184,13 @@ test("self-service export binds verified owner on every query and refuses silent
   env.DB.batch = async () => [{ success: true, results: Array.from({ length: 1001 }, () => ({})) }];
   await assert.rejects(exportOwnData(env, "verified-owner"));
 });
+
+test('account erasure requires explicit review and leaves provider failures pending',async()=>{
+ const {completeAccountErasure}=await import('../src/lib/server/account-erasure.ts');
+ let calls=0,finished=false;
+ const env={DATA_BACKEND:'supabase',DB:{prepare(){return {bind(){return this;},async run(){return {success:true};},async first(){return {target_user_id:'subject',file_deletion_ids:[],status:'pending'};}};},async batch(){finished=true;return [];}}} as any;
+ const auth={async deleteUser(){calls++;return {error:{status:503}};}};
+ await assert.rejects(completeAccountErasure(env,'request','admin',false,auth));assert.equal(calls,0);
+ assert.equal((await completeAccountErasure(env,'request','admin',true,auth)).status,'pending');assert.equal(finished,false);
+ assert.equal((await completeAccountErasure(env,'request','admin',true,{async deleteUser(){return {error:{status:404}};}})).status,'completed');assert.equal(finished,true);
+});

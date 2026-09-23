@@ -72,3 +72,26 @@ export const reviewPrivacyRequestFn = createServerFn({ method: "POST" })
     if (!row) throw new Error("Request changed; reload before reviewing");
     return { ok: true };
   });
+
+export const completeAccountErasureFn = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        confirmation: z.literal("ERASE"),
+        reviewComplete: z.literal(true),
+      })
+      .strict()
+      .parse(raw),
+  )
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const viewer = await requireViewer();
+    const env = await getRequestEnv();
+    const { getSupabaseAdmin } = await import("./supabase");
+    const client = await getSupabaseAdmin();
+    const { completeAccountErasure } = await import("./server/account-erasure");
+    return completeAccountErasure(env, data.id, viewer.userId!, data.reviewComplete, {
+      deleteUser: (id) => client.auth.admin.deleteUser(id),
+    });
+  });

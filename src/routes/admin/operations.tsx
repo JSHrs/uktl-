@@ -1,6 +1,7 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import {
+  completeAccountErasureFn,
   getOperationsFn,
   retryFileDeletionFn,
   reviewPrivacyRequestFn,
@@ -37,6 +38,31 @@ function Operations() {
       await router.invalidate();
     } catch {
       setMessage("Review update failed. Reload and try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function erase(id: string) {
+    if (
+      !confirm(
+        "Confirm identity and request scope, retention/holds, provider records, unlinked enquiries, and any in-flight deliveries have been reviewed and handled. This permanently removes the requested candidate account and owned data. Staff accounts are excluded.",
+      )
+    )
+      return;
+    if (prompt("Type ERASE to perform this reviewed deletion.") !== "ERASE") return;
+    setBusy(true);
+    try {
+      const r = await completeAccountErasureFn({
+        data: { id, confirmation: "ERASE", reviewComplete: true },
+      });
+      setMessage(
+        r.status === "completed"
+          ? "Reviewed account removal completed."
+          : "Account access is blocked; removal remains pending. Retry to resume safely.",
+      );
+      await router.invalidate();
+    } catch {
+      setMessage("Account removal could not start. Check the request and permissions.");
     } finally {
       setBusy(false);
     }
@@ -111,6 +137,11 @@ function Operations() {
             <button className="underline mt-2" disabled={busy} onClick={() => review(r.id)}>
               Record review update
             </button>
+            {r.kind === "erasure" && (
+              <button disabled={busy} className="underline mt-2 ml-4" onClick={() => erase(r.id)}>
+                Erase reviewed account / resume
+              </button>
+            )}
           </div>
         ))}
         {!data.privacy.length && <p>No open requests.</p>}
