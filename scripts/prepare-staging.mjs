@@ -25,10 +25,14 @@ export function validateStaging(env) {
   return { ref, origin: origin.origin };
 }
 export function validateAcceptanceProviders(env) {
-  const required = ["ANTHROPIC_API_KEY", "RESEND_API_KEY", "REED_API_KEY", "CRON_SECRET", "CALENDLY_URL", "CALENDLY_API_TOKEN", "CALENDLY_WEBHOOK_SECRET", "CALENDLY_EVENT_TYPE_URI"];
+  const required = ["ANTHROPIC_API_KEY", "RESEND_API_KEY", "REED_API_KEY", "CRON_SECRET", "CALENDLY_URL", "CALENDLY_API_TOKEN", "CALENDLY_WEBHOOK_SECRET", "CALENDLY_EVENT_TYPE_URI", "CV_SCAN_URL", "CV_SCAN_TOKEN"];
   const missing = required.filter(key => !env[key] || /REPLACE_WITH/.test(env[key]));
   if (missing.length) throw new Error(`Missing acceptance provider configuration: ${missing.join(", ")}`);
   if (env.CRON_SECRET.length < 32) throw new Error("CRON_SECRET must contain at least 32 characters");
+  const limit = Number(env.AI_HOURLY_CALL_LIMIT || 100);
+  if (!Number.isInteger(limit) || limit < 1 || limit > 10000) throw new Error("AI_HOURLY_CALL_LIMIT must be between 1 and 10000");
+  const scanner = new URL(env.CV_SCAN_URL);
+  if (scanner.protocol !== "https:" || scanner.username || scanner.password || scanner.search || scanner.hash || scanner.port || !scanner.hostname.includes(".") || /^[\d.]+$/.test(scanner.hostname) || scanner.hostname.endsWith(".localhost") || scanner.hostname.endsWith(".local") || scanner.hostname.startsWith("[") || env.CV_SCAN_TOKEN.length < 32) throw new Error("CV_SCAN_URL and CV_SCAN_TOKEN must configure a private HTTPS scanner");
   const calendly = new URL(env.CALENDLY_URL);
   if (calendly.protocol !== "https:" || calendly.hostname !== "calendly.com" || calendly.port || calendly.username || calendly.password || calendly.search || calendly.hash || !/^\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+\/?$/.test(calendly.pathname)) throw new Error("CALENDLY_URL must be an exact HTTPS scheduling URL");
   if (!/^https:\/\/api\.calendly\.com\/event_types\/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(env.CALENDLY_EVENT_TYPE_URI)) throw new Error("CALENDLY_EVENT_TYPE_URI must identify the intended Calendly event type");
@@ -42,11 +46,11 @@ export function buildStagingDeployment(env) {
     compatibility_date: "2025-09-24", compatibility_flags: ["nodejs_compat"],
     rules: [{type:"ESModule",globs:["**/*.mjs","**/*.js"]}],
     assets: {directory:resolve("dist/client"),binding:"ASSETS"}, workers_dev:true,
-    vars: {DATA_BACKEND:"supabase",SUPABASE_URL:env.SUPABASE_URL,SUPABASE_ANON_KEY:env.SUPABASE_ANON_KEY,SITE_URL:checked.origin,CALENDLY_URL:env.CALENDLY_URL,CALENDLY_EVENT_TYPE_URI:env.CALENDLY_EVENT_TYPE_URI},
+    vars: {DATA_BACKEND:"supabase",SUPABASE_URL:env.SUPABASE_URL,SUPABASE_ANON_KEY:env.SUPABASE_ANON_KEY,SITE_URL:checked.origin,CALENDLY_URL:env.CALENDLY_URL,CALENDLY_EVENT_TYPE_URI:env.CALENDLY_EVENT_TYPE_URI,CV_SCAN_URL:env.CV_SCAN_URL,AI_HOURLY_CALL_LIMIT:env.AI_HOURLY_CALL_LIMIT||"100"},
     observability: {enabled:true},
   };
   const secrets = {};
-  for (const key of ["DATABASE_URL","SUPABASE_SERVICE_ROLE_KEY","ANTHROPIC_API_KEY","RESEND_API_KEY","REED_API_KEY","CRON_SECRET","CALENDLY_API_TOKEN","CALENDLY_WEBHOOK_SECRET"]) secrets[key] = env[key];
+  for (const key of ["DATABASE_URL","SUPABASE_SERVICE_ROLE_KEY","ANTHROPIC_API_KEY","RESEND_API_KEY","REED_API_KEY","CRON_SECRET","CALENDLY_API_TOKEN","CALENDLY_WEBHOOK_SECRET","CV_SCAN_TOKEN"]) secrets[key] = env[key];
   return {config,secrets};
 }
 export function prepareStaging(env) {

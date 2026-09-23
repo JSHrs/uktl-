@@ -32,6 +32,8 @@ export const Route = createFileRoute("/api/cv/$id")({
             "content-disposition": `attachment; filename="${filename}"`,
             "content-length": String(object.size),
             "cache-control": "private, no-store",
+            "x-content-type-options": "nosniff",
+            "content-security-policy": "sandbox",
           },
         });
       },

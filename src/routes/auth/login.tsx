@@ -4,10 +4,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { candidateLoginFn } from "@/lib/functions";
 
-// Only same-site paths are accepted as a post-login destination.
-function safeRedirect(target: string | undefined): string {
-  return target && target.startsWith("/") && !target.startsWith("//") ? target : "/app";
-}
+import { safeRedirect } from "@/lib/safe-redirect";
 
 export const Route = createFileRoute("/auth/login")({
   validateSearch: (s) => z.object({ redirect: z.string().optional() }).parse(s),

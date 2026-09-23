@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
-import { getEnv } from "./server/env";
+import { getRequestEnv as getEnv } from "./server/request-env";
 import { requireViewer, requireAdmin, getViewer } from "./server/viewer";
 import { listFaqTopics } from "./server/db";
 import {

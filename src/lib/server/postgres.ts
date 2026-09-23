@@ -34,7 +34,7 @@ function safeInteger(value: string) {
   return n;
 }
 
-export function createPostgresDatabase(connectionString: string): D1Database {
+export function createPostgresDatabase(connectionString: string, actorId: string | null = null): D1Database {
   const url = new URL(connectionString);
   if (!["postgres:", "postgresql:"].includes(url.protocol)) {
     throw new Error("DATABASE_URL must use PostgreSQL");
@@ -57,6 +57,7 @@ export function createPostgresDatabase(connectionString: string): D1Database {
     try {
       const result = await client.begin(async (tx) => {
         await tx.unsafe("SET LOCAL search_path = recruitment, pg_catalog");
+        await tx.unsafe("SELECT set_config('uktl.actor_id', $1, true)", [actorId ?? ""]);
         await tx.unsafe("SET LOCAL statement_timeout = '15s'");
         await tx.unsafe("SET LOCAL lock_timeout = '5s'");
         const results: D1Result[] = [];

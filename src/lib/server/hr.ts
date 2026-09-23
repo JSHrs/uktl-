@@ -194,7 +194,7 @@ export async function answerHrJourney(
     throw new Error(
       "No recently reviewed sources are available for this topic. Consult an adviser.",
     );
-  const raw = await claudeJson({
+  const raw = await claudeJson({telemetry:env,purpose:'hr_guidance',
     apiKey: env.ANTHROPIC_API_KEY,
     model: env.PARSE_MODEL,
     schema: AnswerSchema,

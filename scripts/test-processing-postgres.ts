@@ -1,3 +1,6 @@
+import {completeAccountErasure} from '../src/lib/server/account-erasure.ts';
+import {operationsSnapshot,eraseCandidateRecord} from '../src/lib/server/operations.ts';
+import {exportOwnData,requestPrivacyAction} from '../src/lib/server/privacy.ts';
 import postgres from 'postgres';
 import assert from 'node:assert/strict';
 import {postgresQuery} from '../src/lib/server/postgres.ts';
@@ -97,6 +100,31 @@ try{await sql.begin(async tx=>{
   assert.ok(report.missingFiles.some(c=>c.id===missingId));
   assert.ok(!report.missingFiles.some(c=>c.id===candidate),'pending task protects active candidate');
   assert.equal((await tx`SELECT count(*)::int AS n FROM storage.objects WHERE id=${orphanId}`)[0].n,1);
+  const snapshot=await operationsSnapshot(env);
+  assert.ok(snapshot.audit.length>0);assert.ok(snapshot.usage.length>0);
+  const ownExport=await exportOwnData(env,user);
+  assert.equal(ownExport.data.candidates.length,1);
+  assert.equal((ownExport.data.candidates[0] as any).id,candidate);
+  assert.ok(!('source_r2_key' in (ownExport.data.candidates[0] as any)));
+  await requestPrivacyAction(env,user,'erasure');await requestPrivacyAction(env,user,'erasure');
+  assert.equal((await tx`SELECT count(*)::int AS n FROM privacy_requests WHERE user_id=${user}`)[0].n,1);
+  const deletedKeys:string[]=[];env.CV_BUCKET.delete=async(key:string)=>{deletedKeys.push(key);};
+  assert.equal((await eraseCandidateRecord(env,candidate,user)).status,'completed');
+  assert.equal(deletedKeys.length,2);
+  assert.equal((await tx`SELECT count(*)::int AS n FROM candidates WHERE id=${candidate}`)[0].n,0);
+  assert.equal((await tx`SELECT count(*)::int AS n FROM processing_jobs WHERE candidate_id=${candidate}`)[0].n,0);
+  assert.equal((await tx`SELECT status FROM file_deletions WHERE candidate_id=${candidate}`)[0].status,'completed');
+  const request=(await tx`SELECT id FROM privacy_requests WHERE user_id=${user} AND kind='erasure'`)[0].id;
+  const actor=crypto.randomUUID();await tx`INSERT INTO auth.users(id,email,email_confirmed_at) VALUES(${actor},${actor+'@example.invalid'},now())`;
+  const erasing=await completeAccountErasure(env,request,actor,true,{deleteUser:async()=>({error:{status:503}})});
+  assert.equal(erasing.status,'pending');
+  assert.equal((await tx`SELECT target_user_id FROM account_erasures WHERE request_id=${request}`)[0].target_user_id,user);
+  await assert.rejects(registerQueuedCv(env,{...args,id:crypto.randomUUID()}),'tombstone blocks in-flight owner writes');
+  const erased=await completeAccountErasure(env,request,actor,true,{deleteUser:async(id)=>{await tx`DELETE FROM auth.users WHERE id=${id}`;return {error:null};}});
+  assert.equal(erased.status,'completed');
+  assert.equal((await tx`SELECT count(*)::int AS n FROM auth.users WHERE id=${user}`)[0].n,0);
+  assert.equal((await tx`SELECT target_user_id FROM account_erasures WHERE request_id=${request}`)[0].target_user_id,null);
+  assert.equal((await tx`SELECT status FROM privacy_requests WHERE id=${request}`)[0].status,'completed');
   throw new Rollback();
 });throw new Error('Fixtures were not rolled back');}catch(e){if(!(e instanceof Rollback))throw e;}finally{globalThis.fetch=originalFetch;await sql.end();}
 console.log('PASS: actual worker registration, activation, parse/grade, skill mapping, preserved stages, edit refresh, stale-result rejection and private retry errors; all fixtures rolled back');

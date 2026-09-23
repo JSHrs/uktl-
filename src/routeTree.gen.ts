@@ -9,86 +9,61 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ServicesRouteImport } from './routes/services'
-import { Route as SectorsRouteImport } from './routes/sectors'
-import { Route as ReachRouteImport } from './routes/reach'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as ApproachRouteImport } from './routes/approach'
-import { Route as AppRouteImport } from './routes/app'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AppIndexRouteImport } from './routes/app/index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AppRouteImport } from './routes/app'
+import { Route as ApproachRouteImport } from './routes/approach'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ReachRouteImport } from './routes/reach'
+import { Route as SectorsRouteImport } from './routes/sectors'
+import { Route as ServicesRouteImport } from './routes/services'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as AuthSecurityRouteImport } from './routes/auth/security'
-import { Route as AuthResetRouteImport } from './routes/auth/reset'
-import { Route as AuthRegisterRouteImport } from './routes/auth/register'
-import { Route as AuthLoginRouteImport } from './routes/auth/login'
-import { Route as AuthForgotRouteImport } from './routes/auth/forgot'
-import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
-import { Route as AppUploadRouteImport } from './routes/app/upload'
-import { Route as AppProfileRouteImport } from './routes/app/profile'
-import { Route as AppDiscoverRouteImport } from './routes/app/discover'
-import { Route as AppActivityRouteImport } from './routes/app/activity'
-import { Route as ApiReedSyncRouteImport } from './routes/api/reed-sync'
-import { Route as ApiMaintenanceRouteImport } from './routes/api/maintenance'
-import { Route as ApiCalendlyWebhookRouteImport } from './routes/api/calendly-webhook'
-import { Route as AdminProcessingRouteImport } from './routes/admin/processing'
-import { Route as AdminLoginRouteImport } from './routes/admin/login'
-import { Route as AdminHrRouteImport } from './routes/admin/hr'
-import { Route as AdminEnquiriesRouteImport } from './routes/admin/enquiries'
-import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin/analytics'
-import { Route as AppJobsIndexRouteImport } from './routes/app/jobs/index'
-import { Route as AppHrIndexRouteImport } from './routes/app/hr/index'
-import { Route as AppCandidatesIndexRouteImport } from './routes/app/candidates/index'
-import { Route as AdminJobsIndexRouteImport } from './routes/admin/jobs/index'
-import { Route as AdminFaqIndexRouteImport } from './routes/admin/faq/index'
+import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
+import { Route as AdminEnquiriesRouteImport } from './routes/admin/enquiries'
+import { Route as AdminHrRouteImport } from './routes/admin/hr'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminOperationsRouteImport } from './routes/admin/operations'
+import { Route as AdminProcessingRouteImport } from './routes/admin/processing'
+import { Route as ApiCalendlyWebhookRouteImport } from './routes/api/calendly-webhook'
+import { Route as ApiMaintenanceRouteImport } from './routes/api/maintenance'
+import { Route as ApiReedSyncRouteImport } from './routes/api/reed-sync'
+import { Route as AppIndexRouteImport } from './routes/app/index'
+import { Route as AppActivityRouteImport } from './routes/app/activity'
+import { Route as AppDiscoverRouteImport } from './routes/app/discover'
+import { Route as AppProfileRouteImport } from './routes/app/profile'
+import { Route as AppUploadRouteImport } from './routes/app/upload'
+import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as AuthForgotRouteImport } from './routes/auth/forgot'
+import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as AuthRegisterRouteImport } from './routes/auth/register'
+import { Route as AuthResetRouteImport } from './routes/auth/reset'
+import { Route as AuthSecurityRouteImport } from './routes/auth/security'
 import { Route as AdminCandidatesIndexRouteImport } from './routes/admin/candidates/index'
-import { Route as AppJobsIdRouteImport } from './routes/app/jobs/$id'
-import { Route as AppHrLibraryRouteImport } from './routes/app/hr/library'
-import { Route as AppHrHistoryRouteImport } from './routes/app/hr/history'
-import { Route as AppHrAnswerRouteImport } from './routes/app/hr/answer'
-import { Route as AppCandidatesIdRouteImport } from './routes/app/candidates/$id'
-import { Route as ApiCvIdRouteImport } from './routes/api/cv/$id'
-import { Route as AdminJobsNewRouteImport } from './routes/admin/jobs/new'
-import { Route as AdminJobsIdRouteImport } from './routes/admin/jobs/$id'
-import { Route as AdminFaqNewRouteImport } from './routes/admin/faq/new'
+import { Route as AdminFaqIndexRouteImport } from './routes/admin/faq/index'
 import { Route as AdminFaqIdRouteImport } from './routes/admin/faq/$id'
+import { Route as AdminFaqNewRouteImport } from './routes/admin/faq/new'
+import { Route as AdminJobsIndexRouteImport } from './routes/admin/jobs/index'
+import { Route as AdminJobsIdRouteImport } from './routes/admin/jobs/$id'
+import { Route as AdminJobsNewRouteImport } from './routes/admin/jobs/new'
+import { Route as ApiCvIdRouteImport } from './routes/api/cv/$id'
+import { Route as ApiOperationsHealthRouteImport } from './routes/api/operations/health'
+import { Route as ApiPrivacyExportRouteImport } from './routes/api/privacy/export'
+import { Route as AppCandidatesIndexRouteImport } from './routes/app/candidates/index'
+import { Route as AppCandidatesIdRouteImport } from './routes/app/candidates/$id'
+import { Route as AppHrIndexRouteImport } from './routes/app/hr/index'
+import { Route as AppHrAnswerRouteImport } from './routes/app/hr/answer'
+import { Route as AppHrHistoryRouteImport } from './routes/app/hr/history'
+import { Route as AppHrLibraryRouteImport } from './routes/app/hr/library'
+import { Route as AppJobsIndexRouteImport } from './routes/app/jobs/index'
+import { Route as AppJobsIdRouteImport } from './routes/app/jobs/$id'
 
-const ServicesRoute = ServicesRouteImport.update({
-  id: '/services',
-  path: '/services',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SectorsRoute = SectorsRouteImport.update({
-  id: '/sectors',
-  path: '/sectors',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReachRoute = ReachRouteImport.update({
-  id: '/reach',
-  path: '/reach',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApproachRoute = ApproachRouteImport.update({
-  id: '/approach',
-  path: '/approach',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppRoute = AppRouteImport.update({
-  id: '/app',
-  path: '/app',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -96,109 +71,54 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppIndexRoute = AppIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppRoute,
+const ApproachRoute = ApproachRouteImport.update({
+  id: '/approach',
+  path: '/approach',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReachRoute = ReachRouteImport.update({
+  id: '/reach',
+  path: '/reach',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SectorsRoute = SectorsRouteImport.update({
+  id: '/sectors',
+  path: '/sectors',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesRoute = ServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AuthSecurityRoute = AuthSecurityRouteImport.update({
-  id: '/security',
-  path: '/security',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthResetRoute = AuthResetRouteImport.update({
-  id: '/reset',
-  path: '/reset',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthRegisterRoute = AuthRegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthLoginRoute = AuthLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthForgotRoute = AuthForgotRouteImport.update({
-  id: '/forgot',
-  path: '/forgot',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/callback',
-  path: '/callback',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AppUploadRoute = AppUploadRouteImport.update({
-  id: '/upload',
-  path: '/upload',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppProfileRoute = AppProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDiscoverRoute = AppDiscoverRouteImport.update({
-  id: '/discover',
-  path: '/discover',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppActivityRoute = AppActivityRouteImport.update({
-  id: '/activity',
-  path: '/activity',
-  getParentRoute: () => AppRoute,
-} as any)
-const ApiReedSyncRoute = ApiReedSyncRouteImport.update({
-  id: '/api/reed-sync',
-  path: '/api/reed-sync',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiMaintenanceRoute = ApiMaintenanceRouteImport.update({
-  id: '/api/maintenance',
-  path: '/api/maintenance',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCalendlyWebhookRoute = ApiCalendlyWebhookRouteImport.update({
-  id: '/api/calendly-webhook',
-  path: '/api/calendly-webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminProcessingRoute = AdminProcessingRouteImport.update({
-  id: '/processing',
-  path: '/processing',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminLoginRoute = AdminLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminHrRoute = AdminHrRouteImport.update({
-  id: '/hr',
-  path: '/hr',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminEnquiriesRoute = AdminEnquiriesRouteImport.update({
-  id: '/enquiries',
-  path: '/enquiries',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminBookingsRoute = AdminBookingsRouteImport.update({
-  id: '/bookings',
-  path: '/bookings',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
@@ -206,24 +126,109 @@ const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AdminRoute,
 } as any)
-const AppJobsIndexRoute = AppJobsIndexRouteImport.update({
-  id: '/jobs/',
-  path: '/jobs/',
+const AdminBookingsRoute = AdminBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEnquiriesRoute = AdminEnquiriesRouteImport.update({
+  id: '/enquiries',
+  path: '/enquiries',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminHrRoute = AdminHrRouteImport.update({
+  id: '/hr',
+  path: '/hr',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOperationsRoute = AdminOperationsRouteImport.update({
+  id: '/operations',
+  path: '/operations',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProcessingRoute = AdminProcessingRouteImport.update({
+  id: '/processing',
+  path: '/processing',
+  getParentRoute: () => AdminRoute,
+} as any)
+const ApiCalendlyWebhookRoute = ApiCalendlyWebhookRouteImport.update({
+  id: '/api/calendly-webhook',
+  path: '/api/calendly-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMaintenanceRoute = ApiMaintenanceRouteImport.update({
+  id: '/api/maintenance',
+  path: '/api/maintenance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReedSyncRoute = ApiReedSyncRouteImport.update({
+  id: '/api/reed-sync',
+  path: '/api/reed-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppHrIndexRoute = AppHrIndexRouteImport.update({
-  id: '/hr/',
-  path: '/hr/',
+const AppActivityRoute = AppActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
   getParentRoute: () => AppRoute,
 } as any)
-const AppCandidatesIndexRoute = AppCandidatesIndexRouteImport.update({
+const AppDiscoverRoute = AppDiscoverRouteImport.update({
+  id: '/discover',
+  path: '/discover',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfileRoute = AppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUploadRoute = AppUploadRouteImport.update({
+  id: '/upload',
+  path: '/upload',
+  getParentRoute: () => AppRoute,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthForgotRoute = AuthForgotRouteImport.update({
+  id: '/forgot',
+  path: '/forgot',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthRegisterRoute = AuthRegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthResetRoute = AuthResetRouteImport.update({
+  id: '/reset',
+  path: '/reset',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSecurityRoute = AuthSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AdminCandidatesIndexRoute = AdminCandidatesIndexRouteImport.update({
   id: '/candidates/',
   path: '/candidates/',
-  getParentRoute: () => AppRoute,
-} as any)
-const AdminJobsIndexRoute = AdminJobsIndexRouteImport.update({
-  id: '/jobs/',
-  path: '/jobs/',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminFaqIndexRoute = AdminFaqIndexRouteImport.update({
@@ -231,49 +236,9 @@ const AdminFaqIndexRoute = AdminFaqIndexRouteImport.update({
   path: '/faq/',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminCandidatesIndexRoute = AdminCandidatesIndexRouteImport.update({
-  id: '/candidates/',
-  path: '/candidates/',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AppJobsIdRoute = AppJobsIdRouteImport.update({
-  id: '/jobs/$id',
-  path: '/jobs/$id',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppHrLibraryRoute = AppHrLibraryRouteImport.update({
-  id: '/hr/library',
-  path: '/hr/library',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppHrHistoryRoute = AppHrHistoryRouteImport.update({
-  id: '/hr/history',
-  path: '/hr/history',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppHrAnswerRoute = AppHrAnswerRouteImport.update({
-  id: '/hr/answer',
-  path: '/hr/answer',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppCandidatesIdRoute = AppCandidatesIdRouteImport.update({
-  id: '/candidates/$id',
-  path: '/candidates/$id',
-  getParentRoute: () => AppRoute,
-} as any)
-const ApiCvIdRoute = ApiCvIdRouteImport.update({
-  id: '/api/cv/$id',
-  path: '/api/cv/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminJobsNewRoute = AdminJobsNewRouteImport.update({
-  id: '/jobs/new',
-  path: '/jobs/new',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminJobsIdRoute = AdminJobsIdRouteImport.update({
-  id: '/jobs/$id',
-  path: '/jobs/$id',
+const AdminFaqIdRoute = AdminFaqIdRouteImport.update({
+  id: '/faq/$id',
+  path: '/faq/$id',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminFaqNewRoute = AdminFaqNewRouteImport.update({
@@ -281,10 +246,75 @@ const AdminFaqNewRoute = AdminFaqNewRouteImport.update({
   path: '/faq/new',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminFaqIdRoute = AdminFaqIdRouteImport.update({
-  id: '/faq/$id',
-  path: '/faq/$id',
+const AdminJobsIndexRoute = AdminJobsIndexRouteImport.update({
+  id: '/jobs/',
+  path: '/jobs/',
   getParentRoute: () => AdminRoute,
+} as any)
+const AdminJobsIdRoute = AdminJobsIdRouteImport.update({
+  id: '/jobs/$id',
+  path: '/jobs/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminJobsNewRoute = AdminJobsNewRouteImport.update({
+  id: '/jobs/new',
+  path: '/jobs/new',
+  getParentRoute: () => AdminRoute,
+} as any)
+const ApiCvIdRoute = ApiCvIdRouteImport.update({
+  id: '/api/cv/$id',
+  path: '/api/cv/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOperationsHealthRoute = ApiOperationsHealthRouteImport.update({
+  id: '/api/operations/health',
+  path: '/api/operations/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPrivacyExportRoute = ApiPrivacyExportRouteImport.update({
+  id: '/api/privacy/export',
+  path: '/api/privacy/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppCandidatesIndexRoute = AppCandidatesIndexRouteImport.update({
+  id: '/candidates/',
+  path: '/candidates/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCandidatesIdRoute = AppCandidatesIdRouteImport.update({
+  id: '/candidates/$id',
+  path: '/candidates/$id',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHrIndexRoute = AppHrIndexRouteImport.update({
+  id: '/hr/',
+  path: '/hr/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHrAnswerRoute = AppHrAnswerRouteImport.update({
+  id: '/hr/answer',
+  path: '/hr/answer',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHrHistoryRoute = AppHrHistoryRouteImport.update({
+  id: '/hr/history',
+  path: '/hr/history',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHrLibraryRoute = AppHrLibraryRouteImport.update({
+  id: '/hr/library',
+  path: '/hr/library',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJobsIndexRoute = AppJobsIndexRouteImport.update({
+  id: '/jobs/',
+  path: '/jobs/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJobsIdRoute = AppJobsIdRouteImport.update({
+  id: '/jobs/$id',
+  path: '/jobs/$id',
+  getParentRoute: () => AppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -294,14 +324,17 @@ export interface FileRoutesByFullPath {
   '/approach': typeof ApproachRoute
   '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
+  '/privacy': typeof PrivacyRoute
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
+  '/terms': typeof TermsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/hr': typeof AdminHrRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/operations': typeof AdminOperationsRoute
   '/admin/processing': typeof AdminProcessingRoute
   '/api/calendly-webhook': typeof ApiCalendlyWebhookRoute
   '/api/maintenance': typeof ApiMaintenanceRoute
@@ -323,6 +356,8 @@ export interface FileRoutesByFullPath {
   '/admin/jobs/$id': typeof AdminJobsIdRoute
   '/admin/jobs/new': typeof AdminJobsNewRoute
   '/api/cv/$id': typeof ApiCvIdRoute
+  '/api/operations/health': typeof ApiOperationsHealthRoute
+  '/api/privacy/export': typeof ApiPrivacyExportRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/hr/answer': typeof AppHrAnswerRoute
   '/app/hr/history': typeof AppHrHistoryRoute
@@ -340,14 +375,17 @@ export interface FileRoutesByTo {
   '/approach': typeof ApproachRoute
   '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
+  '/privacy': typeof PrivacyRoute
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
+  '/terms': typeof TermsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/hr': typeof AdminHrRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/operations': typeof AdminOperationsRoute
   '/admin/processing': typeof AdminProcessingRoute
   '/api/calendly-webhook': typeof ApiCalendlyWebhookRoute
   '/api/maintenance': typeof ApiMaintenanceRoute
@@ -369,6 +407,8 @@ export interface FileRoutesByTo {
   '/admin/jobs/$id': typeof AdminJobsIdRoute
   '/admin/jobs/new': typeof AdminJobsNewRoute
   '/api/cv/$id': typeof ApiCvIdRoute
+  '/api/operations/health': typeof ApiOperationsHealthRoute
+  '/api/privacy/export': typeof ApiPrivacyExportRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/hr/answer': typeof AppHrAnswerRoute
   '/app/hr/history': typeof AppHrHistoryRoute
@@ -389,14 +429,17 @@ export interface FileRoutesById {
   '/approach': typeof ApproachRoute
   '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
+  '/privacy': typeof PrivacyRoute
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
+  '/terms': typeof TermsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/hr': typeof AdminHrRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/operations': typeof AdminOperationsRoute
   '/admin/processing': typeof AdminProcessingRoute
   '/api/calendly-webhook': typeof ApiCalendlyWebhookRoute
   '/api/maintenance': typeof ApiMaintenanceRoute
@@ -418,6 +461,8 @@ export interface FileRoutesById {
   '/admin/jobs/$id': typeof AdminJobsIdRoute
   '/admin/jobs/new': typeof AdminJobsNewRoute
   '/api/cv/$id': typeof ApiCvIdRoute
+  '/api/operations/health': typeof ApiOperationsHealthRoute
+  '/api/privacy/export': typeof ApiPrivacyExportRoute
   '/app/candidates/$id': typeof AppCandidatesIdRoute
   '/app/hr/answer': typeof AppHrAnswerRoute
   '/app/hr/history': typeof AppHrHistoryRoute
@@ -439,14 +484,17 @@ export interface FileRouteTypes {
     | '/approach'
     | '/auth'
     | '/contact'
+    | '/privacy'
     | '/reach'
     | '/sectors'
     | '/services'
+    | '/terms'
     | '/admin/analytics'
     | '/admin/bookings'
     | '/admin/enquiries'
     | '/admin/hr'
     | '/admin/login'
+    | '/admin/operations'
     | '/admin/processing'
     | '/api/calendly-webhook'
     | '/api/maintenance'
@@ -468,6 +516,8 @@ export interface FileRouteTypes {
     | '/admin/jobs/$id'
     | '/admin/jobs/new'
     | '/api/cv/$id'
+    | '/api/operations/health'
+    | '/api/privacy/export'
     | '/app/candidates/$id'
     | '/app/hr/answer'
     | '/app/hr/history'
@@ -485,14 +535,17 @@ export interface FileRouteTypes {
     | '/approach'
     | '/auth'
     | '/contact'
+    | '/privacy'
     | '/reach'
     | '/sectors'
     | '/services'
+    | '/terms'
     | '/admin/analytics'
     | '/admin/bookings'
     | '/admin/enquiries'
     | '/admin/hr'
     | '/admin/login'
+    | '/admin/operations'
     | '/admin/processing'
     | '/api/calendly-webhook'
     | '/api/maintenance'
@@ -514,6 +567,8 @@ export interface FileRouteTypes {
     | '/admin/jobs/$id'
     | '/admin/jobs/new'
     | '/api/cv/$id'
+    | '/api/operations/health'
+    | '/api/privacy/export'
     | '/app/candidates/$id'
     | '/app/hr/answer'
     | '/app/hr/history'
@@ -533,14 +588,17 @@ export interface FileRouteTypes {
     | '/approach'
     | '/auth'
     | '/contact'
+    | '/privacy'
     | '/reach'
     | '/sectors'
     | '/services'
+    | '/terms'
     | '/admin/analytics'
     | '/admin/bookings'
     | '/admin/enquiries'
     | '/admin/hr'
     | '/admin/login'
+    | '/admin/operations'
     | '/admin/processing'
     | '/api/calendly-webhook'
     | '/api/maintenance'
@@ -562,6 +620,8 @@ export interface FileRouteTypes {
     | '/admin/jobs/$id'
     | '/admin/jobs/new'
     | '/api/cv/$id'
+    | '/api/operations/health'
+    | '/api/privacy/export'
     | '/app/candidates/$id'
     | '/app/hr/answer'
     | '/app/hr/history'
@@ -582,64 +642,26 @@ export interface RootRouteChildren {
   ApproachRoute: typeof ApproachRoute
   AuthRoute: typeof AuthRouteWithChildren
   ContactRoute: typeof ContactRoute
+  PrivacyRoute: typeof PrivacyRoute
   ReachRoute: typeof ReachRoute
   SectorsRoute: typeof SectorsRoute
   ServicesRoute: typeof ServicesRoute
+  TermsRoute: typeof TermsRoute
   ApiCalendlyWebhookRoute: typeof ApiCalendlyWebhookRoute
   ApiMaintenanceRoute: typeof ApiMaintenanceRoute
   ApiReedSyncRoute: typeof ApiReedSyncRoute
   ApiCvIdRoute: typeof ApiCvIdRoute
+  ApiOperationsHealthRoute: typeof ApiOperationsHealthRoute
+  ApiPrivacyExportRoute: typeof ApiPrivacyExportRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/services': {
-      id: '/services'
-      path: '/services'
-      fullPath: '/services'
-      preLoaderRoute: typeof ServicesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sectors': {
-      id: '/sectors'
-      path: '/sectors'
-      fullPath: '/sectors'
-      preLoaderRoute: typeof SectorsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reach': {
-      id: '/reach'
-      path: '/reach'
-      fullPath: '/reach'
-      preLoaderRoute: typeof ReachRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/approach': {
-      id: '/approach'
-      path: '/approach'
-      fullPath: '/approach'
-      preLoaderRoute: typeof ApproachRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app': {
-      id: '/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -649,151 +671,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app/': {
-      id: '/app/'
-      path: '/'
-      fullPath: '/app/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRoute
+    '/approach': {
+      id: '/approach'
+      path: '/approach'
+      fullPath: '/approach'
+      preLoaderRoute: typeof ApproachRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reach': {
+      id: '/reach'
+      path: '/reach'
+      fullPath: '/reach'
+      preLoaderRoute: typeof ReachRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sectors': {
+      id: '/sectors'
+      path: '/sectors'
+      fullPath: '/sectors'
+      preLoaderRoute: typeof SectorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services': {
+      id: '/services'
+      path: '/services'
+      fullPath: '/services'
+      preLoaderRoute: typeof ServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/': {
       id: '/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/auth/security': {
-      id: '/auth/security'
-      path: '/security'
-      fullPath: '/auth/security'
-      preLoaderRoute: typeof AuthSecurityRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/auth/reset': {
-      id: '/auth/reset'
-      path: '/reset'
-      fullPath: '/auth/reset'
-      preLoaderRoute: typeof AuthResetRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/auth/register': {
-      id: '/auth/register'
-      path: '/register'
-      fullPath: '/auth/register'
-      preLoaderRoute: typeof AuthRegisterRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/auth/login': {
-      id: '/auth/login'
-      path: '/login'
-      fullPath: '/auth/login'
-      preLoaderRoute: typeof AuthLoginRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/auth/forgot': {
-      id: '/auth/forgot'
-      path: '/forgot'
-      fullPath: '/auth/forgot'
-      preLoaderRoute: typeof AuthForgotRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/auth/callback': {
-      id: '/auth/callback'
-      path: '/callback'
-      fullPath: '/auth/callback'
-      preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/app/upload': {
-      id: '/app/upload'
-      path: '/upload'
-      fullPath: '/app/upload'
-      preLoaderRoute: typeof AppUploadRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/profile': {
-      id: '/app/profile'
-      path: '/profile'
-      fullPath: '/app/profile'
-      preLoaderRoute: typeof AppProfileRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/discover': {
-      id: '/app/discover'
-      path: '/discover'
-      fullPath: '/app/discover'
-      preLoaderRoute: typeof AppDiscoverRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/activity': {
-      id: '/app/activity'
-      path: '/activity'
-      fullPath: '/app/activity'
-      preLoaderRoute: typeof AppActivityRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/api/reed-sync': {
-      id: '/api/reed-sync'
-      path: '/api/reed-sync'
-      fullPath: '/api/reed-sync'
-      preLoaderRoute: typeof ApiReedSyncRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/maintenance': {
-      id: '/api/maintenance'
-      path: '/api/maintenance'
-      fullPath: '/api/maintenance'
-      preLoaderRoute: typeof ApiMaintenanceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/calendly-webhook': {
-      id: '/api/calendly-webhook'
-      path: '/api/calendly-webhook'
-      fullPath: '/api/calendly-webhook'
-      preLoaderRoute: typeof ApiCalendlyWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/processing': {
-      id: '/admin/processing'
-      path: '/processing'
-      fullPath: '/admin/processing'
-      preLoaderRoute: typeof AdminProcessingRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/login': {
-      id: '/admin/login'
-      path: '/login'
-      fullPath: '/admin/login'
-      preLoaderRoute: typeof AdminLoginRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/hr': {
-      id: '/admin/hr'
-      path: '/hr'
-      fullPath: '/admin/hr'
-      preLoaderRoute: typeof AdminHrRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/enquiries': {
-      id: '/admin/enquiries'
-      path: '/enquiries'
-      fullPath: '/admin/enquiries'
-      preLoaderRoute: typeof AdminEnquiriesRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/bookings': {
-      id: '/admin/bookings'
-      path: '/bookings'
-      fullPath: '/admin/bookings'
-      preLoaderRoute: typeof AdminBookingsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/analytics': {
@@ -803,32 +748,151 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/app/jobs/': {
-      id: '/app/jobs/'
-      path: '/jobs'
-      fullPath: '/app/jobs/'
-      preLoaderRoute: typeof AppJobsIndexRouteImport
-      parentRoute: typeof AppRoute
+    '/admin/bookings': {
+      id: '/admin/bookings'
+      path: '/bookings'
+      fullPath: '/admin/bookings'
+      preLoaderRoute: typeof AdminBookingsRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/app/hr/': {
-      id: '/app/hr/'
+    '/admin/enquiries': {
+      id: '/admin/enquiries'
+      path: '/enquiries'
+      fullPath: '/admin/enquiries'
+      preLoaderRoute: typeof AdminEnquiriesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/hr': {
+      id: '/admin/hr'
       path: '/hr'
-      fullPath: '/app/hr/'
-      preLoaderRoute: typeof AppHrIndexRouteImport
+      fullPath: '/admin/hr'
+      preLoaderRoute: typeof AdminHrRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/operations': {
+      id: '/admin/operations'
+      path: '/operations'
+      fullPath: '/admin/operations'
+      preLoaderRoute: typeof AdminOperationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/processing': {
+      id: '/admin/processing'
+      path: '/processing'
+      fullPath: '/admin/processing'
+      preLoaderRoute: typeof AdminProcessingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/api/calendly-webhook': {
+      id: '/api/calendly-webhook'
+      path: '/api/calendly-webhook'
+      fullPath: '/api/calendly-webhook'
+      preLoaderRoute: typeof ApiCalendlyWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/maintenance': {
+      id: '/api/maintenance'
+      path: '/api/maintenance'
+      fullPath: '/api/maintenance'
+      preLoaderRoute: typeof ApiMaintenanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/reed-sync': {
+      id: '/api/reed-sync'
+      path: '/api/reed-sync'
+      fullPath: '/api/reed-sync'
+      preLoaderRoute: typeof ApiReedSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/app/candidates/': {
-      id: '/app/candidates/'
+    '/app/activity': {
+      id: '/app/activity'
+      path: '/activity'
+      fullPath: '/app/activity'
+      preLoaderRoute: typeof AppActivityRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/discover': {
+      id: '/app/discover'
+      path: '/discover'
+      fullPath: '/app/discover'
+      preLoaderRoute: typeof AppDiscoverRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/profile': {
+      id: '/app/profile'
+      path: '/profile'
+      fullPath: '/app/profile'
+      preLoaderRoute: typeof AppProfileRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/upload': {
+      id: '/app/upload'
+      path: '/upload'
+      fullPath: '/app/upload'
+      preLoaderRoute: typeof AppUploadRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/forgot': {
+      id: '/auth/forgot'
+      path: '/forgot'
+      fullPath: '/auth/forgot'
+      preLoaderRoute: typeof AuthForgotRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/register': {
+      id: '/auth/register'
+      path: '/register'
+      fullPath: '/auth/register'
+      preLoaderRoute: typeof AuthRegisterRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/reset': {
+      id: '/auth/reset'
+      path: '/reset'
+      fullPath: '/auth/reset'
+      preLoaderRoute: typeof AuthResetRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/security': {
+      id: '/auth/security'
+      path: '/security'
+      fullPath: '/auth/security'
+      preLoaderRoute: typeof AuthSecurityRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/admin/candidates/': {
+      id: '/admin/candidates/'
       path: '/candidates'
-      fullPath: '/app/candidates/'
-      preLoaderRoute: typeof AppCandidatesIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/admin/jobs/': {
-      id: '/admin/jobs/'
-      path: '/jobs'
-      fullPath: '/admin/jobs/'
-      preLoaderRoute: typeof AdminJobsIndexRouteImport
+      fullPath: '/admin/candidates/'
+      preLoaderRoute: typeof AdminCandidatesIndexRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/faq/': {
@@ -838,67 +902,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFaqIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/candidates/': {
-      id: '/admin/candidates/'
-      path: '/candidates'
-      fullPath: '/admin/candidates/'
-      preLoaderRoute: typeof AdminCandidatesIndexRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/app/jobs/$id': {
-      id: '/app/jobs/$id'
-      path: '/jobs/$id'
-      fullPath: '/app/jobs/$id'
-      preLoaderRoute: typeof AppJobsIdRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/hr/library': {
-      id: '/app/hr/library'
-      path: '/hr/library'
-      fullPath: '/app/hr/library'
-      preLoaderRoute: typeof AppHrLibraryRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/hr/history': {
-      id: '/app/hr/history'
-      path: '/hr/history'
-      fullPath: '/app/hr/history'
-      preLoaderRoute: typeof AppHrHistoryRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/hr/answer': {
-      id: '/app/hr/answer'
-      path: '/hr/answer'
-      fullPath: '/app/hr/answer'
-      preLoaderRoute: typeof AppHrAnswerRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/candidates/$id': {
-      id: '/app/candidates/$id'
-      path: '/candidates/$id'
-      fullPath: '/app/candidates/$id'
-      preLoaderRoute: typeof AppCandidatesIdRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/api/cv/$id': {
-      id: '/api/cv/$id'
-      path: '/api/cv/$id'
-      fullPath: '/api/cv/$id'
-      preLoaderRoute: typeof ApiCvIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/jobs/new': {
-      id: '/admin/jobs/new'
-      path: '/jobs/new'
-      fullPath: '/admin/jobs/new'
-      preLoaderRoute: typeof AdminJobsNewRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/jobs/$id': {
-      id: '/admin/jobs/$id'
-      path: '/jobs/$id'
-      fullPath: '/admin/jobs/$id'
-      preLoaderRoute: typeof AdminJobsIdRouteImport
+    '/admin/faq/$id': {
+      id: '/admin/faq/$id'
+      path: '/faq/$id'
+      fullPath: '/admin/faq/$id'
+      preLoaderRoute: typeof AdminFaqIdRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/faq/new': {
@@ -908,12 +916,103 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFaqNewRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/faq/$id': {
-      id: '/admin/faq/$id'
-      path: '/faq/$id'
-      fullPath: '/admin/faq/$id'
-      preLoaderRoute: typeof AdminFaqIdRouteImport
+    '/admin/jobs/': {
+      id: '/admin/jobs/'
+      path: '/jobs'
+      fullPath: '/admin/jobs/'
+      preLoaderRoute: typeof AdminJobsIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/admin/jobs/$id': {
+      id: '/admin/jobs/$id'
+      path: '/jobs/$id'
+      fullPath: '/admin/jobs/$id'
+      preLoaderRoute: typeof AdminJobsIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/jobs/new': {
+      id: '/admin/jobs/new'
+      path: '/jobs/new'
+      fullPath: '/admin/jobs/new'
+      preLoaderRoute: typeof AdminJobsNewRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/api/cv/$id': {
+      id: '/api/cv/$id'
+      path: '/api/cv/$id'
+      fullPath: '/api/cv/$id'
+      preLoaderRoute: typeof ApiCvIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/operations/health': {
+      id: '/api/operations/health'
+      path: '/api/operations/health'
+      fullPath: '/api/operations/health'
+      preLoaderRoute: typeof ApiOperationsHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/privacy/export': {
+      id: '/api/privacy/export'
+      path: '/api/privacy/export'
+      fullPath: '/api/privacy/export'
+      preLoaderRoute: typeof ApiPrivacyExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/candidates/': {
+      id: '/app/candidates/'
+      path: '/candidates'
+      fullPath: '/app/candidates/'
+      preLoaderRoute: typeof AppCandidatesIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/candidates/$id': {
+      id: '/app/candidates/$id'
+      path: '/candidates/$id'
+      fullPath: '/app/candidates/$id'
+      preLoaderRoute: typeof AppCandidatesIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/hr/': {
+      id: '/app/hr/'
+      path: '/hr'
+      fullPath: '/app/hr/'
+      preLoaderRoute: typeof AppHrIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/hr/answer': {
+      id: '/app/hr/answer'
+      path: '/hr/answer'
+      fullPath: '/app/hr/answer'
+      preLoaderRoute: typeof AppHrAnswerRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/hr/history': {
+      id: '/app/hr/history'
+      path: '/hr/history'
+      fullPath: '/app/hr/history'
+      preLoaderRoute: typeof AppHrHistoryRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/hr/library': {
+      id: '/app/hr/library'
+      path: '/hr/library'
+      fullPath: '/app/hr/library'
+      preLoaderRoute: typeof AppHrLibraryRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/jobs/': {
+      id: '/app/jobs/'
+      path: '/jobs'
+      fullPath: '/app/jobs/'
+      preLoaderRoute: typeof AppJobsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/jobs/$id': {
+      id: '/app/jobs/$id'
+      path: '/jobs/$id'
+      fullPath: '/app/jobs/$id'
+      preLoaderRoute: typeof AppJobsIdRouteImport
+      parentRoute: typeof AppRoute
     }
   }
 }
@@ -924,6 +1023,7 @@ interface AdminRouteChildren {
   AdminEnquiriesRoute: typeof AdminEnquiriesRoute
   AdminHrRoute: typeof AdminHrRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminOperationsRoute: typeof AdminOperationsRoute
   AdminProcessingRoute: typeof AdminProcessingRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminFaqIdRoute: typeof AdminFaqIdRoute
@@ -941,6 +1041,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEnquiriesRoute: AdminEnquiriesRoute,
   AdminHrRoute: AdminHrRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminOperationsRoute: AdminOperationsRoute,
   AdminProcessingRoute: AdminProcessingRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminFaqIdRoute: AdminFaqIdRoute,
@@ -1015,13 +1116,17 @@ const rootRouteChildren: RootRouteChildren = {
   ApproachRoute: ApproachRoute,
   AuthRoute: AuthRouteWithChildren,
   ContactRoute: ContactRoute,
+  PrivacyRoute: PrivacyRoute,
   ReachRoute: ReachRoute,
   SectorsRoute: SectorsRoute,
   ServicesRoute: ServicesRoute,
+  TermsRoute: TermsRoute,
   ApiCalendlyWebhookRoute: ApiCalendlyWebhookRoute,
   ApiMaintenanceRoute: ApiMaintenanceRoute,
   ApiReedSyncRoute: ApiReedSyncRoute,
   ApiCvIdRoute: ApiCvIdRoute,
+  ApiOperationsHealthRoute: ApiOperationsHealthRoute,
+  ApiPrivacyExportRoute: ApiPrivacyExportRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

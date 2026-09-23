@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { adminDeleteCandidateFn, listCandidatesFn } from "@/lib/functions";
@@ -28,11 +29,14 @@ function AdminCandidatesList() {
     : candidates;
 
   async function deleteCandidate(id: string, name: string | null) {
-    if (!confirm(`Delete candidate "${name ?? id}"? All associated data will be removed.`)) return;
+    if (!confirm(`Delete candidate "${name ?? id}"? The CV record and recruitment data will be removed. Private file removal is tracked and retried separately. This does not delete their account or external provider records.`)) return;
     setBusy(id);
     try {
-      await adminDeleteCandidateFn({ data: { id } });
+      const result = await adminDeleteCandidateFn({ data: { id } });
+      toast(result.status === "completed" ? "CV record and private files removed." : "CV record removed. Private file cleanup is pending in Operations.");
       await router.invalidate();
+    } catch {
+      toast.error("Deletion could not complete. Check Operations before retrying.");
     } finally {
       setBusy(null);
     }

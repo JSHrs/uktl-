@@ -93,7 +93,7 @@ The root route loads the session once per navigation (`getSessionFn` → `contex
 
 ## Known gaps (not bugs — unbuilt)
 
-Charts on the analytics page (Recharts installed, unused) · Calendly embed on the HR answer page · scheduled Reed sync (manual button only) · candidate email outreach · CSV export · dark palette (`@custom-variant dark` exists, no tokens) · GDPR delete/export tooling · comprehensive staff audit trail.
+Charts on the analytics page (Recharts installed, unused) · Calendly embed on the HR answer page · scheduled Reed sync (manual button only) · candidate email outreach · CSV export · GDPR delete/export tooling · comprehensive staff audit trail.
 
 
 ## Launch hardening verification
@@ -104,3 +104,7 @@ Charts on the analytics page (Recharts installed, unused) · Calendly embed on t
 - Rate limits are persisted in D1 migration 0009 and fail closed. Anonymous IP limits rely only on Cloudflare's overwritten `cf-connecting-ip`; missing headers share a conservative bucket.
 - Notifications persist sent/failed/skipped/sending state and use stable provider idempotency keys. Admin retry is limited to records under 23h old; old or interrupted sends require provider-log reconciliation before any manual resend.
 - Never log provider response bodies containing candidate information or credentials.
+
+## 23 September operations hardening
+
+Read OPERATIONS_RUNBOOK.md and RELEASE_CHECKLIST.md. The owner authorized Stage 4 engineering before earlier live acceptance, with Cloudflare last. Live acceptance still cannot pass on skipped tests. Use the request-scoped audited database in server functions; never accept an actor ID from client input. Supabase candidate deletion must use the durable file-deletion queue, never the legacy row-only helper. Private Supabase CV storage requires the configured scanner gateway for upload and download. AI calls use trackedAnthropicFetch with runtime telemetry so the shared hourly budget applies. Keep provider secrets and bodies out of audit/usage logs. Privacy/usage pages are factual product information and still require a complete owner/legal-approved notice before launch.

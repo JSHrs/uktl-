@@ -1,7 +1,7 @@
 # Talent Compass — project deliverables and handover note
 
 **For:** the next developer or agent picking up development (prepared for ChatGPT "Astra").
-**Repository:** `JSHrs/talent-compass`, branch `main` (all work below is merged).
+**Current source:** `devacnt/UKTL`; mirror `JSHrs/uktl-` and active Claude branch. Older sections below are historical; current release evidence is in RELEASE_CHECKLIST.md and DEVELOPMENT_GATES.md.
 **As of:** 17 September 2026.
 
 Read `CLAUDE.md` first — it is the development guide (commands, architecture, hard rules, auth model, verification checklist). `DEPLOYMENT.md` is the infrastructure runbook. This note is the status report and the backlog: what exists, what was just delivered, what is proven, what is still needed to go live, and what to build next, in order.
@@ -144,3 +144,9 @@ UKTL is one firm, so there is no client/employer portal (removed from the backlo
 - Ported onto devacnt/UKTL (the source of truth) on 23 September; JSHrs/uktl- `main` mirrors devacnt.
 - Public pages rewritten for candidates first (free CV score, tips, matched roles, workplace guidance). UKTL is a staffing firm for candidates only, so there is no employer-facing copy, "I'm hiring" route or employer services section; construction, engineering and technology lead because that is where the platform's live roles come from. Unverified stats (e.g. "14+ years", "100% retained") were removed from `/reach`. Company facts (addresses, phone, sector notes) are unchanged and still need the owner's confirmation.
 - Light and dark mode follow the device setting (`prefers-color-scheme`): dark tokens in `styles.css`, `.band` keeps the landing feature bands dark in both themes, `.hero-mark` handles the hero illustration, and Tailwind `dark:` now means "system dark".
+
+## 12. Operations, privacy and dependency hardening — 23 September 2026
+
+New administrator operations dashboard and protected health endpoint; request-scoped transactional audit attribution; AI usage and global hourly request budget; private scanner integration that fails closed; retryable CV-file erasure; candidate self-service data copy and reviewed privacy request queue; corrected same-origin redirect and sign-out revocation; mobile admin shell; working privacy/usage information links. Dependency updates remove the recorded advisories and required adapting the router error type. Supabase migration and actual PostgreSQL regressions accompany the changes. Live scanner/provider acceptance, complete reviewed notices, live full-scope erasure/provider acceptance, approved retention/orphan cleanup and operational exercises remain required. Cloudflare is deliberately last.
+
+Follow-up: dependency-free private ClamAV gateway with bounded authenticated scanning; reviewed account-erasure workflow with tombstone write protection, retryable private-file cleanup and Auth deletion last. Synthetic protocol tests and real PostgreSQL integration cover failure/retry and ownership behavior; real engine/provider deployment remains open.

@@ -1,11 +1,13 @@
+import type { AppEnv } from "./env";
+import { trackedAnthropicFetch } from "./ai-usage.ts";
 import {z} from 'zod';
 import {boundedText} from './bounded-response.ts';
-export async function claudeJson<T>(args:{apiKey?:string;model?:string;system:string;input:unknown;schema:z.ZodType<T>;maxTokens?:number}):Promise<T>{
+export async function claudeJson<T>(args:{apiKey?:string;model?:string;system:string;input:unknown;schema:z.ZodType<T>;maxTokens?:number;telemetry?:AppEnv;purpose?:string}):Promise<T>{
  if(!args.apiKey)throw new Error('AI service is not configured');
  const input=JSON.stringify(args.input);
  if(input.length>100000)throw new Error('Assessment input is too large');
  try{
-  const response=await fetch('https://api.anthropic.com/v1/messages',{
+  const response=await trackedAnthropicFetch(args.telemetry,args.purpose??'assessment',args.model??'claude-sonnet-4-6',{
    method:'POST',signal:AbortSignal.timeout(60000),redirect:'error',
    headers:{'x-api-key':args.apiKey,'anthropic-version':'2023-06-01','content-type':'application/json'},
    body:JSON.stringify({model:args.model??'claude-sonnet-4-6',max_tokens:args.maxTokens??3000,system:args.system,messages:[{role:'user',content:input}]})});

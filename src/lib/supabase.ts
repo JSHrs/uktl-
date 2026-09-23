@@ -19,7 +19,7 @@ export async function getSupabaseAdmin(): Promise<SupabaseClient> {
   const url = env.SUPABASE_URL;
   const key = env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new Error("SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not configured");
-  return createClient(url, key, { auth: { persistSession: false } });
+  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: (input, init) => fetch(input, { ...init, signal: AbortSignal.timeout(15000) }) } });
 }
 
 // ── Session cookie names ──────────────────────────────────────────────────────
@@ -43,7 +43,12 @@ export async function getCandidateSession(): Promise<{
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
     const { resolveCandidateSession } = await import("./server/candidate-session");
-    return await resolveCandidateSession(client.auth, accessToken, refreshToken, setSessionCookies);
+    const session = await resolveCandidateSession(client.auth, accessToken, refreshToken, setSessionCookies);
+    if (session.userId && env.DATA_BACKEND === "supabase") {
+      const blocked = await env.DB.prepare("SELECT 1 FROM account_erasures WHERE target_user_id=?::uuid").bind(session.userId).first();
+      if (blocked) return { userId: null, email: null };
+    }
+    return session;
   } catch {
     return { userId: null, email: null };
   }

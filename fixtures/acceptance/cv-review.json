@@ -1,0 +1,172 @@
+{
+  "version": "synthetic-review-v1",
+  "purpose": "Engineering regression and human review preparation; not live-provider or human acceptance evidence.",
+  "cases": [
+    {
+      "id": "construction-complete",
+      "synthetic": true,
+      "cvText": "Synthetic evaluation only. construction. Skills: site management, health and safety. Seven years of experience. Senior role. Based in London.",
+      "profile": {
+        "name": "Synthetic evaluation candidate",
+        "sector": "construction",
+        "skills": [
+          {
+            "skill": "site management"
+          },
+          {
+            "skill": "health and safety"
+          }
+        ],
+        "experience": [],
+        "education": [],
+        "total_years_experience": 7,
+        "seniority": "senior",
+        "location": "London"
+      },
+      "job": {
+        "id": "synthetic-construction",
+        "created_at": 1,
+        "title": "Synthetic construction role",
+        "status": "open",
+        "must_have_skills": [
+          "site management",
+          "health and safety"
+        ],
+        "nice_to_have_skills": [],
+        "min_years_experience": 5,
+        "seniority": "senior",
+        "location": "London"
+      },
+      "expectedScore": 100,
+      "humanReview": {
+        "reviewer": null,
+        "reviewedAt": null,
+        "approved": false,
+        "notes": null
+      }
+    },
+    {
+      "id": "construction-unknowns",
+      "synthetic": true,
+      "cvText": "Synthetic evaluation only. construction. Skills: site management. Experience duration, seniority and location are not stated.",
+      "profile": {
+        "name": "Synthetic evaluation candidate",
+        "sector": "construction",
+        "skills": [
+          {
+            "skill": "site management"
+          }
+        ],
+        "experience": [],
+        "education": [],
+        "total_years_experience": null,
+        "seniority": null,
+        "location": null
+      },
+      "job": {
+        "id": "synthetic-construction",
+        "created_at": 1,
+        "title": "Synthetic construction role",
+        "status": "open",
+        "must_have_skills": [
+          "site management",
+          "health and safety"
+        ],
+        "nice_to_have_skills": [],
+        "min_years_experience": 5,
+        "seniority": "senior",
+        "location": "London"
+      },
+      "expectedScore": 25,
+      "humanReview": {
+        "reviewer": null,
+        "reviewedAt": null,
+        "approved": false,
+        "notes": null
+      }
+    },
+    {
+      "id": "technology-complete",
+      "synthetic": true,
+      "cvText": "Synthetic evaluation only. technology. Skills: typescript, postgresql. Seven years of experience. Senior role. Based in London.",
+      "profile": {
+        "name": "Synthetic evaluation candidate",
+        "sector": "technology",
+        "skills": [
+          {
+            "skill": "typescript"
+          },
+          {
+            "skill": "postgresql"
+          }
+        ],
+        "experience": [],
+        "education": [],
+        "total_years_experience": 7,
+        "seniority": "senior",
+        "location": "London"
+      },
+      "job": {
+        "id": "synthetic-technology",
+        "created_at": 1,
+        "title": "Synthetic technology role",
+        "status": "open",
+        "must_have_skills": [
+          "typescript",
+          "postgresql"
+        ],
+        "nice_to_have_skills": [],
+        "min_years_experience": 5,
+        "seniority": "senior",
+        "location": "London"
+      },
+      "expectedScore": 100,
+      "humanReview": {
+        "reviewer": null,
+        "reviewedAt": null,
+        "approved": false,
+        "notes": null
+      }
+    },
+    {
+      "id": "technology-unknowns",
+      "synthetic": true,
+      "cvText": "Synthetic evaluation only. technology. Skills: typescript. Experience duration, seniority and location are not stated.",
+      "profile": {
+        "name": "Synthetic evaluation candidate",
+        "sector": "technology",
+        "skills": [
+          {
+            "skill": "typescript"
+          }
+        ],
+        "experience": [],
+        "education": [],
+        "total_years_experience": null,
+        "seniority": null,
+        "location": null
+      },
+      "job": {
+        "id": "synthetic-technology",
+        "created_at": 1,
+        "title": "Synthetic technology role",
+        "status": "open",
+        "must_have_skills": [
+          "typescript",
+          "postgresql"
+        ],
+        "nice_to_have_skills": [],
+        "min_years_experience": 5,
+        "seniority": "senior",
+        "location": "London"
+      },
+      "expectedScore": 25,
+      "humanReview": {
+        "reviewer": null,
+        "reviewedAt": null,
+        "approved": false,
+        "notes": null
+      }
+    }
+  ]
+}

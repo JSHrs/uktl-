@@ -14,6 +14,7 @@ export type RateLimitResult =
 export type RateLimitRule = { limit: number; windowMs: number };
 
 export const RATE_LIMITS = {
+  privacy: { limit: 10, windowMs: 60 * 60 * 1000 },
   hrQuestion: { limit: 30, windowMs: 60 * 60 * 1000 },
   hrSource: { limit: 20, windowMs: 60 * 60 * 1000 },
   videoPlay: { limit: 100, windowMs: 60 * 60 * 1000 },
