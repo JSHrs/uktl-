@@ -830,6 +830,7 @@ export async function getAdminAnalytics(env: AppEnv): Promise<{
 // ── Admin: Candidates ────────────────────────────────────────────────────────
 
 export async function deleteCandidate(env: AppEnv, id: string): Promise<void> {
+  if (env.DATA_BACKEND === "supabase") throw new Error("Use the durable private-file erasure workflow for Supabase candidates");
   await env.DB.batch([
     env.DB.prepare(`DELETE FROM candidate_skills WHERE candidate_id=?`).bind(id),
     env.DB.prepare(`DELETE FROM candidate_experience WHERE candidate_id=?`).bind(id),
