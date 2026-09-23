@@ -181,9 +181,9 @@ export function Pill({
     tone === "good"
       ? "bg-accent-soft text-accent border-accent/20"
       : tone === "warn"
-        ? "bg-amber-50 text-amber-700 border-amber-200"
+        ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900"
         : tone === "bad"
-          ? "bg-red-50 text-red-700 border-red-200"
+          ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900"
           : "bg-paper-deep text-ink-mute border-rule";
   return (
     <span

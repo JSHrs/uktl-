@@ -3,7 +3,8 @@
 @source "../src";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+/* `dark:` utilities follow the visitor's system setting. */
+@custom-variant dark (@media (prefers-color-scheme: dark));
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -51,6 +52,7 @@
 
 :root {
   --radius: 0.5rem;
+  color-scheme: light dark;
 
   /* Minimalist editorial palette — near-neutral, crisper contrast */
   --paper: oklch(0.990 0.001 82);         /* near-pure white, trace chalk */
@@ -97,6 +99,58 @@
   --sidebar-accent-foreground: var(--ink);
   --sidebar-border: var(--rule);
   --sidebar-ring: var(--accent);
+}
+
+/* Dark palette — applied automatically when the device is set to dark mode.
+   Same roles as the light tokens: paper = surface, ink = text, accent = brand. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: oklch(0.165 0.006 262);        /* deep slate, not pure black */
+    --paper-deep: oklch(0.205 0.008 262);   /* raised surface */
+    --ink: oklch(0.955 0.004 82);           /* warm off-white text */
+    --ink-soft: oklch(0.800 0.006 82);
+    --ink-mute: oklch(0.640 0.007 82);
+    --rule: oklch(0.300 0.010 262);         /* hairline on dark */
+    --accent: oklch(0.790 0.085 263);       /* periwinkle — navy is unreadable on dark */
+    --accent-soft: oklch(0.270 0.045 263);
+    --accent-light: oklch(0.840 0.060 263);
+    --destructive: oklch(0.700 0.190 25);
+  }
+}
+
+/* Feature bands (dark sections on the landing pages) stay dark in both themes:
+   inside .band the light-theme values are pinned, so bg-ink / text-paper keep
+   their meaning. In dark mode the band reads as a deeper layer than the page. */
+.band {
+  --paper: oklch(0.990 0.001 82);
+  --paper-deep: oklch(0.963 0.003 82);
+  --ink: oklch(0.095 0.003 60);
+  --ink-soft: oklch(0.365 0.006 60);
+  --ink-mute: oklch(0.585 0.005 60);
+  --rule: oklch(0.908 0.003 82);
+  --accent: oklch(0.285 0.075 263);
+  --accent-soft: oklch(0.945 0.020 263);
+  --accent-light: oklch(0.765 0.055 263);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  .band {
+    --ink: oklch(0.115 0.006 262);
+    box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.06), inset 0 -1px 0 oklch(1 0 0 / 0.06);
+  }
+}
+
+/* Hero map illustration: multiplied onto paper in light mode; inverted and
+   screened in dark mode so it reads as a faint light etching. */
+.hero-mark {
+  mix-blend-mode: multiply;
+  filter: grayscale(100%) contrast(1.05);
+}
+@media (prefers-color-scheme: dark) {
+  .hero-mark {
+    mix-blend-mode: screen;
+    filter: grayscale(100%) invert(1) contrast(1.1);
+  }
 }
 
 @layer base {

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { SiteLayout, Wrap } from "@/components/site/Layout";
 import { Reveal } from "@/components/site/Reveal";
@@ -9,27 +9,29 @@ export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
       { title: "Contact — UK Talent Link" },
-      { name: "description", content: "Tell us about the people problem in front of you. A real person replies, usually within one working day. Offices in London and Dubai." },
+      { name: "description", content: "Questions about a role, your CV or hiring with us? A real person at UK Talent Link replies, usually within one working day. Offices in London and Dubai." },
       { property: "og:title", content: "Contact — UK Talent Link" },
-      { property: "og:description", content: "Tell us about the people problem in front of you. A real person replies, usually within one working day." },
+      { property: "og:description", content: "Questions about a role, your CV or hiring with us? A real person replies, usually within one working day." },
     ],
   }),
   component: ContactPage,
 });
 
 const ENQUIRY_TYPES = [
-  "Executive search mandate",
-  "HR consultancy",
-  "Employment law advice",
-  "GCC recruitment",
-  "Talent Compass platform",
-  "General enquiry",
+  "I'm looking for a role",
+  "Help with my CV or account",
+  "A question about my rights at work",
+  "I'm hiring — recruitment or executive search",
+  "HR consultancy for my business",
+  "Employment law advice for my business",
+  "Recruiting in the Gulf",
+  "Something else",
 ];
 
 function ContactPage() {
   return (
     <SiteLayout>
-      <section className="bg-ink text-paper pt-44 pb-24 md:pt-56 md:pb-40 relative overflow-hidden min-h-screen">
+      <section className="band bg-ink text-paper pt-44 pb-24 md:pt-56 md:pb-40 relative overflow-hidden min-h-screen">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -41,18 +43,18 @@ function ContactPage() {
           <Reveal>
             <div className="font-mono text-xs tracking-[0.15em] uppercase text-paper/40 flex items-center gap-3.5">
               <span className="w-7 h-px bg-paper/40" />
-              05 — Contact
+              Contact
             </div>
             <h1
               className="font-display font-extralight leading-[0.97] tracking-[-0.035em] mt-7 max-w-[16ch]"
               style={{ fontSize: "clamp(44px, 7vw, 108px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
             >
-              Tell us about the people problem{" "}
+              Talk to a{" "}
               <em
                 className="italic"
                 style={{ color: "oklch(0.765 0.055 263)", fontVariationSettings: '"opsz" 144, "SOFT" 100' }}
               >
-                in front of you.
+                real person.
               </em>
             </h1>
           </Reveal>
@@ -74,9 +76,9 @@ function ContactPage() {
                 </div>
                 <ol className="list-none p-0 m-0 space-y-4">
                   {[
-                    "We read every message and reply personally — no auto-responders, no junior team triage.",
-                    "Expect a response within one working day. Usually sooner.",
-                    "If the brief warrants a call, we'll suggest times in our first reply.",
+                    "We read every message and reply personally, usually within one working day.",
+                    "Looking for a role? The quickest way to be considered is to upload your CV — you'll be matched to every role we're recruiting for.",
+                    "Hiring? Tell us about the role and we'll suggest times for a short call in our first reply.",
                     "We'll tell you honestly if we're not the right fit, and suggest who is.",
                   ].map((step, i) => (
                     <li key={i} className="flex gap-4 text-[14px] text-paper/50">
@@ -85,6 +87,12 @@ function ContactPage() {
                     </li>
                   ))}
                 </ol>
+                <Link
+                  to="/auth/register"
+                  className="mt-8 inline-flex items-center gap-2 text-[13px] px-5 py-2.5 bg-paper text-ink rounded-full hover:bg-accent-light transition-colors"
+                >
+                  Upload your CV — it's free →
+                </Link>
               </div>
             </Reveal>
 
@@ -182,7 +190,7 @@ function ContactForm() {
         className="font-display font-light leading-[1.1] tracking-[-0.02em] m-0 mb-2"
         style={{ fontSize: "clamp(20px, 2.2vw, 28px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
       >
-        A short, quiet form.
+        Send us a message.
       </h3>
       <p className="text-paper/45 text-[13px] m-0 mb-8 leading-[1.5]">
         We read every message. A real person replies.
@@ -192,7 +200,7 @@ function ContactForm() {
         {[
           { label: "Your name", id: "name", type: "text", required: true },
           { label: "Email address", id: "email", type: "email", required: true },
-          { label: "Company or organisation", id: "company", type: "text", required: false },
+          { label: "Company (if you're hiring)", id: "company", type: "text", required: false },
         ].map((f) => (
           <div key={f.id}>
             <label htmlFor={f.id} className="block font-mono text-[10px] tracking-[0.14em] uppercase text-paper/35 mb-2.5">
@@ -218,7 +226,7 @@ function ContactForm() {
             className="w-full bg-transparent border-0 border-b border-paper/15 py-3 text-[15px] text-paper outline-none focus:border-paper/40 transition-colors appearance-none"
             style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.25)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 4px center" }}
           >
-            <option value="" className="bg-ink">Select type…</option>
+            <option value="" className="bg-ink">What's this about?</option>
             {ENQUIRY_TYPES.map((t) => (
               <option key={t} value={t} className="bg-ink">{t}</option>
             ))}
@@ -227,14 +235,14 @@ function ContactForm() {
 
         <div>
           <label htmlFor="msg" className="block font-mono text-[10px] tracking-[0.14em] uppercase text-paper/35 mb-2.5">
-            What are you working on? <span className="text-paper/25">*</span>
+            How can we help? <span className="text-paper/25">*</span>
           </label>
           <textarea
             id="msg"
             name="msg"
             required
             rows={4}
-            placeholder="Tell us about the role, the situation, or the problem you're trying to solve. A couple of sentences is enough to get started."
+            placeholder="A couple of sentences is enough — the role you're after, a question about your CV, or the position you're hiring for."
             className="w-full bg-transparent border-0 border-b border-paper/15 py-3 text-[15px] text-paper placeholder:text-paper/20 outline-none focus:border-paper/40 transition-colors resize-none"
           />
         </div>

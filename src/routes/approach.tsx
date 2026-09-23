@@ -5,10 +5,10 @@ import { Reveal } from "@/components/site/Reveal";
 export const Route = createFileRoute("/approach")({
   head: () => ({
     meta: [
-      { title: "Approach — UK Talent Link" },
-      { name: "description", content: "Independent, compliant, confidential. The five principles behind how we advise, search, and write the employment law that holds your team together." },
-      { property: "og:title", content: "Approach — UK Talent Link" },
-      { property: "og:description", content: "Independent, compliant, confidential. The five principles behind how we advise, search, and write the employment law that holds your team together." },
+      { title: "How it works — UK Talent Link" },
+      { name: "description", content: "How UK Talent Link works for candidates and employers: a free CV score and honest tips, matching to real roles, and consultants who get in touch when you're a strong fit." },
+      { property: "og:title", content: "How it works — UK Talent Link" },
+      { property: "og:description", content: "A free CV score, honest tips, matching to real roles, and consultants who get in touch when you're a strong fit." },
     ],
   }),
   component: ApproachPage,
@@ -17,66 +17,66 @@ export const Route = createFileRoute("/approach")({
 const principles = [
   {
     idx: "i.",
-    tag: "Independent",
-    title: "We sit on your side of the table.",
-    body: "No commissions. No preferred suppliers. No referral arrangements with law firms, payroll providers, or software vendors. When we recommend a course of action, it's because it's the right one for your business — not because there's a margin attached to it. Our advice is documented, on the record, and tested against what we see in the market every week.",
-    detail: "This matters most in executive search. The advice we give about a candidate has no financial upside for us beyond the engagement fee — so we have every reason to tell you the truth.",
+    tag: "Free for candidates",
+    title: "You never pay to find work through us.",
+    body: "Employers pay for recruitment, so everything we offer candidates is free: your account, your CV score and tips, your job matches, and general guidance on your rights at work. There's no premium tier and nothing to unlock.",
+    detail: "UK rules stop recruitment agencies charging people for finding them work — and we wouldn't want to anyway.",
   },
   {
     idx: "ii.",
-    tag: "Compliant",
-    title: "Employment law is the starting point, not the afterthought.",
-    body: "Every recruitment engagement, every restructure, every exit is reviewed against current UK statute and case law before it moves. Employment tribunals are expensive — financially and reputationally — and most of the situations that end there were avoidable. The mistakes we prevent are the ones you never have to read about.",
-    detail: "We keep a close watch on Employment Appeal Tribunal decisions and statutory guidance changes. If something relevant lands while we're working with you, you hear about it before it becomes your problem.",
+    tag: "Honest",
+    title: "We tell you where you stand.",
+    body: "Most job searches go quiet and you never find out why. Your CV score breaks down how your CV reads across contact details, experience, skills and education, and each section comes with specific suggestions you can act on straight away.",
+    detail: "Upload an improved version whenever you like; your score and matches update with it.",
   },
   {
     idx: "iii.",
-    tag: "Confidential",
-    title: "Discretion is the default.",
-    body: "Our best work rarely appears on our website. Senior searches where a sitting post-holder doesn't yet know they're being replaced. Sensitive exits where both parties need to move on cleanly. Cross-border restructuring that requires delicacy with a regulator. These engagements happen quietly, in one place, and leave minimal footprint.",
-    detail: "We don't publish case studies without explicit client consent. We don't list company names in our credentials unless we're invited to. The people who matter in our industry know us from the work, not from the marketing.",
+    tag: "Private",
+    title: "Your CV is yours.",
+    body: "Your CV is stored privately and accessed only through your account or by authorised UK Talent Link staff. It is never published or sold on, and you can see and edit the profile we build from it.",
+    detail: "Staff access is restricted to named team members who sign in with two-step verification.",
   },
   {
     idx: "iv.",
-    tag: "Expertise",
-    title: "Written by humans. Drafted by specialists.",
-    body: "Contracts, policies, offer letters, settlement agreements, and handbook documentation that hold up when you actually need them to — because a real practitioner wrote them, not a paralegal following a precedent that hasn't been updated since 2019. We draft. We negotiate. We stand behind our output in writing.",
-    detail: "AI assists with research and drafting speed. Lawyers and HR practitioners review every document that leaves our office. The distinction matters, and we're transparent about it.",
+    tag: "Human",
+    title: "Software ranks the matches. People make the call.",
+    body: "Matching tells us which roles fit your experience and skills, and shows you the reasons. But a consultant reviews the shortlist for every role and decides who to speak to — you're a person, not a keyword count.",
+    detail: "Register interest in the roles you like and it shows up for the consultant working on that role.",
   },
   {
     idx: "v.",
-    tag: "Selective",
-    title: "A small number of clients at a time.",
-    body: "Our model is deliberate. Fewer engagements, deeper relationships, partner-led delivery on everything. You'll know who is making the calls, writing the documents, and speaking to the candidates. There's no account management layer between you and the people doing the work.",
-    detail: "We typically carry eight to twelve active retained relationships at any time. If we can't take on your brief properly, we'll tell you — and suggest someone who can.",
+    tag: "Grounded in employment law",
+    title: "Offers that hold up.",
+    body: "Our HR consultancy and UK employment-law practice sits alongside recruitment. For employers, that means contracts and offers are checked properly. For candidates, it means clear, practical guidance when you have a question about work.",
+    detail: "Guidance for candidates is general information based on ACAS advice and UK law — not legal representation.",
   },
 ];
 
 const process = [
   {
     n: "01",
-    title: "Discovery call",
-    body: "We begin with a 30–45 minute call — structured, not a pitch. We want to understand your business, the nature of the brief, and whether we're the right fit. If we're not, we'll say so.",
+    title: "Create your account",
+    body: "Sign up with your email in a minute. Your account keeps your CV, score, matches and questions in one private place.",
   },
   {
     n: "02",
-    title: "Scoping & terms",
-    body: "For retained search: a written brief, timeline, success criteria, and fee structure agreed before any work begins. For advisory: scope and deliverables confirmed in writing. No surprises.",
+    title: "Upload your CV",
+    body: "PDF, Word or plain text, up to 10 MB. We read it and build a structured profile you can check and correct.",
   },
   {
     n: "03",
-    title: "Active work",
-    body: "Search: market mapping, discreet approaches, structured interviews, candidate reporting. Advisory: document drafting, policy review, investigation support, or whatever the brief requires. All partner-led.",
+    title: "Improve your score",
+    body: "See your score out of 100 and specific tips for each section. Update your CV and upload again whenever you like.",
   },
   {
     n: "04",
-    title: "Decision support",
-    body: "We present options with a clear recommendation. For search: a shortlist with written assessments, not just profiles. For advisory: a decision memo with legal grounding and practical implications.",
+    title: "Choose your roles",
+    body: "Browse the roles you match, see why, and register interest in the ones you want with a single swipe.",
   },
   {
     n: "05",
-    title: "Completion & follow-through",
-    body: "Placement: offer negotiation, employment law review of the contract, onboarding support. Advisory: signed-off documentation, training if required. We're available after completion — not just until the invoice is paid.",
+    title: "Speak to a consultant",
+    body: "When you're a strong fit for a role, a consultant gets in touch to talk it through with you.",
   },
 ];
 
@@ -84,16 +84,16 @@ function ApproachPage() {
   return (
     <SiteLayout>
       <PageHero
-        eyebrow="01 — Approach"
+        eyebrow="How it works"
         title={
           <>
-            A quieter way to{" "}
+            Recruitment that{" "}
             <em className="italic text-accent" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 100' }}>
-              build teams.
+              works for you.
             </em>
           </>
         }
-        lede="Each engagement begins by listening — to your business, your obligations, and the gap between the team you have and the one you need. We ask more questions than most firms at this stage. It's not due diligence theatre — it's how we stay useful."
+        lede="Whether you're looking for your next role or hiring for one, the idea is the same: understand what you need, be honest about the fit, and stay involved until the right person is in the right job."
       />
 
       {/* Principles */}
@@ -101,7 +101,7 @@ function ApproachPage() {
         <Wrap>
           <Reveal>
             <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute mb-10">
-              — Five working principles
+              — What you can expect from us
             </div>
           </Reveal>
           <Reveal stagger>
@@ -141,17 +141,17 @@ function ApproachPage() {
             <div className="grid md:grid-cols-[1fr_2fr] gap-16 items-end mb-16">
               <div>
                 <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute mb-4">
-                  — How an engagement works
+                  — Your journey
                 </div>
                 <h2
                   className="font-display font-light leading-[1] tracking-[-0.03em]"
                   style={{ fontSize: "clamp(28px, 4vw, 52px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
                 >
-                  From first call to completion.
+                  From upload to first conversation.
                 </h2>
               </div>
               <p className="text-[15px] text-ink-soft leading-[1.65] max-w-[52ch]">
-                Whether it's a retained search, an HR advisory engagement, or an employment law matter, every piece of work follows the same structure: clear scope, active delivery, clean completion. No ambiguity about who does what and when.
+                Five steps, all free. You stay in control throughout: you choose which roles you're interested in, and you can update your CV whenever you like.
               </p>
             </div>
           </Reveal>
@@ -181,7 +181,7 @@ function ApproachPage() {
           <div className="grid md:grid-cols-[1fr_2fr] gap-16 items-start">
             <Reveal>
               <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute mb-4">
-                — Who we work with
+                — Two sides, one firm
               </div>
               <h2
                 className="font-display font-light leading-[1] tracking-[-0.03em]"
@@ -194,13 +194,13 @@ function ApproachPage() {
             <Reveal>
               <div className="space-y-8">
                 <p className="text-[16px] text-ink-soft leading-[1.65]">
-                  Our clients are typically scaling businesses and established firms who need expert support without the overhead of a large retained search firm or an employment law practice on hourly billing. They value directness, written advice, and a practice that knows their sector.
+                  We recruit for employers across the UK and the Gulf, and we work for the candidates we place as much as for the businesses that hire them. A good placement is one both sides are still happy with a year later.
                 </p>
                 <div className="grid sm:grid-cols-3 gap-6">
                   {[
-                    { title: "Scale-ups", body: "Series A to Series C businesses building their first leadership team or professionalising an HR function." },
-                    { title: "Established firms", body: "Businesses in regulated sectors — financial services, legal, healthcare — where compliance is non-negotiable." },
-                    { title: "GCC operations", body: "Regional companies bringing UK talent in, and UK businesses expanding into the Gulf." },
+                    { title: "Candidates", body: "Professionals at every level looking for their next role in the UK or the Gulf — especially in construction, engineering and technology." },
+                    { title: "Employers", body: "Businesses hiring in the UK who want recruitment, HR and employment law from one team that knows their sector." },
+                    { title: "UK ↔ Gulf", body: "Regional companies bringing UK talent in, and UK professionals and businesses making the move to the Gulf." },
                   ].map((c) => (
                     <div key={c.title} className="border border-rule rounded-sm p-5">
                       <h4 className="font-display font-light text-lg tracking-[-0.01em] mb-2">{c.title}</h4>
@@ -224,16 +224,22 @@ function ApproachPage() {
                   className="font-display font-light leading-[1.1] tracking-[-0.02em] mb-2"
                   style={{ fontSize: "clamp(22px, 2.5vw, 32px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
                 >
-                  Ready to talk through a brief?
+                  Ready to see where you stand?
                 </h3>
-                <p className="text-[15px] text-ink-soft m-0">A short call is usually enough to know whether we're the right fit.</p>
+                <p className="text-[15px] text-ink-soft m-0">Upload your CV free and get your score today. Hiring? Tell us about the role.</p>
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 <Link
                   to="/contact"
+                  className="text-[13px] px-5 py-2.5 border border-rule text-ink rounded-full hover:border-ink transition-colors whitespace-nowrap"
+                >
+                  I'm hiring
+                </Link>
+                <Link
+                  to="/auth/register"
                   className="text-[13px] px-5 py-2.5 border border-ink bg-ink text-paper rounded-full hover:opacity-80 transition-opacity whitespace-nowrap"
                 >
-                  Start a conversation →
+                  Upload your CV →
                 </Link>
               </div>
             </div>

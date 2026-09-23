@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { signOutFn } from "@/lib/functions";
 
 const links = [
-  { to: "/approach", label: "Approach" },
+  { to: "/approach", label: "How it works" },
   { to: "/services", label: "Services" },
   { to: "/sectors", label: "Sectors" },
   { to: "/reach", label: "Reach" },

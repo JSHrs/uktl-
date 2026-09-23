@@ -19,7 +19,7 @@ test.describe("Public site and header", () => {
   test("sign-in pages use the same header", async ({ page }) => {
     await page.goto("/auth/login");
     const nav = page.getByRole("navigation").first();
-    await expect(nav.getByRole("link", { name: "Approach" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "How it works" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   });
 });

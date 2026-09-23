@@ -7,10 +7,10 @@ import heroMark from "@/assets/hero-mark.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "UK Talent Link — People, law, and the work of hiring well." },
-      { name: "description", content: "London-based executive search, HR consultancy, and UK employment law practice. Independent advice, embedded compliance, and a working knowledge of the GCC market." },
-      { property: "og:title", content: "UK Talent Link — People, law, and the work of hiring well." },
-      { property: "og:description", content: "London-based executive search, HR consultancy, and UK employment law practice. Independent advice, embedded compliance, and a working knowledge of the GCC market." },
+      { title: "UK Talent Link — Your next role, matched to what you do best" },
+      { name: "description", content: "UK Talent Link is a recruitment firm placing people across the UK and the Gulf. Upload your CV free: get a CV score, specific tips to improve it, and matches to the roles we're recruiting for." },
+      { property: "og:title", content: "UK Talent Link — Your next role, matched to what you do best" },
+      { property: "og:description", content: "Upload your CV free. Get a CV score, specific tips to improve it, and matches to the roles we're recruiting for across the UK and the Gulf." },
       { property: "og:type", content: "website" },
     ],
   }),
@@ -76,15 +76,13 @@ function Hero() {
       <div
         ref={markRef}
         aria-hidden="true"
-        className="absolute inset-0 z-0 pointer-events-none will-change-transform"
+        className="hero-mark absolute inset-0 z-0 pointer-events-none will-change-transform"
         style={{
           backgroundImage: `url(${heroMark})`,
           backgroundSize: "cover",
           backgroundPosition: "center 40%",
           maskImage: "radial-gradient(ellipse 70% 65% at 68% 42%, black 0%, black 30%, transparent 80%)",
           WebkitMaskImage: "radial-gradient(ellipse 70% 65% at 68% 42%, black 0%, black 30%, transparent 80%)",
-          mixBlendMode: "multiply",
-          filter: "grayscale(100%) contrast(1.05)",
           opacity: entered ? `calc(var(--mark-fade, 1) * 0.20)` : 0,
           transition: "opacity 2000ms var(--ease-publication)",
         }}
@@ -100,20 +98,20 @@ function Hero() {
       <Wrap className="relative z-10 flex-1 flex flex-col justify-between">
         <div className="eyebrow-rise font-mono text-[11px] tracking-[0.16em] uppercase text-ink-mute flex items-center gap-3">
           <span className="w-6 h-px bg-current" />
-          London · Dubai · Riyadh · Abu Dhabi
+          Recruitment · London & the Gulf
         </div>
 
         <h1
           className="font-display font-light leading-[0.93] tracking-[-0.03em] mt-8 text-ink"
           style={{ fontSize: "clamp(52px, 8.5vw, 140px)", fontVariationSettings: '"opsz" 144, "SOFT" 35' }}
         >
-          <span className="title-line"><span style={{ animationDelay: "320ms" }}>People, law,</span></span>
-          <span className="title-line"><span style={{ animationDelay: "460ms" }}>and the work</span></span>
+          <span className="title-line"><span style={{ animationDelay: "320ms" }}>Your next role,</span></span>
+          <span className="title-line"><span style={{ animationDelay: "460ms" }}>matched to what</span></span>
           <span className="title-line">
             <span style={{ animationDelay: "600ms" }}>
-              of hiring{" "}
+              you do{" "}
               <em className="italic font-light text-accent" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 95' }}>
-                well.
+                best.
               </em>
             </span>
           </span>
@@ -121,7 +119,7 @@ function Hero() {
 
         <div className="foot-rise grid md:grid-cols-[1fr_auto_1fr] items-end gap-10 mt-20 pt-7 border-t border-rule">
           <p className="m-0 text-[15px] text-ink-soft leading-relaxed max-w-[38ch]">
-            An independent HR consultancy, executive search firm, and UK employment law practice. No commissions. No preferred suppliers. Just the right answer.
+            UK Talent Link is a recruitment firm placing people across the UK and the Gulf. Upload your CV once — we score it, show you exactly how to strengthen it, and match you to the roles we're recruiting for. It's free.
           </p>
           <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-mute flex items-center gap-2 md:justify-self-center">
             <span className="w-1.5 h-1.5 rounded-full bg-ink-mute pulse-dot" />
@@ -132,7 +130,7 @@ function Hero() {
               to="/contact"
               className="inline-flex items-center gap-2 text-[13px] px-5 py-2.5 border border-rule text-ink rounded-full hover:border-ink transition-colors"
             >
-              Start a conversation
+              Hiring? Talk to us
             </Link>
             <Link
               to="/auth/register"
@@ -151,14 +149,14 @@ function Hero() {
 
 function Marquee() {
   const items = [
-    "HR Consultancy",
-    "Executive Search",
-    "UK Employment Law",
-    "GCC Recruitment",
-    "Workforce Strategy",
-    "TUPE & Compliance",
-    "Talent Intelligence",
-    "Cross-Border Placements",
+    "Free CV score",
+    "Tips to strengthen your CV",
+    "Matched to live roles",
+    "Construction & engineering",
+    "Technology & digital",
+    "UK & Gulf opportunities",
+    "Free workplace guidance",
+    "Real consultants",
   ];
   const row = (
     <span className="flex items-center gap-14">
@@ -187,27 +185,27 @@ function Marquee() {
 const SERVICES = [
   {
     num: "01",
-    title: "HR Consultancy",
-    body: "Fractional HR leadership and embedded advisory for scaling companies. Policy design, restructures, TUPE, investigations, and performance frameworks — delivered by practitioners who stay long enough to see the results.",
-    link: "/services",
+    title: "A free CV score",
+    body: "Your CV is scored out of 100 across contact details, experience, skills and education — so you can see exactly where it's strong and where it may be costing you interviews.",
+    link: "/auth/register",
   },
   {
     num: "02",
-    title: "Executive Search",
-    body: "Retained search for senior and board-level appointments where the wrong hire is expensive. Mapped markets, discreet approaches, structured assessment — with employment law built in from the first brief.",
-    link: "/services",
+    title: "Specific ways to improve it",
+    body: "Not generic advice. Clear, section-by-section suggestions you can act on today. Make the changes, upload again, and watch your score move.",
+    link: "/auth/register",
   },
   {
     num: "03",
-    title: "UK Employment Law",
-    body: "Contracts, handbooks, settlement agreements, TUPE, and day-to-day advice. Practical answers from specialists who write the documents themselves, not a memo that ends in 'it depends'.",
-    link: "/services",
+    title: "Matched to real roles",
+    body: "Your CV is matched against every role we're recruiting for, with a fit score and the reasons behind it. Tell us which roles interest you with a single swipe.",
+    link: "/auth/register",
   },
   {
     num: "04",
-    title: "GCC Recruitment",
-    body: "A London practice with a working knowledge of the Gulf labour market. We connect UK businesses hiring into the region and regional firms seeking the UK talent they actually want — handling mobility, compliance, and cultural fit.",
-    link: "/services",
+    title: "Guidance on your rights at work",
+    body: "Questions about contracts, pay, holiday or dismissal? Get clear answers grounded in ACAS guidance and UK employment law — and book time with a specialist if you need more.",
+    link: "/auth/register",
   },
 ];
 
@@ -219,20 +217,20 @@ function Services() {
           <div className="flex items-end justify-between gap-8 mb-16">
             <div>
               <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute mb-4">
-                — What we do
+                — What you get
               </div>
               <h2
                 className="font-display font-light leading-[1] tracking-[-0.03em] max-w-[16ch]"
                 style={{ fontSize: "clamp(36px, 5vw, 68px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
               >
-                <Words text="Four practices," accent="one team." />
+                <Words text="Four reasons to" accent="upload today." />
               </h2>
             </div>
             <Link
-              to="/services"
+              to="/approach"
               className="hidden md:inline-flex items-center gap-2 text-[13px] text-ink-soft hover:text-ink transition-colors border-b border-transparent hover:border-ink pb-0.5 shrink-0"
             >
-              All services →
+              How it works →
             </Link>
           </div>
         </Reveal>
@@ -256,7 +254,7 @@ function Services() {
                 </h3>
                 <p className="text-[15px] text-ink-soft leading-[1.6] m-0 max-w-[46ch]">{s.body}</p>
                 <div className="mt-6 text-[13px] text-ink-mute group-hover:text-ink transition-colors duration-500">
-                  Learn more{" "}
+                  Get started{" "}
                   <span className="inline-block transition-transform duration-500 [transition-timing-function:var(--ease-publication)] group-hover:translate-x-1.5">
                     →
                   </span>
@@ -288,17 +286,17 @@ function Platform() {
   }, []);
 
   const steps = [
-    { n: "01", title: "Upload", desc: "PDF, DOCX, or plain text. Stored privately — never accessible publicly.", glyph: "↑" },
-    { n: "02", title: "Extract", desc: "Claude reads the document and outputs a full structured profile.", glyph: "◎" },
-    { n: "03", title: "Normalise", desc: "Canonical skill taxonomy. 'ReactJS' and 'React.js' resolve to one entry.", glyph: "≡" },
-    { n: "04", title: "Grade", desc: "CV quality scored 0–100 with per-section breakdown and improvement notes.", glyph: "◈" },
-    { n: "05", title: "Match", desc: "Ranked against every open mandate. Scores update when mandates change.", glyph: "→" },
+    { n: "01", title: "Sign up", desc: "A free account keeps your CV, score and matches in one private place.", glyph: "○" },
+    { n: "02", title: "Upload", desc: "PDF, Word or plain text, up to 10 MB. Stored privately, never public.", glyph: "↑" },
+    { n: "03", title: "Get your score", desc: "0–100, with a section-by-section breakdown and tips to improve.", glyph: "◈" },
+    { n: "04", title: "See your matches", desc: "A fit score for every open role we're recruiting for — and why.", glyph: "≡" },
+    { n: "05", title: "Hear from us", desc: "When you're a strong fit for a role, a consultant will be in touch.", glyph: "→" },
   ];
 
   return (
     <section
       ref={ref}
-      className="bg-ink text-paper py-24 md:py-40 relative overflow-hidden"
+      className="band bg-ink text-paper py-24 md:py-40 relative overflow-hidden"
     >
       <div
         className="absolute inset-0 pointer-events-none opacity-[0.035]"
@@ -313,16 +311,16 @@ function Platform() {
             <div className="md:max-w-[48ch]">
               <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-paper/40 mb-5 flex items-center gap-3">
                 <span className="w-6 h-px bg-paper/40" />
-                Talent Compass — Intelligence Platform
+                How it works
               </div>
               <h2
                 className="font-display font-light leading-[0.95] tracking-[-0.025em]"
                 style={{ fontSize: "clamp(36px, 5vw, 72px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
               >
-                <Words text="One upload." accent="Full intelligence." accentColor="oklch(0.765 0.055 263)" />
+                <Words text="One upload." accent="Every role we're hiring for." accentColor="oklch(0.765 0.055 263)" />
               </h2>
               <p className="text-paper/50 text-[15px] leading-relaxed max-w-[48ch] mt-5">
-                Upload your CV once. In under a minute it is read, scored with specific tips to improve it, and matched against every role we are recruiting for — and a consultant sees the strongest matches first.
+                Create a free account and upload your CV. Once it's processed you'll have your score, your improvement tips and your best-matched roles — and our consultants see your strongest matches when they're shortlisting.
               </p>
             </div>
             <div className="md:shrink-0 md:pt-2">
@@ -330,7 +328,7 @@ function Platform() {
                 to="/auth/register"
                 className="inline-flex items-center gap-2 text-[13px] px-5 py-2.5 border border-paper/20 text-paper/70 rounded-full hover:border-paper/60 hover:text-paper transition-colors"
               >
-                Upload your CV →
+                Create your free account →
               </Link>
             </div>
           </div>
@@ -380,19 +378,19 @@ function Platform() {
 
 const PRINCIPLES = [
   {
-    tag: "Independent",
-    title: "We sit on your side of the table.",
-    body: "No commissions. No preferred suppliers. No referral arrangements that compromise the advice. Just the right call — documented, on the record, and grounded in daily market practice.",
+    tag: "Free for candidates",
+    title: "You never pay us a penny.",
+    body: "Employers pay for recruitment. Your account, your CV score, your job matches and our workplace guidance cost you nothing.",
   },
   {
-    tag: "Compliant",
-    title: "Law first, not an afterthought.",
-    body: "Every search, every hire, every restructure is reviewed against UK statute and current case law before it moves. The mistakes we prevent are the ones you never read about in a tribunal award.",
+    tag: "Honest",
+    title: "Straight feedback, not silence.",
+    body: "Your score and tips show you exactly how your CV reads to a recruiter, so you're not left guessing why applications go quiet.",
   },
   {
-    tag: "Selective",
-    title: "A small number of clients at a time.",
-    body: "Our model is deliberate. Fewer engagements, partner-led delivery, deeper relationships. You'll know who is making the calls and writing the documents — not an account manager managing a team you've never met.",
+    tag: "Private",
+    title: "Your CV stays yours.",
+    body: "It's stored privately and accessed only through your account or by authorised UK Talent Link staff — never published or sold on.",
   },
 ];
 
@@ -404,22 +402,22 @@ function Approach() {
           <Reveal>
             <div className="md:sticky md:top-32">
               <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute mb-4">
-                — Approach
+                — Why UK Talent Link
               </div>
               <h2
                 className="font-display font-light leading-[1] tracking-[-0.03em]"
                 style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
               >
-                <Words text="A quieter way to" accent="build teams." />
+                <Words text="Recruitment that" accent="works for you." />
               </h2>
               <p className="text-[15px] text-ink-soft mt-6 leading-[1.65] max-w-[38ch]">
-                Each engagement begins by listening — to your business, your obligations, and the gap between the team you have and the one you need.
+                We're a recruitment firm, so our job is to put good people in good roles. That starts with telling you honestly where you stand — and matching you to roles that genuinely fit.
               </p>
               <Link
                 to="/approach"
                 className="mt-8 inline-flex items-center gap-1.5 text-[13px] text-ink-soft hover:text-ink transition-colors border-b border-transparent hover:border-ink pb-0.5"
               >
-                Read the full approach →
+                How we work →
               </Link>
             </div>
           </Reveal>
@@ -454,12 +452,12 @@ function Approach() {
 /* ─────────────────── Sectors ─────────────────── */
 
 const SECTORS = [
-  { name: "Financial Services", roles: "CFO · Finance Director · Head of Compliance · Investment Manager" },
-  { name: "Legal & Professional", roles: "General Counsel · Head of Legal · Partner · Managing Associate" },
-  { name: "Technology", roles: "CTO · VP Engineering · Head of Product · CISO" },
-  { name: "Energy & Infrastructure", roles: "Country Director · Project Director · HSE Lead · Commercial Manager" },
-  { name: "Healthcare & Life Sciences", roles: "Medical Director · COO · Head of Clinical Operations · CFO" },
-  { name: "Construction", roles: "Contracts Director · Quantity Surveyor · Bid Manager · Site Director" },
+  { name: "Construction & Engineering", roles: "Quantity Surveyor · Site Manager · Project Manager · Contracts Director" },
+  { name: "Technology & Digital", roles: "Software Engineer · Data Engineer · Head of Product · CTO" },
+  { name: "Energy & Infrastructure", roles: "Project Director · HSE Lead · Commercial Manager · Country Director" },
+  { name: "Financial Services", roles: "Finance Director · Head of Compliance · Risk · Investment Manager" },
+  { name: "Legal & Professional", roles: "General Counsel · Head of Legal · COO · Business Development" },
+  { name: "Healthcare & Life Sciences", roles: "COO · Head of Clinical Operations · Regulatory Affairs · CFO" },
 ];
 
 function Sectors() {
@@ -470,13 +468,13 @@ function Sectors() {
           <div className="flex items-end justify-between gap-8 mb-14">
             <div>
               <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute mb-4">
-                — Sectors
+                — Where we recruit
               </div>
               <h2
                 className="font-display font-light leading-[1] tracking-[-0.03em] max-w-[18ch]"
                 style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
               >
-                <Words text="Where the work" accent="tends to land." />
+                <Words text="Roles we" accent="recruit for." />
               </h2>
             </div>
             <Link
@@ -528,7 +526,7 @@ function Sectors() {
 
 function ContactCTA() {
   return (
-    <section className="bg-ink text-paper py-24 md:py-36 relative overflow-hidden">
+    <section className="band bg-ink text-paper py-24 md:py-36 relative overflow-hidden">
       <div
         className="absolute inset-0 pointer-events-none mesh-drift"
         style={{
@@ -541,33 +539,33 @@ function ContactCTA() {
             <div>
               <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-paper/40 mb-6 flex items-center gap-3">
                 <span className="w-6 h-px bg-paper/40" />
-                Start a conversation
+                Get started
               </div>
               <h2
                 className="font-display font-light leading-[0.97] tracking-[-0.03em]"
                 style={{ fontSize: "clamp(40px, 6vw, 96px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
               >
-                <Words text="Tell us about the people problem" accent="in front of you." accentColor="oklch(0.765 0.055 263)" />
+                <Words text="Your next move starts" accent="with one upload." accentColor="oklch(0.765 0.055 263)" />
               </h2>
             </div>
 
             <div className="flex flex-col gap-5">
               <p className="text-paper/55 text-[15px] leading-[1.6]">
-                We read every message. A real person replies, usually within one working day. If you need something quickly, call us.
+                Create a free account, upload your CV and see where you stand today. Hiring instead? Our consultants would like to hear about the role — a real person replies, usually within one working day.
               </p>
               <div className="flex flex-col gap-3 pt-2">
                 <Link
-                  to="/contact"
+                  to="/auth/register"
                   className="inline-flex items-center justify-center gap-2 text-[14px] font-medium px-6 py-3.5 bg-paper text-ink rounded-full hover:bg-accent-light transition-colors"
                 >
-                  Send an enquiry →
+                  Upload your CV — it's free →
                 </Link>
-                <a
-                  href="tel:+442071892857"
+                <Link
+                  to="/contact"
                   className="inline-flex items-center justify-center gap-2 text-[14px] px-6 py-3.5 border border-paper/20 text-paper/70 rounded-full hover:border-paper/60 hover:text-paper transition-colors"
                 >
-                  +44 (0)20 7189 2857
-                </a>
+                  I'm hiring — get in touch
+                </Link>
               </div>
               <div className="pt-4 border-t border-paper/10">
                 <div className="font-mono text-[11px] tracking-[0.1em] uppercase text-paper/30 mb-2">Office</div>

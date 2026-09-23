@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteLayout, Wrap, PageHero } from "@/components/site/Layout";
 import { Reveal } from "@/components/site/Reveal";
 
@@ -9,13 +9,13 @@ export const Route = createFileRoute("/reach")({
       {
         name: "description",
         content:
-          "Rooted in London. Working across the Gulf. One firm for both ends of the UK–GCC hiring corridor.",
+          "UK roles and Gulf roles from one recruitment firm. One free account opens up opportunities in London and across the GCC.",
       },
       { property: "og:title", content: "Reach — UK Talent Link" },
       {
         property: "og:description",
         content:
-          "Rooted in London. Working across the Gulf. One firm for both ends of the UK–GCC hiring corridor.",
+          "UK roles and Gulf roles from one recruitment firm. One free account opens up opportunities in both.",
       },
     ],
   }),
@@ -35,40 +35,25 @@ function ReachPage() {
   return (
     <SiteLayout>
       <PageHero
-        eyebrow="03 — Reach"
+        eyebrow="Reach"
         title={
           <>
-            One firm.{" "}
+            UK roles.{" "}
             <em className="italic text-accent" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 100' }}>
-              Two markets.
+              Gulf roles.
             </em>{" "}
-            One point of contact.
+            One account.
           </>
         }
-        lede="The UK–Gulf hiring corridor is busy, lucrative, and full of firms who only understand one end of it. We work on both."
+        lede="We recruit for employers in the UK and across the Gulf, so one free account opens up opportunities in both. Thinking about a move between them? Our consultants know what it really involves — from relocation to contracts under local law."
       />
 
       <section className="py-16 md:py-24">
         <Wrap>
           <Reveal>
-            <dl className="grid grid-cols-2 md:grid-cols-4 gap-x-12 gap-y-10 pb-16 border-b border-rule mb-16">
-              {[
-                { v: "14+", l: "Years combined practice" },
-                { v: "6", l: "GCC markets covered" },
-                { v: "100%", l: "Retained engagements" },
-                { v: "1", l: "Firm. One invoice." },
-              ].map((s) => (
-                <div key={s.l}>
-                  <dt
-                    className="font-display font-light tracking-[-0.03em] leading-[1] m-0"
-                    style={{ fontSize: "clamp(36px, 4vw, 52px)", fontVariationSettings: '"opsz" 144, "SOFT" 60' }}
-                  >
-                    {s.v}
-                  </dt>
-                  <dd className="m-0 mt-2 text-sm text-ink-mute font-mono uppercase tracking-[0.08em]">{s.l}</dd>
-                </div>
-              ))}
-            </dl>
+            <p className="text-[17px] text-ink-soft leading-[1.65] max-w-[62ch] pb-16 border-b border-rule mb-16 m-0">
+              London is our home. The Gulf is where many of the biggest construction, engineering and technology programmes are being delivered — and where UK-trained professionals are in demand. Whichever side you're on, you deal with one team.
+            </p>
           </Reveal>
 
           <Reveal>
@@ -76,9 +61,9 @@ function ReachPage() {
               className="font-display font-light leading-[1.05] tracking-[-0.02em] max-w-[20ch] mb-12"
               style={{ fontSize: "clamp(26px, 3.4vw, 40px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
             >
-              Where we{" "}
+              Where our{" "}
               <em className="italic text-accent" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 100' }}>
-                operate.
+                roles are.
               </em>
             </h3>
           </Reveal>
@@ -100,6 +85,26 @@ function ReachPage() {
                 </li>
               ))}
             </ul>
+          </Reveal>
+
+          <Reveal>
+            <div className="mt-16 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+              <div>
+                <h3
+                  className="font-display font-light leading-[1.1] tracking-[-0.02em] mb-2"
+                  style={{ fontSize: "clamp(22px, 2.5vw, 32px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
+                >
+                  Open to a move?
+                </h3>
+                <p className="text-[15px] text-ink-soft m-0">Upload your CV free and see UK and Gulf roles you match.</p>
+              </div>
+              <Link
+                to="/auth/register"
+                className="text-[13px] px-5 py-2.5 border border-ink bg-ink text-paper rounded-full hover:opacity-80 transition-opacity whitespace-nowrap shrink-0"
+              >
+                Upload your CV →
+              </Link>
+            </div>
           </Reveal>
         </Wrap>
       </section>
