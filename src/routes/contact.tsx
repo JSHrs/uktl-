@@ -9,9 +9,9 @@ export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
       { title: "Contact — UK Talent Link" },
-      { name: "description", content: "Questions about a role, your CV or hiring with us? A real person at UK Talent Link replies, usually within one working day. Offices in London and Dubai." },
+      { name: "description", content: "Questions about a role, your CV or your account? A real person at UK Talent Link replies, usually within one working day. Offices in London and Dubai." },
       { property: "og:title", content: "Contact — UK Talent Link" },
-      { property: "og:description", content: "Questions about a role, your CV or hiring with us? A real person replies, usually within one working day." },
+      { property: "og:description", content: "Questions about a role, your CV or your account? A real person replies, usually within one working day." },
     ],
   }),
   component: ContactPage,
@@ -21,10 +21,7 @@ const ENQUIRY_TYPES = [
   "I'm looking for a role",
   "Help with my CV or account",
   "A question about my rights at work",
-  "I'm hiring — recruitment or executive search",
-  "HR consultancy for my business",
-  "Employment law advice for my business",
-  "Recruiting in the Gulf",
+  "Moving to or from the Gulf",
   "Something else",
 ];
 
@@ -78,7 +75,7 @@ function ContactPage() {
                   {[
                     "We read every message and reply personally, usually within one working day.",
                     "Looking for a role? The quickest way to be considered is to upload your CV — you'll be matched to every role we're recruiting for.",
-                    "Hiring? Tell us about the role and we'll suggest times for a short call in our first reply.",
+                    "If it's easier to talk it through, say so and we'll suggest times for a short call.",
                     "We'll tell you honestly if we're not the right fit, and suggest who is.",
                   ].map((step, i) => (
                     <li key={i} className="flex gap-4 text-[14px] text-paper/50">
@@ -200,7 +197,6 @@ function ContactForm() {
         {[
           { label: "Your name", id: "name", type: "text", required: true },
           { label: "Email address", id: "email", type: "email", required: true },
-          { label: "Company (if you're hiring)", id: "company", type: "text", required: false },
         ].map((f) => (
           <div key={f.id}>
             <label htmlFor={f.id} className="block font-mono text-[10px] tracking-[0.14em] uppercase text-paper/35 mb-2.5">
@@ -242,7 +238,7 @@ function ContactForm() {
             name="msg"
             required
             rows={4}
-            placeholder="A couple of sentences is enough — the role you're after, a question about your CV, or the position you're hiring for."
+            placeholder="A couple of sentences is enough — the kind of role you're after, a question about your CV or your account."
             className="w-full bg-transparent border-0 border-b border-paper/15 py-3 text-[15px] text-paper placeholder:text-paper/20 outline-none focus:border-paper/40 transition-colors resize-none"
           />
         </div>

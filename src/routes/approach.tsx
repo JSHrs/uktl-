@@ -6,7 +6,7 @@ export const Route = createFileRoute("/approach")({
   head: () => ({
     meta: [
       { title: "How it works — UK Talent Link" },
-      { name: "description", content: "How UK Talent Link works for candidates and employers: a free CV score and honest tips, matching to real roles, and consultants who get in touch when you're a strong fit." },
+      { name: "description", content: "How UK Talent Link works: a free CV score and honest tips, matching to real roles, and consultants who get in touch when you're a strong fit." },
       { property: "og:title", content: "How it works — UK Talent Link" },
       { property: "og:description", content: "A free CV score, honest tips, matching to real roles, and consultants who get in touch when you're a strong fit." },
     ],
@@ -40,14 +40,14 @@ const principles = [
     idx: "iv.",
     tag: "Human",
     title: "Software ranks the matches. People make the call.",
-    body: "Matching tells us which roles fit your experience and skills, and shows you the reasons. But a consultant reviews the shortlist for every role and decides who to speak to — you're a person, not a keyword count.",
+    body: "Matching tells us which roles fit your experience and skills, and shows you the reasons. But consultants review the strongest matches and decide who to speak to — you're a person, not a keyword count.",
     detail: "Register interest in the roles you like and it shows up for the consultant working on that role.",
   },
   {
     idx: "v.",
-    tag: "Grounded in employment law",
-    title: "Offers that hold up.",
-    body: "Our HR consultancy and UK employment-law practice sits alongside recruitment. For employers, that means contracts and offers are checked properly. For candidates, it means clear, practical guidance when you have a question about work.",
+    tag: "Your rights at work",
+    title: "Guidance when you need it.",
+    body: "Questions about a contract, pay, holiday or dismissal don't wait for a job change. Your account includes clear, practical answers grounded in ACAS guidance and UK employment law, and you can book a consultation if you need more.",
     detail: "Guidance for candidates is general information based on ACAS advice and UK law — not legal representation.",
   },
 ];
@@ -93,7 +93,7 @@ function ApproachPage() {
             </em>
           </>
         }
-        lede="Whether you're looking for your next role or hiring for one, the idea is the same: understand what you need, be honest about the fit, and stay involved until the right person is in the right job."
+        lede="Our job is to put good people in good roles. That means understanding what you want, being honest about where you fit, and staying with you until you're in the right job."
       />
 
       {/* Principles */}
@@ -181,26 +181,26 @@ function ApproachPage() {
           <div className="grid md:grid-cols-[1fr_2fr] gap-16 items-start">
             <Reveal>
               <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute mb-4">
-                — Two sides, one firm
+                — Who we work with
               </div>
               <h2
                 className="font-display font-light leading-[1] tracking-[-0.03em]"
                 style={{ fontSize: "clamp(28px, 4vw, 52px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
               >
-                The right fit matters both ways.
+                People looking for their next move.
               </h2>
             </Reveal>
 
             <Reveal>
               <div className="space-y-8">
                 <p className="text-[16px] text-ink-soft leading-[1.65]">
-                  We recruit for employers across the UK and the Gulf, and we work for the candidates we place as much as for the businesses that hire them. A good placement is one both sides are still happy with a year later.
+                  We recruit for roles across the UK and the Gulf. Whether you're early in your career or stepping up to leadership, the aim is the same: a role you're still glad you took a year later.
                 </p>
                 <div className="grid sm:grid-cols-3 gap-6">
                   {[
-                    { title: "Candidates", body: "Professionals at every level looking for their next role in the UK or the Gulf — especially in construction, engineering and technology." },
-                    { title: "Employers", body: "Businesses hiring in the UK who want recruitment, HR and employment law from one team that knows their sector." },
-                    { title: "UK ↔ Gulf", body: "Regional companies bringing UK talent in, and UK professionals and businesses making the move to the Gulf." },
+                    { title: "Construction & engineering", body: "Site, project, commercial and engineering professionals — where many of our live roles sit." },
+                    { title: "Technology & digital", body: "Engineers, data specialists, product people and technology leaders." },
+                    { title: "UK ↔ Gulf moves", body: "UK-trained professionals moving to the Gulf, and people coming back to the UK." },
                   ].map((c) => (
                     <div key={c.title} className="border border-rule rounded-sm p-5">
                       <h4 className="font-display font-light text-lg tracking-[-0.01em] mb-2">{c.title}</h4>
@@ -226,15 +226,9 @@ function ApproachPage() {
                 >
                   Ready to see where you stand?
                 </h3>
-                <p className="text-[15px] text-ink-soft m-0">Upload your CV free and get your score today. Hiring? Tell us about the role.</p>
+                <p className="text-[15px] text-ink-soft m-0">Upload your CV free and get your score today.</p>
               </div>
               <div className="flex items-center gap-3 shrink-0">
-                <Link
-                  to="/contact"
-                  className="text-[13px] px-5 py-2.5 border border-rule text-ink rounded-full hover:border-ink transition-colors whitespace-nowrap"
-                >
-                  I'm hiring
-                </Link>
                 <Link
                   to="/auth/register"
                   className="text-[13px] px-5 py-2.5 border border-ink bg-ink text-paper rounded-full hover:opacity-80 transition-opacity whitespace-nowrap"

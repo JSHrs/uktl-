@@ -166,13 +166,13 @@ function SectorsPage() {
                   Upload your CV anyway. You'll still get your CV score and improvement tips, and you'll be matched automatically whenever a role that fits you comes in.
                 </p>
                 <p className="text-[15px] text-ink-soft leading-[1.65]">
-                  Hiring in a sector that isn't listed? Tell us about the role. The situation often matters more than the sector, and if we're not the right firm we'll say so.
+                  Not sure whether your experience fits? Send us a question and a consultant will point you in the right direction.
                 </p>
                 <Link
                   to="/contact"
                   className="text-[13px] text-ink-soft hover:text-ink transition-colors border-b border-transparent hover:border-ink pb-0.5 inline-block"
                 >
-                  Talk to us about a role →
+                  Ask us a question →
                 </Link>
               </div>
             </div>

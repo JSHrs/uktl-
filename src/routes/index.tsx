@@ -127,10 +127,10 @@ function Hero() {
           </div>
           <div className="flex items-center gap-3 md:justify-end flex-wrap">
             <Link
-              to="/contact"
+              to="/approach"
               className="inline-flex items-center gap-2 text-[13px] px-5 py-2.5 border border-rule text-ink rounded-full hover:border-ink transition-colors"
             >
-              Hiring? Talk to us
+              How it works
             </Link>
             <Link
               to="/auth/register"
@@ -551,7 +551,7 @@ function ContactCTA() {
 
             <div className="flex flex-col gap-5">
               <p className="text-paper/55 text-[15px] leading-[1.6]">
-                Create a free account, upload your CV and see where you stand today. Hiring instead? Our consultants would like to hear about the role — a real person replies, usually within one working day.
+                Create a free account, upload your CV and see where you stand today. Questions first? A real person replies, usually within one working day.
               </p>
               <div className="flex flex-col gap-3 pt-2">
                 <Link
@@ -564,7 +564,7 @@ function ContactCTA() {
                   to="/contact"
                   className="inline-flex items-center justify-center gap-2 text-[14px] px-6 py-3.5 border border-paper/20 text-paper/70 rounded-full hover:border-paper/60 hover:text-paper transition-colors"
                 >
-                  I'm hiring — get in touch
+                  Ask us a question
                 </Link>
               </div>
               <div className="pt-4 border-t border-paper/10">

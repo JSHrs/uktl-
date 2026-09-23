@@ -23,7 +23,7 @@ export function Footer() {
               </em>
             </div>
             <p className="text-[13px] text-ink-mute leading-[1.6] max-w-[28ch]">
-              A recruitment firm placing people across the UK and the Gulf — with HR consultancy and UK employment law for employers. London and Dubai.
+              A recruitment firm placing people in roles across the UK and the Gulf. London and Dubai.
             </p>
             <div className="mt-6 flex flex-col gap-1.5">
               <a
@@ -41,11 +41,11 @@ export function Footer() {
             </div>
           </div>
 
-          <FooterCol title="For employers">
-            <FooterLink to="/services" hash="hr-consultancy">HR Consultancy</FooterLink>
-            <FooterLink to="/services" hash="executive-search">Recruitment & Search</FooterLink>
-            <FooterLink to="/services" hash="employment-law">Employment Law</FooterLink>
-            <FooterLink to="/services" hash="gcc-recruitment">GCC Recruitment</FooterLink>
+          <FooterCol title="What we offer">
+            <FooterLink to="/services" hash="cv-score">CV score</FooterLink>
+            <FooterLink to="/services" hash="cv-tips">CV tips</FooterLink>
+            <FooterLink to="/services" hash="matching">Job matching</FooterLink>
+            <FooterLink to="/services" hash="workplace-guidance">Workplace guidance</FooterLink>
           </FooterCol>
 
           <FooterCol title="Firm">

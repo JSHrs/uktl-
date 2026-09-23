@@ -5,7 +5,7 @@ import { signOutFn } from "@/lib/functions";
 
 const links = [
   { to: "/approach", label: "How it works" },
-  { to: "/services", label: "Services" },
+  { to: "/services", label: "What we offer" },
   { to: "/sectors", label: "Sectors" },
   { to: "/reach", label: "Reach" },
   { to: "/contact", label: "Contact" },
