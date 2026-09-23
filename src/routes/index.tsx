@@ -135,10 +135,10 @@ function Hero() {
               Start a conversation
             </Link>
             <Link
-              to="/app"
+              to="/auth/register"
               className="inline-flex items-center gap-2 text-[13px] px-5 py-2.5 border border-ink bg-ink text-paper rounded-full hover:opacity-80 transition-opacity"
             >
-              Talent Compass →
+              Upload your CV →
             </Link>
           </div>
         </div>
@@ -322,15 +322,15 @@ function Platform() {
                 <Words text="One upload." accent="Full intelligence." accentColor="oklch(0.765 0.055 263)" />
               </h2>
               <p className="text-paper/50 text-[15px] leading-relaxed max-w-[48ch] mt-5">
-                Talent Compass parses a CV end-to-end in under thirty seconds. Every candidate is immediately scored, graded, and ranked — before a consultant opens the file.
+                Upload your CV once. In under a minute it is read, scored with specific tips to improve it, and matched against every role we are recruiting for — and a consultant sees the strongest matches first.
               </p>
             </div>
             <div className="md:shrink-0 md:pt-2">
               <Link
-                to="/app"
+                to="/auth/register"
                 className="inline-flex items-center gap-2 text-[13px] px-5 py-2.5 border border-paper/20 text-paper/70 rounded-full hover:border-paper/60 hover:text-paper transition-colors"
               >
-                Open platform →
+                Upload your CV →
               </Link>
             </div>
           </div>

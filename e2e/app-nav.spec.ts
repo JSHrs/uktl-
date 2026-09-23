@@ -1,43 +1,35 @@
 import { test, expect } from "./fixtures";
 
-test.describe("App navigation", () => {
-  test("/ redirects to app", async ({ page }) => {
+test.describe("Public site and header", () => {
+  test("landing page renders with the shared header", async ({ page }) => {
     await page.goto("/");
-    // Either redirects to /app or shows a landing page — not a 404
-    await expect(page).not.toHaveURL(/404/);
-    const status = await page.evaluate(() => document.title);
-    expect(status).not.toMatch(/not found/i);
+    await expect(page).not.toHaveTitle(/not found/i);
+    const nav = page.getByRole("navigation").first();
+    await expect(nav.getByRole("link", { name: "Sign in" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: /upload your cv/i })).toBeVisible();
   });
 
-  test("Overview page loads at /app", async ({ page }) => {
-    await page.goto("/app");
-    await expect(page).toHaveURL(/\/app/);
-    // Main layout renders
-    await expect(page.locator("body")).toBeVisible();
-  });
+  for (const path of ["/approach", "/services", "/sectors", "/reach", "/contact"]) {
+    test(`${path} renders with the shared header`, async ({ page }) => {
+      await page.goto(path);
+      await expect(page.getByRole("navigation").first().getByRole("link", { name: "Sign in" })).toBeVisible();
+    });
+  }
 
-  test("Discover page loads at /app/discover", async ({ page }) => {
-    await page.goto("/app/discover");
-    await expect(page.locator("body")).toBeVisible();
-    await expect(page).not.toHaveURL(/404/);
+  test("sign-in pages use the same header", async ({ page }) => {
+    await page.goto("/auth/login");
+    const nav = page.getByRole("navigation").first();
+    await expect(nav.getByRole("link", { name: "Approach" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   });
+});
 
-  test("HR library page loads at /app/hr", async ({ page }) => {
-    await page.goto("/app/hr");
-    await expect(page.locator("body")).toBeVisible();
-    await expect(page).not.toHaveURL(/404/);
-  });
-
-  test("Upload page loads at /app/upload", async ({ page }) => {
-    await page.goto("/app/upload");
-    await expect(page.getByText(/drag a cv here/i)).toBeVisible();
-  });
-
-  test("app navigation links are present", async ({ page }) => {
-    await page.goto("/app");
-    const nav = page.getByRole("navigation");
-    await expect(nav.getByRole("link", { name: "Discover" })).toBeVisible();
-    await expect(nav.getByRole("link", { name: "Upload CV" })).toBeVisible();
-    await expect(nav.getByRole("link", { name: "Candidates" })).toBeVisible();
-  });
+test.describe("Candidate area requires sign-in", () => {
+  for (const path of ["/app", "/app/upload", "/app/discover", "/app/profile", "/app/jobs", "/app/hr"]) {
+    test(`${path} redirects signed-out visitors to sign in`, async ({ page }) => {
+      await page.goto(path);
+      await expect(page).toHaveURL(/\/auth\/login/);
+      expect(new URL(page.url()).searchParams.get("redirect")).toContain(path);
+    });
+  }
 });

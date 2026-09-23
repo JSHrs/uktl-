@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound, redirect, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useRouteContext, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -11,16 +11,11 @@ import {
 import {
   getAnonymisedCandidateFn,
   getCandidateDetailFn,
-  getViewerFn,
   rematchCandidateFn,
 } from "@/lib/functions";
 import { STAGE_LABELS, stageTone } from "@/lib/stages";
 
 export const Route = createFileRoute("/app/candidates/$id")({
-  beforeLoad: async () => {
-    const viewer = await getViewerFn();
-    if (!viewer.isAdmin && !viewer.userId) throw redirect({ to: "/auth/login" });
-  },
   loader: async ({ params }) => {
     const detail = await getCandidateDetailFn({ data: { id: params.id } });
     if (!detail) throw notFound();
@@ -31,6 +26,8 @@ export const Route = createFileRoute("/app/candidates/$id")({
 
 function CandidateDetailPage() {
   const { candidate: c, matches } = Route.useLoaderData();
+  const { session } = useRouteContext({ from: "__root__" });
+  const isStaff = session.isAdmin;
   const router = useRouter();
   const [rematching, setRematching] = useState(false);
   const [anonView, setAnonView] = useState(false);
@@ -80,7 +77,7 @@ function CandidateDetailPage() {
   return (
     <>
       <PageHeader
-        eyebrow={`Candidate — ${c.id}`}
+        eyebrow={isStaff ? `Candidate — ${c.id}` : "Your CV"}
         title={
           <>
             {displayName ?? "(unnamed)"}
@@ -103,19 +100,30 @@ function CandidateDetailPage() {
                 Download CV
               </a>
             )}
-            <button
-              onClick={onAnonymise}
-              className="text-[13px] px-[16px] py-2 border border-rule rounded-full hover:border-ink"
-            >
-              {anonView ? "Show full profile" : "Anonymise for client"}
-            </button>
-            <button
-              onClick={onRematch}
-              disabled={rematching || c.status !== "parsed"}
-              className="text-[13px] px-[16px] py-2 border border-ink bg-ink text-paper rounded-full disabled:opacity-40"
-            >
-              {rematching ? "Re-matching…" : "Re-match mandates"}
-            </button>
+            {isStaff ? (
+              <>
+                <button
+                  onClick={onAnonymise}
+                  className="text-[13px] px-[16px] py-2 border border-rule rounded-full hover:border-ink"
+                >
+                  {anonView ? "Show full profile" : "Anonymise for client"}
+                </button>
+                <button
+                  onClick={onRematch}
+                  disabled={rematching || c.status !== "parsed"}
+                  className="text-[13px] px-[16px] py-2 border border-ink bg-ink text-paper rounded-full disabled:opacity-40"
+                >
+                  {rematching ? "Re-matching…" : "Re-match mandates"}
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/app/upload"
+                className="text-[13px] px-[16px] py-2 border border-ink bg-ink text-paper rounded-full"
+              >
+                Upload a new version
+              </Link>
+            )}
           </>
         }
       />
@@ -330,11 +338,11 @@ function CandidateDetailPage() {
 
           <div className="border border-rule rounded-md p-6 bg-paper">
             <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute mb-4">
-              Matched mandates
+              {isStaff ? "Matched mandates" : "Your best-matched jobs"}
             </div>
             {matches.length === 0 ? (
               <div className="text-sm text-ink-soft">
-                No matches yet — run "Re-match" to compute.
+                {isStaff ? 'No matches yet — run "Re-match" to compute.' : "No matching roles yet. We'll match you as new jobs are posted."}
               </div>
             ) : (
               <ul className="space-y-4">
@@ -349,7 +357,7 @@ function CandidateDetailPage() {
                         {m.job.title}
                       </Link>
                       <div className="flex items-center gap-2 shrink-0">
-                        {m.stage !== "matched" && (
+                        {isStaff && m.stage !== "matched" && (
                           <Pill tone={stageTone(m.stage)}>{STAGE_LABELS[m.stage]}</Pill>
                         )}
                         <div className="font-mono text-sm tabular-nums">{m.score}</div>

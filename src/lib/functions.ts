@@ -79,6 +79,20 @@ function authCallbackUrl(env: { SITE_URL?: string }): string {
 
 export const getViewerFn = createServerFn({ method: "GET" }).handler(async () => getViewer());
 
+// What the header and route guards need: who is signed in, if anyone.
+export const getSessionFn = createServerFn({ method: "GET" }).handler(async () => {
+  const { getCandidateSession } = await import("./supabase");
+  const [isAdmin, candidate] = await Promise.all([isAdminRequest(), getCandidateSession()]);
+  return { isAdmin, userId: candidate.userId, email: candidate.email };
+});
+
+export const signOutFn = createServerFn({ method: "POST" }).handler(async () => {
+  const { clearSessionCookies } = await import("./supabase");
+  await clearSessionCookies();
+  deleteCookie(SESSION_COOKIE, { path: "/" });
+  return { ok: true };
+});
+
 export const listCandidatesFn = createServerFn({ method: "GET" }).handler(
   async () => {
     const viewer = await getViewer();

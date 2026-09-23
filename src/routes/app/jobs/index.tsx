@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouteContext } from "@tanstack/react-router";
 import { PageHeader, Pill } from "@/components/app/AppLayout";
 import { listJobsFn } from "@/lib/functions";
 
@@ -9,20 +9,26 @@ export const Route = createFileRoute("/app/jobs/")({
 
 function JobsListPage() {
   const jobs = Route.useLoaderData();
+  const { session } = useRouteContext({ from: "__root__" });
+  const isStaff = session.isAdmin;
 
   return (
     <>
       <PageHeader
-        eyebrow="Mandates"
+        eyebrow={isStaff ? "Mandates" : "Jobs"}
         title={
           <>
-            Live{" "}
+            {isStaff ? "Live" : "Open"}{" "}
             <em className="not-italic italic font-normal text-ink-soft">
-              searches
+              {isStaff ? "searches" : "roles"}
             </em>
           </>
         }
-        lede="Each mandate lists its must-haves, nice-to-haves, and seniority target. Open one to see the ranked shortlist generated from the current talent pool."
+        lede={
+          isStaff
+            ? "Each mandate lists its must-haves, nice-to-haves, and seniority target. Open one to see the ranked shortlist and move candidates through the pipeline."
+            : "Every role UK Talent Link is currently recruiting for. Your CV is matched against each one automatically."
+        }
       />
 
       <div className="grid md:grid-cols-2 gap-4">

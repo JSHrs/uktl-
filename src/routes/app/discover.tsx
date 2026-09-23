@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
-import { getDiscoverJobsFn, recordSwipeFn } from "@/lib/functions";
+import { getDiscoverJobsFn, listCandidatesFn, recordSwipeFn } from "@/lib/functions";
 import type { Job } from "@/lib/schemas/job";
 
 export const Route = createFileRoute("/app/discover")({
   validateSearch: (s) => z.object({ candidate: z.string().optional() }).parse(s),
   loaderDeps: ({ search }) => ({ candidateId: search.candidate }),
-  loader: async ({ deps }) =>
-    getDiscoverJobsFn({ data: { candidateId: deps.candidateId } }),
+  loader: async ({ deps }) => {
+    // A candidate browses against their own latest CV; staff may pass ?candidate=.
+    const candidateId = deps.candidateId ?? (await listCandidatesFn())[0]?.id;
+    const result = await getDiscoverJobsFn({ data: { candidateId } });
+    return { ...result, candidateId };
+  },
   component: DiscoverPage,
 });
 
@@ -21,8 +25,7 @@ type SwipeAction = "interested" | "dismissed";
 type FlyDir = "right" | "left" | null;
 
 function DiscoverPage() {
-  const { jobs: initialJobs, matches } = Route.useLoaderData();
-  const { candidate: candidateId } = Route.useSearch();
+  const { jobs: initialJobs, matches, candidateId } = Route.useLoaderData();
 
   const [queue, setQueue] = useState<Job[]>(initialJobs);
   const [swipedCount, setSwipedCount] = useState(0);
@@ -167,11 +170,10 @@ function DiscoverPage() {
         )}
         {!candidateId && (
           <p className="text-sm text-ink-mute mt-2">
-            Browsing without a profile.{" "}
-            <Link to="/app/candidates" className="underline">
-              Select a candidate
+            <Link to="/app/upload" className="underline">
+              Upload your CV
             </Link>{" "}
-            to track your swipes.
+            to see how well you match each role and register your interest.
           </p>
         )}
       </div>
@@ -399,14 +401,14 @@ function EmptyState({ swipedCount, candidateId }: { swipedCount: number; candida
         {swipedCount > 0
           ? `You reviewed ${swipedCount} role${swipedCount !== 1 ? "s" : ""}.`
           : "No open roles at the moment."}{" "}
-        New mandates are added as they come in.
+        New roles are added as they come in.
       </p>
       <div className="flex flex-wrap gap-3 justify-center">
         <Link
           to="/app"
           className="text-sm px-5 py-2.5 border border-ink bg-ink text-paper rounded-full hover:opacity-90 transition-opacity"
         >
-          Back to overview
+          Back to dashboard
         </Link>
         {candidateId && (
           <Link
@@ -414,7 +416,7 @@ function EmptyState({ swipedCount, candidateId }: { swipedCount: number; candida
             params={{ id: candidateId }}
             className="text-sm px-5 py-2.5 border border-rule rounded-full hover:border-ink transition-colors"
           >
-            View your profile
+            View your CV
           </Link>
         )}
       </div>
