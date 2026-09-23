@@ -46,7 +46,7 @@ export async function processNextCv(env:AppEnv) {
     const candidate=await env.DB.prepare('SELECT source_r2_key,source_filename,raw_profile FROM candidates WHERE id=?').bind(lease.candidate_id)
       .first<{source_r2_key:string;source_filename:string;raw_profile:string|null}>();
     if (!candidate) throw new Error('Candidate unavailable');
-    const opts={apiKey:env.ANTHROPIC_API_KEY,model:env.PARSE_MODEL};
+    const opts={apiKey:env.ANTHROPIC_API_KEY,model:env.PARSE_MODEL,telemetry:env};
     let result;
     if (lease.kind==='match') {
       const profile=ParsedProfileSchema.parse(JSON.parse(candidate.raw_profile ?? '{}'));

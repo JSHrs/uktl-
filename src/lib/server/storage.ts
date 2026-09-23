@@ -1,7 +1,8 @@
+import { scanPrivateCv, type ScanConfig } from "./malware-scan";
 import { createClient } from "@supabase/supabase-js";
 import type {} from "./env";
 
-export function createPrivateCvStorage(url: string, key: string): R2Bucket {
+export function createPrivateCvStorage(url: string, key: string, scanner: ScanConfig = {}): R2Bucket {
   if (new URL(url).protocol !== "https:") throw new Error("Storage requires HTTPS");
   const client = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -17,6 +18,7 @@ export function createPrivateCvStorage(url: string, key: string): R2Bucket {
       if (bytes.byteLength === 0 || bytes.byteLength > 10 * 1024 * 1024) {
         throw new Error("CV must be between 1 byte and 10 MiB");
       }
+      await scanPrivateCv(bytes instanceof ArrayBuffer ? bytes : bytes.buffer as ArrayBuffer, scanner);
       const { error } = await bucket.upload(path, bytes, {
         contentType: options?.httpMetadata?.contentType,
         upsert: false,
@@ -29,6 +31,8 @@ export function createPrivateCvStorage(url: string, key: string): R2Bucket {
         if ("statusCode" in error && String(error.statusCode) === "404") return null;
         throw new Error("Private CV download failed");
       }
+      if (data.size > 10 * 1024 * 1024) throw new Error("Private file is too large");
+      await scanPrivateCv(await data.arrayBuffer(), scanner);
       return {
         body: data.stream(), size: data.size,
         httpMetadata: { contentType: data.type },

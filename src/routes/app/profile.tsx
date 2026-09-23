@@ -1,3 +1,4 @@
+import { PrivacyControls } from "@/components/app/PrivacyControls";
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -222,6 +223,7 @@ function ProfilePage() {
         <CandidateCvPanel candidateId={profile.d1_candidate_id} />
       )}
 
+      <PrivacyControls />
       {/* Quick links */}
       <Section title="Next steps">
         <div className="grid md:grid-cols-3 gap-4">
@@ -253,7 +255,7 @@ function CandidateCvPanel({ candidateId }: { candidateId: string }) {
   return (
     <Section title="Your CV">
       <p className="text-sm text-ink-soft mb-4">
-        Your latest CV has been parsed and scored.{" "}
+        View your latest CV, its processing status and any available assessment.{" "}
         <Link to="/app/candidates/$id" params={{ id: candidateId }} className="underline hover:text-ink">
           View full profile →
         </Link>

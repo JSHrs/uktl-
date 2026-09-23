@@ -1,6 +1,8 @@
 # UKTL development and release gates
 
-20 September acceptance decision: Gates 2 and 3 remain BLOCKED for the missing live/provider/content/policy evidence listed in ACCEPTANCE_REVIEW.md. The owner requested Stage 4 only after their acceptance; it has not been advanced. A staging configuration defect was corrected without deploying. Implementation remains approximately 75%; do not convert that estimate into an acceptance claim.
+23 September owner instruction: proceed with remaining implementation and hardening; complete Cloudflare last. This supersedes the earlier Stage 4 engineering pause, but does not waive live acceptance. See OPERATIONS_RUNBOOK.md and RELEASE_CHECKLIST.md for the new controls and unresolved release evidence.
+
+Historical 20 September acceptance decision: Gates 2 and 3 remain BLOCKED for the missing live/provider/content/policy evidence listed in ACCEPTANCE_REVIEW.md. The owner requested Stage 4 only after their acceptance; it has not been advanced. A staging configuration defect was corrected without deploying. Implementation remains approximately 75%; do not convert that estimate into an acceptance claim.
 
 ## Hosting decision — 18 September 2026
 

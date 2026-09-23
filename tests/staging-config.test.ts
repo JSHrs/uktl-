@@ -9,7 +9,7 @@ test("staging preflight refuses production data, mismatched DB, unsafe origin an
     assert.throws(() => validateStaging({...env,...patch}));
   }
 });
-const providers={ANTHROPIC_API_KEY:'synthetic-anthropic',RESEND_API_KEY:'synthetic-resend',REED_API_KEY:'synthetic-reed',CRON_SECRET:'synthetic-cron-secret-with-32-characters',CALENDLY_URL:'https://calendly.com/fixture/consultation',CALENDLY_EVENT_TYPE_URI:'https://api.calendly.com/event_types/11111111-1111-4111-8111-111111111111',CALENDLY_API_TOKEN:'synthetic-calendly-token',CALENDLY_WEBHOOK_SECRET:'synthetic-signing-secret'};
+const providers={CV_SCAN_URL:'https://scanner.example/scan',CV_SCAN_TOKEN:'synthetic-scanner-token-at-least-32-characters',ANTHROPIC_API_KEY:'synthetic-anthropic',RESEND_API_KEY:'synthetic-resend',REED_API_KEY:'synthetic-reed',CRON_SECRET:'synthetic-cron-secret-with-32-characters',CALENDLY_URL:'https://calendly.com/fixture/consultation',CALENDLY_EVENT_TYPE_URI:'https://api.calendly.com/event_types/11111111-1111-4111-8111-111111111111',CALENDLY_API_TOKEN:'synthetic-calendly-token',CALENDLY_WEBHOOK_SECRET:'synthetic-signing-secret'};
 test('acceptance preflight requires every provider setting without revealing its value',()=>{
  validateAcceptanceProviders(providers);
  for(const key of Object.keys(providers))assert.throws(()=>validateAcceptanceProviders({...providers,[key]:''}),error=>error instanceof Error&&error.message.includes(key)&&!error.message.includes('synthetic-calendly-token'));

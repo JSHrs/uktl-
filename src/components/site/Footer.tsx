@@ -97,9 +97,9 @@ export function Footer() {
           <span>© {year} UK Talent Link Ltd. All rights reserved.</span>
           <span className="hidden sm:block">Chancery Lane, London · Boulevard Plaza, Dubai</span>
           <div className="flex items-center gap-4">
-            <a href="#" className="hover:text-ink transition-colors">Privacy</a>
+            <Link to="/privacy" className="hover:text-ink transition-colors">Privacy</Link>
             <span className="text-rule">·</span>
-            <a href="#" className="hover:text-ink transition-colors">Terms</a>
+            <Link to="/terms" className="hover:text-ink transition-colors">Terms</Link>
           </div>
         </div>
       </div>

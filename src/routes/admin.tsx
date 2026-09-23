@@ -31,6 +31,7 @@ const NAV = [
   { to: "/admin/enquiries", label: "Enquiries" },
   { to: "/admin/analytics", label: "Analytics" },
   { to: "/admin/processing", label: "CV processing" },
+  { to: "/admin/operations", label: "Operations & privacy" },
 ] as const;
 
 function AdminLayout() {
@@ -40,20 +41,21 @@ function AdminLayout() {
 
   async function logout() {
     await adminLogoutFn();
-    router.navigate({ to: "/admin/login" });
+    await router.invalidate();
+    await router.navigate({ to: "/admin/login" });
   }
 
   return (
-    <div className="min-h-screen bg-paper flex">
+    <div className="min-h-screen bg-paper flex flex-col md:flex-row">
       {/* Sidebar */}
-      <aside className="w-52 flex-shrink-0 border-r border-rule bg-paper-deep/40 flex flex-col">
+      <aside className="w-full md:w-52 flex-shrink-0 border-r border-rule bg-paper-deep/40 flex flex-col">
         <div className="px-5 py-5 border-b border-rule">
           <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-mute">
             UK Talent Link
           </div>
           <div className="font-display font-light text-lg mt-0.5 text-ink">Admin</div>
         </div>
-        <nav className="flex-1 px-3 py-4 space-y-0.5">
+        <nav className="flex-1 px-3 py-4 flex flex-wrap gap-1 md:block md:space-y-0.5">
           {NAV.filter(item => staffRole === "admin" || item.to === "/admin/candidates").map((item) => (
             <Link
               key={item.to}
@@ -78,7 +80,7 @@ function AdminLayout() {
 
       {/* Content */}
       <main className="flex-1 min-w-0 overflow-auto">
-        <div className="max-w-5xl mx-auto px-8 py-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-8 py-8">
           <Outlet />
         </div>
       </main>
@@ -116,7 +118,7 @@ export function AdminTable({
   children: ReactNode;
 }) {
   return (
-    <div className="border border-rule rounded-md overflow-hidden">
+    <div className="border border-rule rounded-md overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-paper-deep">

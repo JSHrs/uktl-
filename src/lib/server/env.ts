@@ -9,12 +9,15 @@ export type AppEnv = {
   DATA_BACKEND?: "d1" | "supabase";
   DATABASE_URL?: string;
   CRON_SECRET?: string;
+  CV_SCAN_URL?: string;
+  CV_SCAN_TOKEN?: string;
   DB: D1Database;
   CV_BUCKET: R2Bucket;
   AI: Ai;
   PARSE_PROVIDER?: string;
   PARSE_MODEL?: string;
   ANTHROPIC_API_KEY?: string;
+  AI_HOURLY_CALL_LIMIT?: string;
   // Admin auth — set via: wrangler secret put ADMIN_PASSWORD_HASH / JWT_SECRET
   ADMIN_PASSWORD_HASH?: string;
   JWT_SECRET?: string;
@@ -70,7 +73,7 @@ export function configureBackend(env: AppEnv): AppEnv {
       if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
         throw new Error("Private CV storage is not configured");
       }
-      return (storage ??= createPrivateCvStorage(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY));
+      return (storage ??= createPrivateCvStorage(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {url:env.CV_SCAN_URL,token:env.CV_SCAN_TOKEN}));
     },
   };
 }

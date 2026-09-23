@@ -1,3 +1,6 @@
+import type { AppEnv } from "./env";
+import { trackedAnthropicFetch } from "./ai-usage.ts";
+import { boundedText } from "./bounded-response.ts";
 import {
   ParsedProfileSchema,
   QualityAssessmentSchema,
@@ -81,16 +84,17 @@ type ParseInput =
 
 export async function parseCv(
   input: ParseInput,
-  opts: { apiKey?: string; model?: string },
+  opts: { apiKey?: string; model?: string; telemetry?: AppEnv },
 ): Promise<ParseResult> {
   if (!opts.apiKey) throw new Error("CV processing is not configured");
-  return parseWithAnthropic(input, opts.apiKey, opts.model ?? "claude-sonnet-4-6");
+  return parseWithAnthropic(input, opts.apiKey, opts.model ?? "claude-sonnet-4-6", opts.telemetry);
 }
 
 async function parseWithAnthropic(
   input: ParseInput,
   apiKey: string,
   model: string,
+  telemetry?: AppEnv,
 ): Promise<ParseResult> {
   const content: unknown[] = [];
   if (input.kind === "pdf") {
@@ -107,7 +111,7 @@ async function parseWithAnthropic(
   }
   content.push({ type: "text", text: EXTRACTION_PROMPT });
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await trackedAnthropicFetch(telemetry, "extraction", model, {
     method: "POST",
     signal: AbortSignal.timeout(60000),
     headers: {
@@ -124,22 +128,23 @@ async function parseWithAnthropic(
   if (!res.ok) {
     throw new Error(`CV extraction unavailable (HTTP ${res.status}). Please retry.`);
   }
-  const payload = (await res.json()) as {
-    content?: Array<{ type: string; text?: string }>;
+  const payload = JSON.parse(await boundedText(res, 1024 * 1024)) as {
+    stop_reason?: string; content?: Array<{ type: string; text?: string }>;
   };
+  if (payload.stop_reason === "max_tokens") throw new Error("CV extraction response was incomplete. Please retry.");
   const text =
     payload.content?.find((c) => c.type === "text")?.text?.trim() ?? "";
   const profile = ParsedProfileSchema.parse(extractJsonObject(text));
 
-  return {profile,quality:await gradeProfile(profile,{apiKey,model})};
+  return {profile,quality:await gradeProfile(profile,{apiKey,model,telemetry})};
 }
 
-export async function gradeProfile(profile: ParsedProfile, opts: {apiKey?:string;model?:string}): Promise<QualityAssessment> {
+export async function gradeProfile(profile: ParsedProfile, opts: {apiKey?:string;model?:string;telemetry?:AppEnv}): Promise<QualityAssessment> {
   if (!opts.apiKey) throw new Error("CV processing is not configured");
   const apiKey=opts.apiKey;
   const model=opts.model ?? "claude-sonnet-4-6";
   // Regrade the candidate-corrected profile without extracting the original again.
-  const qRes = await fetch("https://api.anthropic.com/v1/messages", {
+  const qRes = await trackedAnthropicFetch(opts.telemetry, "grading", model, {
     method: "POST",
     signal: AbortSignal.timeout(60000),
     headers: {
@@ -159,7 +164,7 @@ export async function gradeProfile(profile: ParsedProfile, opts: {apiKey?:string
     }),
   });
   if (!qRes.ok) throw new Error(`CV grading unavailable (HTTP ${qRes.status}). Please retry.`);
-  const qPayload = (await qRes.json()) as {
+  const qPayload = JSON.parse(await boundedText(qRes, 1024 * 1024)) as {
     stop_reason?: string;
     content?: Array<{ type: string; text?: string }>;
   };

@@ -1,3 +1,4 @@
+import { eraseCandidateRecord } from "./server/operations";
 import { registerQueuedCv,activateQueuedCv,failQueuedUpload,processingStatus,processNextCv,saveProfileRevision } from "./server/processing";
 import { EditableProfileSchema } from "./schemas/editable-profile";
 import { storeRegisteredCv } from "./server/upload-lifecycle";
@@ -7,13 +8,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/start-server-core";
 import { z } from "zod";
 
-import { getEnv } from "./server/env";
+import { getRequestEnv as getEnv } from "./server/request-env";
 import {
   createBooking,
   createEnquiry,
   createFaqTopic,
   createJob,
-  deleteCandidate,
   deleteFaqTopic,
   deleteJob,
   getAdminAnalytics,
@@ -102,8 +102,8 @@ export const getSessionFn = createServerFn({ method: "GET" }).handler(async () =
 });
 
 export const signOutFn = createServerFn({ method: "POST" }).handler(async () => {
-  const { clearSessionCookies } = await import("./supabase");
-  await clearSessionCookies();
+  const { revokeCurrentSession } = await import("./supabase");
+  await revokeCurrentSession();
   return { ok: true };
 });
 
@@ -277,6 +277,7 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
       const { profile, quality } = await parseCv(parseInput, {
         apiKey: env.ANTHROPIC_API_KEY,
         model: env.PARSE_MODEL,
+        telemetry: env,
       });
       const normalisedSkills = normaliseSkillList(
         (profile.skills ?? []).map((s) => s.skill),
@@ -591,8 +592,8 @@ export const adminDeleteCandidateFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await requireAdmin();
     const env = await getEnv();
-    await deleteCandidate(env, data.id);
-    return { ok: true };
+    const viewer = await requireViewer();
+    return eraseCandidateRecord(env, data.id, viewer.userId!);
   });
 
 // ── Candidate Auth (Supabase) ─────────────────────────────────────────────────

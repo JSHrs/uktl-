@@ -86,6 +86,7 @@ function RegisterPage() {
         </p>
       </div>
 
+      <p className="text-xs text-ink-soft my-4">Before creating an account, read <Link to="/privacy" className="underline">how your information is used</Link> and <Link to="/terms" className="underline">using Talent Compass</Link>.</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="register-name" className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
