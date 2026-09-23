@@ -18,3 +18,9 @@ Every required row needs a dated result, commit and evidence link. `not run`, `s
 | Hosting | Cloudflare staging then approved production, secrets, redirects, domain | Last, per owner instruction |
 
 Do not deploy real candidate processing until scanner/data handling, private access, reviewed notices and required acceptance evidence are satisfied.
+
+## Verified engineering checkpoint — 23 September 2026
+
+- Source commit `f0451e3d449b2237f24403be9e461ef252b19466`: [CI run](https://github.com/devacnt/UKTL/actions/runs/35899128210) passed both jobs: 75 unit tests, TypeScript, Workers build, 35 browser cases, and all real PostgreSQL integration/policy tests. The 14 credential-dependent browser cases were skipped and remain open launch gates. Locked dependency installation reports zero vulnerabilities.
+- Connected UKTL Supabase project: operations/privacy/audit and reviewed account-erasure migrations applied as `20260923175936` and `20260923175954`; explicit service-only policies applied as `20260923180105`. No live account erasure or candidate deletion was performed. Migration filenames match remote history.
+- Registry throttling interrupted earlier CI before SQL execution. Database CI now starts only PostgreSQL using the official Docker Hub images, with every regression still enabled.
