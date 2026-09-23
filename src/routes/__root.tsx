@@ -1,6 +1,7 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Toaster } from "sonner";
+import { getSessionFn } from "@/lib/functions";
 
 import appCss from "../styles.css?url";
 
@@ -26,7 +27,19 @@ function NotFoundComponent() {
   );
 }
 
+export type Session = { userId: string | null; email: string | null; isStaff: boolean; isAdmin: boolean };
+
+const SIGNED_OUT: Session = { userId: null, email: null, isStaff: false, isAdmin: false };
+
 export const Route = createRootRoute({
+  // Re-evaluated on every navigation, so sign-in/out is reflected everywhere at once.
+  beforeLoad: async (): Promise<{ session: Session }> => {
+    try {
+      return { session: await getSessionFn() };
+    } catch {
+      return { session: SIGNED_OUT };
+    }
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },

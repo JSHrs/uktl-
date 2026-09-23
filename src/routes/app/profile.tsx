@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
-  candidateLogoutFn,
+  signOutFn,
   getCandidateProfileFn,
   getCandidateSessionFn,
   updateCandidateProfileFn,
@@ -88,9 +88,10 @@ function ProfilePage() {
   }
 
   async function handleLogout() {
-    await candidateLogoutFn();
+    await signOutFn();
     toast("Signed out");
-    router.navigate({ to: "/" });
+    await router.navigate({ to: "/" });
+    await router.invalidate();
   }
 
   const profile = profileData.profile;

@@ -1,18 +1,30 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouter, useRouteContext } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { signOutFn } from "@/lib/functions";
 
 const links = [
   { to: "/approach", label: "Approach" },
   { to: "/services", label: "Services" },
   { to: "/sectors", label: "Sectors" },
+  { to: "/reach", label: "Reach" },
   { to: "/contact", label: "Contact" },
 ] as const;
 
-export function Nav() {
+/**
+ * The one header for the public site, the candidate area and the sign-in pages.
+ * `overlay` floats over the landing hero and gains a background on scroll;
+ * `solid` is a sticky bar for inner pages. Staff are Supabase users with a
+ * verified role, so they get the staff dashboard instead of "My account".
+ */
+export function Nav({ variant = "overlay" }: { variant?: "overlay" | "solid" }) {
+  const { session } = useRouteContext({ from: "__root__" });
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const routerState = useRouterState();
-  const isApp = routerState.location.pathname.startsWith("/app") || routerState.location.pathname.startsWith("/auth");
+
+  const signedIn = !!session.userId;
+  const isStaff = session.isStaff;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 32);
@@ -22,23 +34,32 @@ export function Nav() {
   }, []);
 
   useEffect(() => {
-    if (open) document.body.style.overflow = "hidden";
-    else document.body.style.overflow = "";
-    return () => { document.body.style.overflow = ""; };
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [open]);
 
-  if (isApp) return null;
+  async function signOut() {
+    setOpen(false);
+    await signOutFn();
+    toast("Signed out");
+    await router.navigate({ to: "/" });
+    await router.invalidate();
+  }
+
+  const solid = variant === "solid" || scrolled || open;
+  const position = variant === "solid" ? "sticky" : "fixed";
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-[100] flex items-center justify-between transition-all duration-[400ms] [transition-timing-function:var(--ease-publication)] ${
-        scrolled
-          ? "py-3 bg-paper/90 backdrop-blur-xl backdrop-saturate-150 border-b border-rule shadow-[0_1px_0_0_var(--color-rule)]"
+      className={`${position} top-0 left-0 right-0 z-[100] flex items-center justify-between transition-all duration-[400ms] [transition-timing-function:var(--ease-publication)] ${
+        solid
+          ? "py-3 bg-paper/90 backdrop-blur-xl backdrop-saturate-150 border-b border-rule"
           : "py-5 bg-transparent border-b border-transparent"
       }`}
       style={{ paddingLeft: "clamp(20px, 4.5vw, 64px)", paddingRight: "clamp(20px, 4.5vw, 64px)" }}
     >
-      {/* Wordmark */}
       <Link
         to="/"
         onClick={() => setOpen(false)}
@@ -46,12 +67,15 @@ export function Nav() {
         style={{ fontVariationSettings: '"opsz" 144, "SOFT" 30' }}
       >
         UK Talent{" "}
-        <em className="not-italic font-normal text-ink-soft italic" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 80' }}>
+        <em
+          className="not-italic font-normal text-ink-soft italic"
+          style={{ fontVariationSettings: '"opsz" 144, "SOFT" 80' }}
+        >
           Link
         </em>
       </Link>
 
-      {/* Desktop nav */}
+      {/* Desktop */}
       <ul className="hidden md:flex gap-7 items-center list-none p-0 m-0">
         {links.map((l) => (
           <li key={l.to}>
@@ -68,22 +92,45 @@ export function Nav() {
         <li>
           <div className="w-px h-4 bg-rule mx-1" aria-hidden="true" />
         </li>
-        <li>
-          <Link
-            to="/auth/login"
-            className="text-[13px] text-ink-mute hover:text-ink transition-colors"
-          >
-            Sign in
-          </Link>
-        </li>
-        <li>
-          <Link
-            to="/app"
-            className="text-[13px] px-4 py-2 bg-ink text-paper rounded-full transition-all duration-300 hover:opacity-80 [transition-timing-function:var(--ease-publication)]"
-          >
-            Talent Compass →
-          </Link>
-        </li>
+        {signedIn ? (
+          <>
+
+            <li>
+              <button
+                type="button"
+                onClick={signOut}
+                className="text-[13px] text-ink-mute hover:text-ink transition-colors bg-transparent border-0 p-0 cursor-pointer"
+              >
+                Sign out
+              </button>
+            </li>
+            <li>
+              <Link
+                to={isStaff ? "/admin" : "/app"}
+                title={session.email ?? undefined}
+                className="text-[13px] px-4 py-2 bg-ink text-paper rounded-full transition-opacity duration-300 hover:opacity-80"
+              >
+                {isStaff ? "Staff dashboard →" : "My account →"}
+              </Link>
+            </li>
+          </>
+        ) : (
+          <>
+            <li>
+              <Link to="/auth/login" className="text-[13px] text-ink-mute hover:text-ink transition-colors">
+                Sign in
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/auth/register"
+                className="text-[13px] px-4 py-2 bg-ink text-paper rounded-full transition-opacity duration-300 hover:opacity-80"
+              >
+                Upload your CV →
+              </Link>
+            </li>
+          </>
+        )}
       </ul>
 
       {/* Mobile burger */}
@@ -124,20 +171,41 @@ export function Nav() {
             </ul>
 
             <div className="mt-10 flex flex-col gap-3">
-              <Link
-                to="/app"
-                onClick={() => setOpen(false)}
-                className="w-full text-center text-[14px] px-6 py-4 bg-ink text-paper rounded-full"
-              >
-                Open Talent Compass →
-              </Link>
-              <Link
-                to="/auth/login"
-                onClick={() => setOpen(false)}
-                className="w-full text-center text-[14px] px-6 py-4 border border-rule text-ink-soft rounded-full"
-              >
-                Sign in
-              </Link>
+              {signedIn ? (
+                <>
+                  <Link
+                    to={isStaff ? "/admin" : "/app"}
+                    onClick={() => setOpen(false)}
+                    className="w-full text-center text-[14px] px-6 py-4 bg-ink text-paper rounded-full"
+                  >
+                    {isStaff ? "Staff dashboard →" : "My account →"}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={signOut}
+                    className="w-full text-center text-[14px] px-6 py-4 border border-rule text-ink-soft rounded-full bg-transparent cursor-pointer"
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/auth/register"
+                    onClick={() => setOpen(false)}
+                    className="w-full text-center text-[14px] px-6 py-4 bg-ink text-paper rounded-full"
+                  >
+                    Upload your CV →
+                  </Link>
+                  <Link
+                    to="/auth/login"
+                    onClick={() => setOpen(false)}
+                    className="w-full text-center text-[14px] px-6 py-4 border border-rule text-ink-soft rounded-full"
+                  >
+                    Sign in
+                  </Link>
+                </>
+              )}
             </div>
 
             <div className="mt-auto pt-12">

@@ -1,11 +1,11 @@
 import { useState, useCallback, useRef } from "react";
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouteContext } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/AppLayout";
-import { uploadAndParseCvFn, getViewerFn } from "@/lib/functions";
+import { uploadAndParseCvFn } from "@/lib/functions";
 
+// Sign-in is enforced by the /app layout guard and again by uploadAndParseCvFn.
 export const Route = createFileRoute("/app/upload")({
-  loader: () => getViewerFn(),
   component: UploadPage,
 });
 
@@ -23,7 +23,8 @@ const STAGE_LABELS: Record<Stage, string> = {
 
 function UploadPage() {
   const navigate = useNavigate();
-  const viewer = Route.useLoaderData();
+  const { session } = useRouteContext({ from: "__root__" });
+  const isStaff = session.isStaff;
   const [file, setFile] = useState<File | null>(null);
   const [stage, setStage] = useState<Stage>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -58,10 +59,6 @@ function UploadPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!file || busy) return;
-    if (!viewer.isAdmin && !viewer.userId) {
-      setError("Please sign in before uploading your CV.");
-      return;
-    }
     setError(null);
     setStage("processing");
 
@@ -92,18 +89,26 @@ function UploadPage() {
 
   return (
     <>
-      {!viewer.isAdmin && !viewer.userId && <Link to="/auth/login" className="text-sm underline">Sign in to upload your CV</Link>}
       <PageHeader
-        eyebrow="Upload"
+        eyebrow={isStaff ? "Upload a CV" : "My CV"}
         title={
-          <>
-            Drop a CV,{" "}
-            <em className="not-italic italic font-normal text-ink-soft">
-              receive a shortlist.
-            </em>
-          </>
+          isStaff ? (
+            <>
+              Add a candidate{" "}
+              <em className="not-italic italic font-normal text-ink-soft">from a CV.</em>
+            </>
+          ) : (
+            <>
+              Upload your CV,{" "}
+              <em className="not-italic italic font-normal text-ink-soft">see where you fit.</em>
+            </>
+          )
         }
-        lede="PDF, DOCX, or plain text. We extract the structured profile, grade CV quality, and rank the candidate against every open mandate — all in one pass."
+        lede={
+          isStaff
+            ? "PDF, DOCX or plain text. The profile is extracted, graded and ranked against every open mandate."
+            : "PDF, DOCX or plain text. We read your CV, give you a quality score with specific improvement tips, and match you to the roles we're recruiting for."
+        }
       />
 
       <form onSubmit={onSubmit} className="max-w-[720px]">
@@ -202,11 +207,10 @@ function UploadPage() {
         </div>
         <ol className="space-y-3">
           {[
-            ["Store", "Your CV is stored privately and accessed through your account or authorised UKTL staff."],
-            ["Extract", "Claude reads the document and outputs a strict JSON profile: identity, experience, skills, education."],
-            ["Normalise", 'Skills are collapsed to a canonical taxonomy so "React.js" and "ReactJS" count as one.'],
-            ["Grade", "CV quality is scored 0–100 with specific improvement notes for you and the consultant."],
-            ["Match", "The candidate is ranked against every open mandate and surfaced on the discovery dashboard."],
+            ["Store", "Your CV is stored privately and accessed only through your account or authorised UKTL staff."],
+            ["Read", "Claude extracts your experience, skills and education into a structured profile."],
+            ["Score", "Your CV gets a 0–100 quality score with specific tips to improve it."],
+            ["Match", "You are matched against every open role; the best fits appear under Job matches."],
           ].map(([step, desc], i) => (
             <li key={step} className="flex gap-4 text-sm">
               <span className="flex-shrink-0 w-5 h-5 mt-0.5 rounded-full border border-rule flex items-center justify-center font-mono text-[10px] text-ink-mute">

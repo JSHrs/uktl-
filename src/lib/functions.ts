@@ -46,7 +46,7 @@ import {
   type FaqTopicInput,
   type JobInput,
 } from "./server/db";
-import { hasStaffAccess, readStaffAccess } from "./server/staff-access";
+import { hasStaffAccess, NO_STAFF_ACCESS, readStaffAccess } from "./server/staff-access";
 import {
   canAccessCandidate,
   getStaffAccess,
@@ -85,6 +85,27 @@ function authCallbackUrl(env: { SITE_URL?: string }): string {
 }
 
 export const getViewerFn = createServerFn({ method: "GET" }).handler(async () => getViewer());
+
+// What the header and route guards need: who is signed in, and whether they
+// are MFA-verified staff. Staff are Supabase users too, so userId alone does
+// not mean "candidate".
+export const getSessionFn = createServerFn({ method: "GET" }).handler(async () => {
+  const { getCandidateSession } = await import("./supabase");
+  const user = await getCandidateSession();
+  const access = user.userId ? await getStaffAccess() : NO_STAFF_ACCESS;
+  return {
+    userId: user.userId,
+    email: user.email,
+    isStaff: hasStaffAccess(access),
+    isAdmin: hasStaffAccess(access, true),
+  };
+});
+
+export const signOutFn = createServerFn({ method: "POST" }).handler(async () => {
+  const { clearSessionCookies } = await import("./supabase");
+  await clearSessionCookies();
+  return { ok: true };
+});
 
 export const listCandidatesFn = createServerFn({ method: "GET" }).handler(
   async () => {

@@ -7,13 +7,13 @@ test("private HR history and question IDs redirect anonymous visitors to sign-in
     await expect(page).toHaveURL(/\/auth\/login/);
   }
 });
-test("anonymous HR submission never puts sensitive text in the URL", async ({ page }) => {
+test("anonymous visitors are sent to sign in before they can type an HR question", async ({ page }) => {
   await page.goto("/app/hr");
-  await page.getByLabel("Your question").fill("Private synthetic workplace concern");
-  await page.getByRole("button", { name: "Find answer" }).click();
-  await expect(page.getByRole("alert")).toContainText("Sign in first");
-  expect(page.url()).not.toContain("Private");
-  expect(new URL(page.url()).searchParams.has("q")).toBe(false);
+  await expect(page).toHaveURL(/\/auth\/login/);
+  const url = new URL(page.url());
+  expect(url.searchParams.get("redirect")).toBe("/app/hr");
+  expect(url.searchParams.has("q")).toBe(false);
+  await expect(page.getByLabel("Your question")).toHaveCount(0);
   await expect(page.locator('iframe[src*="calendly"]')).toHaveCount(0);
 });
 test("unconfigured or unsigned Calendly webhook cannot confirm a booking", async ({ request }) => {

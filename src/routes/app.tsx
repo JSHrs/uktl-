@@ -1,16 +1,19 @@
 import { DataError } from "@/components/app/DataError";
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { AppShell } from "@/components/app/AppLayout";
 
 export const Route = createFileRoute("/app")({
+  // The candidate area is for signed-in candidates (and staff opening a record).
+  // Server functions enforce the same rule; this guard only decides what to render.
+  beforeLoad: ({ context, location }) => {
+    const { session } = context;
+    if (!session.userId) {
+      throw redirect({ to: "/auth/login", search: { redirect: location.href } });
+    }
+  },
   head: () => ({
     meta: [
-      { title: "Talent Compass — UK Talent Link" },
-      {
-        name: "description",
-        content:
-          "Internal CV parsing and candidate-to-mandate matching workspace.",
-      },
+      { title: "My account — UK Talent Link" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -25,4 +28,3 @@ function AppLayoutRoute() {
     </AppShell>
   );
 }
-

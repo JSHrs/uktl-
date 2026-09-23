@@ -86,20 +86,19 @@ Supabase holds `profiles` (mirror: `d1_candidate_id`), plus Postgres copies of `
 
 ## 7. Backlog — recommended order, with implementation notes
 
-1. **Client portal** (turns the platform into a sales asset). New role: a client user linked to one or more mandates. Read-only mandate view: anonymised shortlist (reuse `anonymiseProfile` in `src/lib/server/anonymize.ts`), stage per candidate, consultant notes flagged "shared". Suggested: Supabase Auth with an `app_metadata.role = "client"` claim and a `client_mandates` table (client_user_id, job_id); a `getClientViewer()` alongside `getViewer()`. Routes under `/client/*`. Never expose names, contact fields or the R2 key to this role.
-2. **Scheduled Reed sync + expiry.** Add a Workers cron trigger in `wrangler.toml` (`[triggers] crons = ["0 2 * * *"]`) and a `scheduled` handler that calls the sync logic now inside `syncReedJobsFn` (extract it into `src/lib/server/reed.ts`, keep the server function as a thin wrapper), then closes jobs whose `expiry_date` has passed. Nitro's cloudflare preset supports a scheduled export — check its docs for the entry hook.
-3. **Analytics charts.** Recharts is installed and unused. `adminGetAnalyticsFn` returns totals only; add time-bucketed queries (uploads per week, score histogram, funnel by stage using `matches.stage`) and render area/bar charts on `/admin/analytics` using the design tokens (`var(--color-accent)` etc.).
-4. **GDPR tooling.** "Delete everything about this candidate" across D1 (`deleteCandidate` already cascades tables), R2 (`CV_BUCKET.delete(source_r2_key)`) and Supabase (`profiles`); a JSON export endpoint; a retention policy (e.g. purge unlinked CVs after N months via the same cron).
-5. **Named admin users + audit trail.** Move admin auth onto Supabase with an `admin` role claim; keep `requireAdmin()` as the single check but resolve it from the Supabase session. Add an `audit_log` table (actor, action, entity, before/after JSON, at) written from every mutating admin function.
-6. **Candidate password reset.** `/auth/forgot` sends a magic link only; add `resetPasswordForEmail` + a `/auth/reset` route that calls `updateUser({ password })` after the callback establishes the session.
-7. **Notes and activity log** on candidate and mandate pages (`candidate_notes` table; timeline from `created_at`, `stage_updated_at`, notes, emails).
-8. **Saved jobs / applications.** `candidate_swipes.action = 'interested'` is recorded but nothing follows; surface interested candidates on the mandate pipeline as a "Applied" signal and notify the consultant.
-9. **Email outreach from the platform.** Resend is wired for notifications; add templated candidate emails (intro, interview invite, rejection) logged against the candidate.
-10. **Global search** across candidates, mandates and FAQ topics — `candidate_skills.skill` is already normalised, so skill search is a simple join.
-11. **CSV export** of candidate lists and mandate shortlists.
-12. **Job alerts** (nightly email of new matches above a threshold) — depends on item 2.
-13. **Dark palette** — `@custom-variant dark` exists in `styles.css` but no dark tokens are defined.
-14. **Calendly embed** on the HR answer page (`CALENDLY_URL` var is plumbed; the widget is not).
+1. **Scheduled Reed sync + expiry.** Add a Workers cron trigger in `wrangler.toml` (`[triggers] crons = ["0 2 * * *"]`) and a `scheduled` handler that calls the sync logic now inside `syncReedJobsFn` (extract it into `src/lib/server/reed.ts`, keep the server function as a thin wrapper), then closes jobs whose `expiry_date` has passed. Nitro's cloudflare preset supports a scheduled export — check its docs for the entry hook.
+2. **Analytics charts.** Recharts is installed and unused. `adminGetAnalyticsFn` returns totals only; add time-bucketed queries (uploads per week, score histogram, funnel by stage using `matches.stage`) and render area/bar charts on `/admin/analytics` using the design tokens (`var(--color-accent)` etc.).
+3. **GDPR tooling.** "Delete everything about this candidate" across D1 (`deleteCandidate` already cascades tables), R2 (`CV_BUCKET.delete(source_r2_key)`) and Supabase (`profiles`); a JSON export endpoint; a retention policy (e.g. purge unlinked CVs after N months via the same cron).
+4. **Named admin users + audit trail.** Move admin auth onto Supabase with an `admin` role claim; keep `requireAdmin()` as the single check but resolve it from the Supabase session. Add an `audit_log` table (actor, action, entity, before/after JSON, at) written from every mutating admin function.
+5. **Candidate password reset.** `/auth/forgot` sends a magic link only; add `resetPasswordForEmail` + a `/auth/reset` route that calls `updateUser({ password })` after the callback establishes the session.
+6. **Notes and activity log** on candidate and mandate pages (`candidate_notes` table; timeline from `created_at`, `stage_updated_at`, notes, emails).
+7. **Saved jobs / applications.** `candidate_swipes.action = 'interested'` is recorded but nothing follows; surface interested candidates on the mandate pipeline as a "Applied" signal and notify the consultant.
+8. **Email outreach from the platform.** Resend is wired for notifications; add templated candidate emails (intro, interview invite, rejection) logged against the candidate.
+9. **Global search** across candidates, mandates and FAQ topics — `candidate_skills.skill` is already normalised, so skill search is a simple join.
+10. **CSV export** of candidate lists and mandate shortlists.
+11. **Job alerts** (nightly email of new matches above a threshold) — depends on item 2.
+12. **Dark palette** — `@custom-variant dark` exists in `styles.css` but no dark tokens are defined.
+13. **Calendly embed** on the HR answer page (`CALENDLY_URL` var is plumbed; the widget is not).
 
 ---
 
@@ -131,3 +130,15 @@ The first Lovable pass exhausted available credits and left an undefined `DEV_JW
 New regression tests cover credentials, malformed tokens, candidate ownership, refresh-only sessions, invalid refreshed sessions, durable limits, migration replay, grading failures, real zero scores, email failures/concurrent retries and Reed counters. Local results: 14 tests passed, TypeScript passed, Workers build passed. Browser installation was blocked by upstream download failures; browser verification must be completed in CI and configured staging. Supabase hardening SQL is prepared but has not been applied to a live project.
 
 Remaining launch gates: passing final PR CI; provision dedicated UKTL staging Supabase and Cloudflare D1/R2; apply migrations; supply API keys and secrets securely; verify sender domain; run database-backed staging acceptance; review production domain/configuration; deploy only after those gates pass. Rate-limit cleanup scheduling and automatic notification retries remain future operational work. No environment has been deployed by this change.
+
+
+## 11. Site structure and sign-in fixes — 23 September 2026
+
+UKTL is one firm, so there is no client/employer portal (removed from the backlog). Two user types: candidates and firm staff.
+
+- One header (`Nav`) on the public site, the candidate area and the sign-in pages. It shows *Sign in / Upload your CV* when signed out, *My account / Sign out* for candidates and *Admin* for staff. Previously the candidate area had its own header that looked signed-in to everyone.
+- `/app` now requires sign-in and returns the visitor to the page they wanted afterwards. The candidate menu is Dashboard · My CV · Job matches · All jobs · My interests · HR & Law · Profile; staff tools are no longer in it.
+- New candidate dashboard (CV score, strongest matches). Candidates see "Your CV" without the consultant buttons (anonymise, re-match, pipeline stages). Job matches use the candidate's own CV automatically.
+- Upload page: removed the duplicate sign-in link; copy rewritten for candidates.
+- Footer links fixed (service anchors, `/reach` linked, candidate column), and the landing page buttons go to sign-up.
+- Ported onto devacnt/UKTL (the source of truth) on 23 September; JSHrs/uktl- `main` mirrors devacnt.

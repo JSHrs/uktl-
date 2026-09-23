@@ -1,14 +1,25 @@
 import { useState } from "react";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { z } from "zod";
 import { candidateLoginFn } from "@/lib/functions";
 
+// Only same-site paths are accepted as a post-login destination.
+function safeRedirect(target: string | undefined): string {
+  return target && target.startsWith("/") && !target.startsWith("//") ? target : "/app";
+}
+
 export const Route = createFileRoute("/auth/login")({
+  validateSearch: (s) => z.object({ redirect: z.string().optional() }).parse(s),
+  beforeLoad: ({ context, search }) => {
+    if (context.session.userId) throw redirect({ href: safeRedirect(search.redirect) });
+  },
   component: LoginPage,
 });
 
 function LoginPage() {
   const router = useRouter();
+  const search = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +32,8 @@ function LoginPage() {
     try {
       const { email: signedInAs } = await candidateLoginFn({ data: { email, password } });
       toast.success(`Signed in as ${signedInAs ?? email}`);
-      router.navigate({ to: "/app/profile" });
+      await router.invalidate();
+      await router.navigate({ href: safeRedirect(search.redirect) });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed. Please try again.");
     } finally {
@@ -33,7 +45,7 @@ function LoginPage() {
     <div className="w-full max-w-[400px]">
       <div className="mb-8 text-center">
         <div className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-mute mb-3">
-          — Candidate portal
+          — Candidates
         </div>
         <h1
           className="font-display font-light tracking-[-0.025em]"
@@ -42,7 +54,7 @@ function LoginPage() {
           Sign in
         </h1>
         <p className="text-sm text-ink-soft mt-2">
-          Access your CV profile, job matches, and HR guidance.
+          See your CV score, your job matches and HR guidance.
         </p>
       </div>
 

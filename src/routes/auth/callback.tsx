@@ -42,7 +42,7 @@ function CallbackPage() {
     })
       .then(() => {
         window.history.replaceState(null, "", window.location.pathname);
-        router.navigate({ to: recovery ? "/auth/reset" : "/app/profile" });
+        router.navigate({ to: recovery ? "/auth/reset" : "/app" }).then(() => router.invalidate());
       })
       .catch((err: unknown) =>
         setError(err instanceof Error ? err.message : "Sign-in failed. Request a new link."),
