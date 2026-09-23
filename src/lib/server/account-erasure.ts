@@ -32,6 +32,9 @@ export async function completeAccountErasure(
     // provider failures leave this durable job pending and access blocked.
     const { error } = await auth.deleteUser(job.target_user_id);
     if (error && error.status !== 404) throw new Error();
+    // A 404 from a misconfigured Auth project must never count as erasure.
+    const stillExists = await env.DB.prepare("SELECT id FROM auth.users WHERE id=?::uuid").bind(job.target_user_id).first();
+    if (stillExists) throw new Error();
     await env.DB.batch([
       env.DB.prepare(
         "UPDATE privacy_requests SET status='completed',user_id=NULL,updated_at=?,resolution='Reviewed account data and private files removed. External records were handled in the administrator review.' WHERE id=?::uuid",
