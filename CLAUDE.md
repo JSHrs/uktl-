@@ -59,6 +59,15 @@ wrangler.toml          the ONLY Wrangler config (never add wrangler.json/jsonc �
 8. **Design system, not ad-hoc styling.** Colours come from the tokens in `styles.css` (`paper`, `paper-deep`, `ink`, `ink-soft`, `ink-mute`, `rule`, `accent`, `accent-soft`, `accent-light`). Display type is Fraunces via `font-display` with `fontVariationSettings`, body is Geist, labels are Geist Mono uppercase tracked. Public-site sections use `<Reveal>` for entrance; the app shell uses the primitives in `AppLayout.tsx`. Respect `prefers-reduced-motion` (there is a global rule; new keyframes need a static end-state there).
 9. **Keep `tsc` at zero and `npm run build` green before pushing.** Run both. Do not push speculative fixes.
 
+## Who uses the site
+
+UKTL is one recruitment firm. There are exactly two kinds of user, and no client/employer logins:
+
+- **Candidates** — sign up (Supabase), upload their CV, see their own score, matches and HR guidance. Everything under `/app` requires sign-in (guard in `src/routes/app.tsx`); a candidate only ever sees their own records.
+- **Firm staff** — the admin dashboard (`/admin`) plus the staff views of a candidate record and a mandate pipeline (`/app/candidates`, `/app/candidates/:id`, `/app/jobs/:id`). Staff-only actions are hidden from candidates and enforced server-side.
+
+The root route loads the session once per navigation (`getSessionFn` → `context.session`); the shared header (`src/components/site/Nav.tsx`) and all route guards read it from there. After signing in or out, call `router.invalidate()` so the header updates.
+
 ## Auth model
 
 - **Admin:** password checked against `ADMIN_PASSWORD_HASH` (PBKDF2-SHA256, salt `uktl-admin-salt-v1`, 100k iterations, `scripts/hash-password.mjs`). Session is an HMAC-signed `admin_session` httpOnly cookie (`JWT_SECRET`, 8h). `isAdminRequest()` in `src/lib/server/viewer.ts` is the single check.
@@ -81,7 +90,7 @@ wrangler.toml          the ONLY Wrangler config (never add wrangler.json/jsonc �
 
 ## Known gaps (not bugs — unbuilt)
 
-Charts on the analytics page (Recharts installed, unused) · Calendly embed on the HR answer page · scheduled Reed sync (manual button only) · candidate email outreach · CSV export · dark palette (`@custom-variant dark` exists, no tokens) · client portal · GDPR delete/export tooling · named admin users with audit trail.
+Charts on the analytics page (Recharts installed, unused) · Calendly embed on the HR answer page · scheduled Reed sync (manual button only) · candidate email outreach · CSV export · dark palette (`@custom-variant dark` exists, no tokens) · GDPR delete/export tooling · named admin users with audit trail.
 
 
 ## Launch hardening verification

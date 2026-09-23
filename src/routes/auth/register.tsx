@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { candidateRegisterFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/auth/register")({
+  beforeLoad: ({ context }) => {
+    if (context.session.userId) throw redirect({ to: "/app/upload" });
+  },
   component: RegisterPage,
 });
 
@@ -35,7 +38,8 @@ function RegisterPage() {
       if (result.needsConfirmation) {
         setSuccess(true);
       } else {
-        router.navigate({ to: "/app/upload" });
+        await router.invalidate();
+        await router.navigate({ to: "/app/upload" });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
@@ -69,16 +73,16 @@ function RegisterPage() {
     <div className="w-full max-w-[400px]">
       <div className="mb-8 text-center">
         <div className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-mute mb-3">
-          — Create your account
+          — Candidates
         </div>
         <h1
           className="font-display font-light tracking-[-0.025em]"
           style={{ fontSize: "clamp(28px, 4vw, 36px)", fontVariationSettings: '"opsz" 144, "SOFT" 50' }}
         >
-          Register
+          Create your account
         </h1>
         <p className="text-sm text-ink-soft mt-2">
-          Upload your CV, get matched, and track your applications.
+          Then upload your CV — we'll score it and match you to the roles we're recruiting for.
         </p>
       </div>
 

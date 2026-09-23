@@ -1,70 +1,70 @@
 import type { ReactNode } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouteContext, useRouterState } from "@tanstack/react-router";
+import { Nav } from "@/components/site/Nav";
+import { Footer } from "@/components/site/Footer";
 
-const nav = [
-  { to: "/app", label: "Overview", exact: true },
-  { to: "/app/profile", label: "Profile" },
-  { to: "/app/discover", label: "Discover" },
+type Section = { to: string; label: string; exact?: boolean };
+
+const CANDIDATE_SECTIONS: Section[] = [
+  { to: "/app", label: "Dashboard", exact: true },
+  { to: "/app/upload", label: "My CV" },
+  { to: "/app/discover", label: "Job matches" },
+  { to: "/app/jobs", label: "All jobs" },
   { to: "/app/hr", label: "HR & Law" },
-  { to: "/app/upload", label: "Upload CV" },
+  { to: "/app/profile", label: "Profile" },
+];
+
+// Staff reach the candidate area only to open a record or a mandate pipeline.
+const STAFF_SECTIONS: Section[] = [
   { to: "/app/candidates", label: "Candidates" },
   { to: "/app/jobs", label: "Mandates" },
-] as const;
+  { to: "/app/upload", label: "Upload a CV" },
+];
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-paper text-ink">
-      <AppNav />
+    <div className="min-h-screen bg-paper text-ink flex flex-col">
+      <Nav variant="solid" />
+      <AccountNav />
       <main
-        className="py-8 md:py-10"
-        style={{ paddingLeft: "clamp(16px, 4vw, 56px)", paddingRight: "clamp(16px, 4vw, 56px)" }}
+        className="flex-1 w-full max-w-[1440px] mx-auto py-8 md:py-10"
+        style={{ paddingLeft: "clamp(20px, 4.5vw, 64px)", paddingRight: "clamp(20px, 4.5vw, 64px)" }}
       >
         {children}
       </main>
+      <Footer />
     </div>
   );
 }
 
-function AppNav() {
-  const routerState = useRouterState();
-  const current = routerState.location.pathname;
+function AccountNav() {
+  const { session } = useRouteContext({ from: "__root__" });
+  const current = useRouterState().location.pathname;
+  const staffOnly = session.isAdmin && !session.userId;
+  const sections = staffOnly ? STAFF_SECTIONS : CANDIDATE_SECTIONS;
 
   return (
-    <header className="border-b border-rule sticky top-0 z-50 bg-paper/95 backdrop-blur-md">
+    <div className="border-b border-rule bg-paper">
       <div
-        className="flex items-center gap-4 py-3"
-        style={{ paddingLeft: "clamp(16px, 4vw, 56px)", paddingRight: "clamp(16px, 4vw, 56px)" }}
+        className="w-full max-w-[1440px] mx-auto flex items-center gap-4"
+        style={{ paddingLeft: "clamp(20px, 4.5vw, 64px)", paddingRight: "clamp(20px, 4.5vw, 64px)" }}
       >
-        <Link
-          to="/"
-          className="font-display text-[15px] font-medium tracking-[-0.025em] text-ink shrink-0 mr-1"
-          style={{ fontVariationSettings: '"opsz" 144, "SOFT" 30' }}
-        >
-          UK Talent{" "}
-          <em className="not-italic font-normal text-ink-mute italic" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 80' }}>
-            Compass
-          </em>
-        </Link>
-
-        <span className="hidden sm:block w-px h-4 bg-rule flex-shrink-0" aria-hidden="true" />
-
+        <span className="hidden sm:block font-mono text-[10px] tracking-[0.16em] uppercase text-ink-mute shrink-0">
+          {staffOnly ? "Staff" : "My account"}
+        </span>
         <nav
-          className="flex items-center gap-0.5 overflow-x-auto flex-1 min-w-0"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          aria-label="Account"
+          className="flex items-center gap-0.5 overflow-x-auto flex-1 min-w-0 py-2"
+          style={{ scrollbarWidth: "none" }}
         >
-          {nav.map((item) => {
-            const isActive = "exact" in item && item.exact
-              ? current === item.to
-              : current.startsWith(item.to);
+          {sections.map((item) => {
+            const active = item.exact ? current === item.to || current === `${item.to}/` : current.startsWith(item.to);
             return (
               <Link
                 key={item.to}
                 to={item.to}
-                activeOptions={"exact" in item && item.exact ? { exact: true } : undefined}
                 className={`text-[13px] whitespace-nowrap px-3 py-1.5 rounded-md transition-colors ${
-                  isActive
-                    ? "text-ink bg-paper-deep font-medium"
-                    : "text-ink-mute hover:text-ink hover:bg-paper-deep/60"
+                  active ? "text-ink bg-paper-deep font-medium" : "text-ink-mute hover:text-ink hover:bg-paper-deep/60"
                 }`}
               >
                 {item.label}
@@ -72,8 +72,13 @@ function AppNav() {
             );
           })}
         </nav>
+        {session.email && (
+          <span className="hidden lg:block text-[12px] text-ink-mute truncate max-w-[28ch]" title={session.email}>
+            {session.email}
+          </span>
+        )}
       </div>
-    </header>
+    </div>
   );
 }
 

@@ -6,12 +6,12 @@ import {
   ScoreBar,
   StatusPill,
 } from "@/components/app/AppLayout";
-import { getViewerFn, listCandidatesFn } from "@/lib/functions";
+import { listCandidatesFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/app/candidates/")({
-  beforeLoad: async () => {
-    const viewer = await getViewerFn();
-    if (!viewer.isAdmin && !viewer.userId) throw redirect({ to: "/auth/login" });
+  // The talent pool is a staff view; candidates see their own CV on the dashboard.
+  beforeLoad: ({ context }) => {
+    if (!context.session.isAdmin) throw redirect({ to: "/app" });
   },
   loader: async () => await listCandidatesFn(),
   component: CandidatesListPage,

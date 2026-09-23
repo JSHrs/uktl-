@@ -42,23 +42,24 @@ export function Footer() {
           </div>
 
           <FooterCol title="Practice">
-            <FooterLink to="/services#hr-consultancy">HR Consultancy</FooterLink>
-            <FooterLink to="/services#executive-search">Executive Search</FooterLink>
-            <FooterLink to="/services#employment-law">Employment Law</FooterLink>
-            <FooterLink to="/services#gcc-recruitment">GCC Recruitment</FooterLink>
+            <FooterLink to="/services" hash="hr-consultancy">HR Consultancy</FooterLink>
+            <FooterLink to="/services" hash="executive-search">Executive Search</FooterLink>
+            <FooterLink to="/services" hash="employment-law">Employment Law</FooterLink>
+            <FooterLink to="/services" hash="gcc-recruitment">GCC Recruitment</FooterLink>
           </FooterCol>
 
           <FooterCol title="Firm">
             <FooterLink to="/approach">Approach</FooterLink>
             <FooterLink to="/sectors">Sectors</FooterLink>
+            <FooterLink to="/reach">Reach</FooterLink>
             <FooterLink to="/contact">Contact</FooterLink>
           </FooterCol>
 
-          <FooterCol title="Platform">
-            <FooterLink to="/app">Talent Compass</FooterLink>
-            <FooterLink to="/app/upload">Upload CV</FooterLink>
-            <FooterLink to="/app/discover">Discover</FooterLink>
-            <FooterLink to="/app/hr">HR & Law</FooterLink>
+          <FooterCol title="Candidates">
+            <FooterLink to="/auth/register">Create an account</FooterLink>
+            <FooterLink to="/auth/login">Sign in</FooterLink>
+            <FooterLink to="/app/upload">Upload your CV</FooterLink>
+            <FooterLink to="/app/jobs">Open roles</FooterLink>
           </FooterCol>
 
           <FooterCol title="Elsewhere">
@@ -115,10 +116,10 @@ function FooterCol({ title, children }: { title: string; children: React.ReactNo
   );
 }
 
-function FooterLink({ to, children }: { to: string; children: React.ReactNode }) {
+function FooterLink({ to, hash, children }: { to: string; hash?: string; children: React.ReactNode }) {
   return (
     <li>
-      <Link to={to} className="text-[14px] text-ink-soft hover:text-ink transition-colors">
+      <Link to={to} hash={hash} className="text-[14px] text-ink-soft hover:text-ink transition-colors">
         {children}
       </Link>
     </li>
