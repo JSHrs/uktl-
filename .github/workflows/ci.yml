@@ -58,6 +58,8 @@ jobs:
           version: 2.117.0
       - name: Start isolated local Supabase and replay migrations
         run: supabase db start
+        env:
+          SUPABASE_INTERNAL_IMAGE_REGISTRY: docker.io
       - name: Staff authorization and ownership regression
         run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -v ON_ERROR_STOP=1 -f supabase/tests/staff_access.sql
       - uses: actions/setup-node@v4
