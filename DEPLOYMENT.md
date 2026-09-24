@@ -16,7 +16,7 @@ Production project: `fvkffdeindboirukscfq`. Canonical migration history is docum
 
 Production remains gated by DEVELOPMENT_GATES.md, including isolated staging UAT, actual CV/recruitment and HR/booking journeys, backup restoration, monitoring, privacy workflows and a tested rollback plan. Confirm the production origin and set Auth redirects exactly; no production host is presumed.
 
-Required runtime configuration: `DATA_BACKEND=supabase`, project URL and public key, confirmed `SITE_URL`, `DATABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. Live functionality also needs Anthropic, Resend, Reed and Calendly configuration. Scheduling must use a strong dedicated secret and remains disabled until tested. Provider subscriptions, video content and domain verification are client deliverables.
+Required runtime configuration: `DATA_BACKEND=supabase`, project URL and public key, confirmed `SITE_URL`, `DATABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. Live functionality also needs Anthropic, Resend and Reed configuration. Consultations use the native calendar (no scheduling provider); staff set opening hours in Admin → Consultations before candidates can book. Scheduling must use a strong dedicated secret and remains disabled until tested. Provider subscriptions, video content and domain verification are client deliverables.
 
 Staff access uses named verified Supabase users, current `recruitment.staff_users` membership and MFA. `ADMIN_PASSWORD_HASH` and `JWT_SECRET` do not enable current staff access. Public profile writes are scoped to the authenticated user; the private recruitment adapter still uses a privileged server connection, so every server action must authorize itself.
 

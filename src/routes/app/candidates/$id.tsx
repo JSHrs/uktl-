@@ -16,6 +16,7 @@ import {
   rematchCandidateFn,
 } from "@/lib/functions";
 import { STAGE_LABELS, stageTone } from "@/lib/stages";
+import { CandidateOutreach } from "@/components/app/CandidateOutreach";
 
 export const Route = createFileRoute("/app/candidates/$id")({
   loader: async ({ params }) => {
@@ -32,6 +33,7 @@ function CandidateDetailPage() {
   const isStaff = session.isStaff;
   const router = useRouter();
   const [editing,setEditing]=useState(false);
+  const [emailing, setEmailing] = useState(false);
   const processingState=processing?.status;
   useEffect(()=>{
     if(!processingState || !['pending','running'].includes(processingState) || editing) return;
@@ -113,6 +115,12 @@ function CandidateDetailPage() {
             {isStaff ? (
               <>
                 <button
+                  onClick={() => setEmailing((v) => !v)}
+                  className="text-[13px] px-[16px] py-2 border border-rule rounded-full hover:border-ink"
+                >
+                  Email candidate
+                </button>
+                <button
                   onClick={onAnonymise}
                   className="text-[13px] px-[16px] py-2 border border-rule rounded-full hover:border-ink"
                 >
@@ -142,6 +150,7 @@ function CandidateDetailPage() {
         {processing.status==='running'?'Your CV assessment is processing.':processing.status==='pending'?'Your CV assessment is queued. You can leave this page and return later.':'Processing could not complete. Please contact the team or upload your CV again.'}
         <p className="text-ink-soft mt-1">Attempt {processing.attempts} of 3. Previous match scores are hidden until the current assessment is ready.</p>
       </div>}
+      {isStaff && emailing && <CandidateOutreach candidateId={c.id} name={c.name} onClose={() => setEmailing(false)} />}
       {editing && <ProfileEditor id={c.id} onClose={()=>setEditing(false)} onSaved={()=>{setEditing(false);toast.success('Corrections saved; assessment refresh queued');void router.invalidate();}}/>}
       <div className="grid md:grid-cols-[2fr_1fr] gap-10">
         <div>

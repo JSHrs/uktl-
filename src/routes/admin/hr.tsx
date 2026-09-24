@@ -4,7 +4,6 @@ import {
   listHrSourcesFn,
   retrieveHrSourceFn,
   reviewHrSourceFn,
-  reviewVideoFn,
 } from "@/lib/hr-functions";
 import { adminListFaqFn } from "@/lib/functions";
 import { AdminHeader, AdminField, AdminBtn, inputCls, textareaCls } from "@/routes/admin";
@@ -124,69 +123,24 @@ function HrReview() {
         ))}
       </section>
       <section className="space-y-4">
-        <h2 className="text-xl">Approve video, captions and transcript</h2>
-        <p className="text-sm">
-          Upload reviewed MP4/WebM and VTT assets to private Storage bucket <code>uktl-videos</code>{" "}
-          using paths under <code>videos/</code>. No uploads or content approval happen
-          automatically. Then save their keys and the transcript here. Publish/unpublish the topic
-          in{" "}
-          <Link to="/admin/faq" className="underline">
-            FAQ Topics
-          </Link>
-          .
+        <h2 className="text-xl">FAQ answers and videos</h2>
+        <p className="text-sm text-ink-soft">
+          Write answers, upload videos, captions and posters, and approve topics for candidates from each topic&apos;s
+          page. Any change to an approved topic withdraws approval until it is reviewed again.
         </p>
-        <form
-          className="space-y-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const f = new FormData(e.currentTarget);
-            void act(() =>
-              reviewVideoFn({
-                data: {
-                  id: String(f.get("id")),
-                  videoKey: String(f.get("videoKey")),
-                  captionsKey: String(f.get("captionsKey")),
-                  transcript: String(f.get("transcript")),
-                },
-              }),
-            );
-          }}
-        >
-          <AdminField label="Topic">
-            <select name="id" className={inputCls} required>
-              {topics.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.title}
-                  {t.reviewed_at ? " (reviewed)" : ""}
-                </option>
-              ))}
-            </select>
-          </AdminField>
-          <AdminField label="Video object key">
-            <input name="videoKey" required placeholder="videos/topic.mp4" className={inputCls} />
-          </AdminField>
-          <AdminField label="Captions object key">
-            <input
-              name="captionsKey"
-              required
-              placeholder="videos/topic.vtt"
-              className={inputCls}
-            />
-          </AdminField>
-          <AdminField label="Reviewed transcript">
-            <textarea
-              name="transcript"
-              required
-              minLength={20}
-              maxLength={50000}
-              rows={8}
-              className={textareaCls}
-            />
-          </AdminField>
-          <AdminBtn type="submit" disabled={busy || !topics.length}>
-            Approve these video assets
-          </AdminBtn>
-        </form>
+        <ul className="border border-rule rounded-md divide-y divide-rule">
+          {topics.map((t) => (
+            <li key={t.id} className="flex items-center gap-4 px-4 py-2 text-sm">
+              <Link to="/admin/faq/$id" params={{ id: t.id }} className="underline flex-1">
+                {t.title}
+              </Link>
+              <span className="font-mono text-[10px] uppercase tracking-[0.08em] text-ink-mute">
+                {t.reviewed_at ? "approved" : "needs review"}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <Link to="/admin/faq/new" className="underline text-sm">Add a topic</Link>
       </section>
     </div>
   );

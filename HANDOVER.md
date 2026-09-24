@@ -98,7 +98,7 @@ Supabase holds `profiles` (mirror: `d1_candidate_id`), plus Postgres copies of `
 10. **CSV export** of candidate lists and mandate shortlists.
 11. **Job alerts** (nightly email of new matches above a threshold) — depends on item 2.
 12. **Dark palette** — `@custom-variant dark` exists in `styles.css` but no dark tokens are defined.
-13. **Calendly embed** on the HR answer page (`CALENDLY_URL` var is plumbed; the widget is not).
+13. ~~Calendly embed~~ — replaced by the native consultation calendar (Admin → Consultations; candidates book at /app/consultations).
 
 ---
 

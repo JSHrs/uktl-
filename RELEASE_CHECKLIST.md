@@ -21,6 +21,14 @@ Do not deploy real candidate processing until scanner/data handling, private acc
 
 ## Verified engineering checkpoint — 23 September 2026
 
+## Claude handoff — 24 September 2026
+
+The native consultation calendar replaces Calendly; FAQ written answers/media uploads, analytics charts, audited CSV exports and staff outreach are implemented. Handoff review adds transactional outreach deduplication, bounded media signature reads and explicit CSV export limits. Source: Claude commits `338123e` and `48f80df` on `JSHrs/uktl-`.
+
+The new `20260924122319_native_calendar_media_outreach` migration must be applied to isolated staging first and then reconciled with remote migration history. Only the existing UKTL project is currently visible; no separate staging project has been verified. Do not claim this migration is applied or these features are live. Configure real office availability (none is seeded), verify the 100 MB project upload limit, and use test inboxes only for staging outreach. See `STAGE_3_UAT.md` for acceptance. Google/Outlook sync, generated meeting links, reminders, bulk campaigns and candidate-facing message history remain separate unbuilt features.
+
+### Previous verified checkpoint
+
 - Source commit `f0451e3d449b2237f24403be9e461ef252b19466`: [CI run](https://github.com/devacnt/UKTL/actions/runs/35899128210) passed both jobs: 75 unit tests, TypeScript, Workers build, 35 browser cases, and all real PostgreSQL integration/policy tests. The 14 credential-dependent browser cases were skipped and remain open launch gates. Locked dependency installation reports zero vulnerabilities.
 - Connected UKTL Supabase project: operations/privacy/audit and reviewed account-erasure migrations applied as `20260923175936` and `20260923175954`; explicit service-only policies applied as `20260923180105`. No live account erasure or candidate deletion was performed. Migration filenames match remote history.
 - Registry throttling interrupted earlier CI before SQL execution. Database CI now starts only PostgreSQL using the official Docker Hub images, with every regression still enabled.

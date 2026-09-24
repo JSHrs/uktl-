@@ -55,7 +55,7 @@ wrangler.toml          the ONLY Wrangler config (never add wrangler.json/jsonc �
 4. **`getEnv()` throws outside the Workers runtime.** Protected reads must throw a safe unavailable error; do not present an outage as an empty database. Public catalogue loaders may return an empty state in development. Never return fabricated records — the old `mockData.ts` fallback was removed for that reason.
 5. **Migrations are append-only.** Supabase changes belong in `supabase/migrations`; use CLI migration creation, reconcile the applied remote timestamp and run the PostgreSQL CI replay/policy tests. Never edit applied SQL. Legacy D1 changes use `migrations/000N_name.sql`. A migration must be correct against the schema the previous files actually produce (0005 once redefined a table 0003 had already created and aborted). Prove new migrations by replaying 0001→N on SQLite (`node:sqlite` works in Node 22).
 6. **`routeTree.gen.ts` is generated.** After adding or renaming a route, run dev or build and commit the regenerated file; a stale one silently drops routes from the type map.
-7. **No secrets in the repo.** `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `JWT_SECRET`, `ADMIN_PASSWORD_HASH`, `SUPABASE_SERVICE_ROLE_KEY`, `REED_API_KEY` are `wrangler secret put`. `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_URL`, `CALENDLY_URL` are `[vars]` and must be repeated under `[env.staging.vars]` / `[env.production.vars]`.
+7. **No secrets in the repo.** `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `JWT_SECRET`, `ADMIN_PASSWORD_HASH`, `SUPABASE_SERVICE_ROLE_KEY`, `REED_API_KEY` are `wrangler secret put`. `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_URL` are `[vars]` and must be repeated under `[env.staging.vars]` / `[env.production.vars]`.
 8. **Design system, not ad-hoc styling.** Colours come from the tokens in `styles.css` (`paper`, `paper-deep`, `ink`, `ink-soft`, `ink-mute`, `rule`, `accent`, `accent-soft`, `accent-light`). Display type is Fraunces via `font-display` with `fontVariationSettings`, body is Geist, labels are Geist Mono uppercase tracked. Public-site sections use `<Reveal>` for entrance; the app shell uses the primitives in `AppLayout.tsx`. Respect `prefers-reduced-motion` (there is a global rule; new keyframes need a static end-state there).
 9. **Keep `tsc` at zero and `npm run build` green before pushing.** Run both. Do not push speculative fixes.
 
@@ -76,6 +76,13 @@ The root route loads the session once per navigation (`getSessionFn` → `contex
 - Candidates use server-verified Supabase sessions in httpOnly cookies. Profile edits use their own RLS client. Callback tokens are verified by Auth; recovery links lead to `/auth/reset`, update the password and revoke sessions.
 - Configure the exact HTTPS `SITE_URL` + `/auth/callback` in Supabase Auth. Resend SMTP handles Auth email. Provider credentials stay in server secrets.
 - Stage 1 and subsequent release requirements are in `DEVELOPMENT_GATES.md`; skipped authenticated tests never pass a stage.
+
+## Consultations, FAQ media, outreach, exports (Supabase)
+
+- **Calendar** (`server/calendar.ts`, `booking-functions.ts`): weekly `availability_rules` in Europe/London wall time, `availability_blocks` closures, singleton `booking_settings`. Slot maths is pure (`generateSlots`, DST-tested). `recruitment.reserve_consultation()` re-checks buffers/closures/daily and per-candidate limits under an advisory lock; an exclusion constraint forbids overlapping confirmed native bookings. Emails go through the `booking_events` outbox (candidate + team, `.ics` attached). `/api/consultations/:id` serves the calendar file to its owner or staff.
+- **FAQ media** (`server/media.ts`, `faq-functions.ts`): browser uploads straight to the private `uktl-videos` bucket with a signed upload URL; `attachMedia` verifies size, MIME and magic bytes before referencing it. Formats: MP4/WebM ≤100 MB, WebVTT ≤1 MB, JPEG/PNG/WebP ≤5 MB. Approval (`reviewed_at`) is withdrawn by a trigger on any content/media change.
+- **Outreach** (`server/admin-tools.ts`, `outreach-templates.ts`): staff-only, logged in `candidate_messages`, idempotent Resend key per message, verified account email preferred.
+- **CSV** (`/api/admin/export/:kind`): admin + MFA, formula-injection safe, audited in the same transaction.
 
 ## Data model (D1)
 
