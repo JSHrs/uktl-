@@ -2,7 +2,8 @@ import { NotificationStatus } from "@/components/app/NotificationStatus";
 import { useState } from "react";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { AdminHeader, AdminTable, AdminTd, AdminTr, selectCls } from "@/routes/admin";
+import { AdminHeader,
+  ExportLink, AdminTable, AdminTd, AdminTr, selectCls } from "@/routes/admin";
 import { adminListEnquiriesFn, adminSetEnquiryStatusFn } from "@/lib/functions";
 import type { EnquiryRow } from "@/lib/server/db";
 
@@ -54,6 +55,7 @@ function EnquiriesPage() {
       <AdminHeader
         title="Enquiries"
         sub={`${counts.new} new · ${counts.replied} replied · ${counts.closed} closed`}
+        actions={<ExportLink kind="enquiries" />}
       />
 
       <div className="flex flex-wrap gap-1.5 mb-5">

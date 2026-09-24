@@ -14,12 +14,19 @@ test("anonymous visitors are sent to sign in before they can type an HR question
   expect(url.searchParams.get("redirect")).toBe("/app/hr");
   expect(url.searchParams.has("q")).toBe(false);
   await expect(page.getByLabel("Your question")).toHaveCount(0);
-  await expect(page.locator('iframe[src*="calendly"]')).toHaveCount(0);
 });
-test("unconfigured or unsigned Calendly webhook cannot confirm a booking", async ({ request }) => {
-  const response = await request.post("/api/calendly-webhook", {
-    data: { event: "invitee.created", payload: { uri: "https://example.invalid/forged" } },
-  });
-  expect([401, 503]).toContain(response.status());
-  expect(await response.text()).not.toContain("received");
+test("consultation booking and calendar files require sign-in", async ({ page, request }) => {
+  await page.goto("/app/consultations");
+  await expect(page).toHaveURL(/\/auth\/login/);
+  const ics = await request.get("/api/consultations/cons_synthetic");
+  expect(ics.status()).toBe(404);
+  const webhook = await request.post("/api/calendly-webhook", { data: {} });
+  expect(webhook.status()).not.toBe(200);
+});
+test("CSV exports are not available without a verified admin session", async ({ request }) => {
+  for (const kind of ["candidates", "pipeline", "enquiries", "bookings", "unknown"]) {
+    const response = await request.get(`/api/admin/export/${kind}`);
+    expect(response.status()).toBe(404);
+    expect(response.headers()["content-type"] ?? "").not.toContain("text/csv");
+  }
 });

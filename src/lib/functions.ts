@@ -479,17 +479,22 @@ export const adminGetFaqFn = createServerFn({ method: "GET" })
     }
   });
 
+const FaqFields = {
+  title: z.string().trim().min(3).max(200),
+  category: z.enum(["dismissal", "contracts", "discrimination", "pay", "redundancy", "holiday", "working-time", "leave", "whistleblowing", "settlement"]),
+  keywords: z.array(z.string().trim().min(1).max(60)).max(30),
+  sector_tag: z.string().max(50).nullable().optional(),
+  answer: z.string().trim().max(20000).nullable().optional(),
+  video_url: z.string().max(2000).nullable().optional(),
+  thumbnail: z.string().max(2000).nullable().optional(),
+  duration_s: z.number().int().min(1).max(86400).nullable().optional(),
+  published: z.boolean().optional(),
+};
+
 export const adminCreateFaqFn = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) =>
     z.object({
-      title: z.string().min(1),
-      category: z.string().min(1),
-      keywords: z.array(z.string()),
-      sector_tag: z.string().nullable().optional(),
-      video_url: z.string().nullable().optional(),
-      thumbnail: z.string().nullable().optional(),
-      duration_s: z.number().int().nullable().optional(),
-      published: z.boolean().optional(),
+      ...FaqFields,
     }).parse(raw),
   )
   .handler(async ({ data }) => {
@@ -503,15 +508,8 @@ export const adminCreateFaqFn = createServerFn({ method: "POST" })
 export const adminUpdateFaqFn = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) =>
     z.object({
-      id: z.string(),
-      title: z.string().min(1),
-      category: z.string().min(1),
-      keywords: z.array(z.string()),
-      sector_tag: z.string().nullable().optional(),
-      video_url: z.string().nullable().optional(),
-      thumbnail: z.string().nullable().optional(),
-      duration_s: z.number().int().nullable().optional(),
-      published: z.boolean().optional(),
+      id: z.string().min(1).max(100),
+      ...FaqFields,
     }).parse(raw),
   )
   .handler(async ({ data }) => {

@@ -82,7 +82,7 @@ export async function saveHrResolution(
 ) {
   const row = await env.DB.prepare(
     `UPDATE hr_queries SET faq_topic_id=?,resolution_type=?,resolved=?,revision=revision+1
- WHERE id=? AND auth_user_id=? AND revision=? AND (?::text IS NULL OR EXISTS(SELECT 1 FROM faq_topics f WHERE f.id=? AND f.published=1 AND f.reviewed_at IS NOT NULL AND f.transcript IS NOT NULL)) RETURNING id`,
+ WHERE id=? AND auth_user_id=? AND revision=? AND (?::text IS NULL OR EXISTS(SELECT 1 FROM faq_topics f WHERE f.id=? AND f.published=1 AND f.reviewed_at IS NOT NULL AND (f.answer IS NOT NULL OR (f.transcript IS NOT NULL AND f.video_key IS NOT NULL)))) RETURNING id`,
   )
     .bind(topicId, resolution, resolution === "yes" ? 1 : 0, id, userId, revision, topicId, topicId)
     .first();

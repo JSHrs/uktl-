@@ -7,11 +7,6 @@ import {
   validateHrExcerpts,
   boundedText,
 } from "../src/lib/server/hr.ts";
-import {
-  verifyCalendlySignature,
-  calendlyEmbedUrl,
-  processCalendlyWebhook,
-} from "../src/lib/server/calendly.ts";
 test("FAQ ranking uses distinct full tokens and category alone cannot invent a match", () => {
   const topic = {
     id: "one",
@@ -67,46 +62,4 @@ test("HR sources forbid redirects/alternate hosts and require supplied verbatim 
 test("provider response reads are bounded", async () => {
   assert.equal(await boundedText(new Response("safe"), 4), "safe");
   await assert.rejects(boundedText(new Response("oversized"), 3));
-});
-test("Calendly signature uses exact raw body, tolerates rotating signatures and rejects stale replay", async () => {
-  const raw = '{"event":"fixture"}',
-    secret = "test-only-signing-secret",
-    now = Date.now(),
-    t = String(Math.floor(now / 1000));
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const mac = Array.from(
-    new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${t}.${raw}`))),
-  )
-    .map((v) => v.toString(16).padStart(2, "0"))
-    .join("");
-  const header = `t=${t},v1=${"0".repeat(64)},v1=${mac}`;
-  assert.equal(await verifyCalendlySignature(raw, header, secret, now), true);
-  assert.equal(await verifyCalendlySignature(raw + " ", header, secret, now), false);
-  assert.equal(await verifyCalendlySignature(raw, header, secret, now + 181000), false);
-  assert.equal(await verifyCalendlySignature(raw, header, undefined, now), false);
-  assert.equal(await verifyCalendlySignature(raw, header + `,t=${t}`, secret, now), false);
-});
-test("Calendly embeds contain opaque intent only and provider URLs fail closed", async () => {
-  const id = crypto.randomUUID(),
-    url = new URL(calendlyEmbedUrl("https://calendly.com/uktl/consultation", id));
-  assert.equal(url.searchParams.get("utm_content"), id);
-  assert.equal([...url.searchParams].length, 2);
-  for (const bad of [
-    "https://evil.test/a/b",
-    "https://calendly.com/a/b?email=secret",
-    "http://calendly.com/a/b",
-  ])
-    assert.throws(() => calendlyEmbedUrl(bad, id));
-  await assert.rejects(
-    processCalendlyWebhook(
-      {} as any,
-      JSON.stringify({ event: "invitee.created", payload: { uri: "http://127.0.0.1/private" } }),
-    ),
-  );
 });

@@ -56,8 +56,8 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.117.0
-      - name: Start isolated local Supabase and replay migrations
-        run: supabase db start
+      - name: Start isolated local Supabase (database, storage, auth) and replay migrations
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,mailpit,realtime,postgres-meta
         env:
           SUPABASE_INTERNAL_IMAGE_REGISTRY: docker.io
       - name: Staff authorization and ownership regression
@@ -81,6 +81,12 @@ jobs:
         run: node scripts/test-reed-resume-postgres.ts
       - name: HR journeys and verified booking PostgreSQL integration
         run: node scripts/test-hr-postgres.ts
+      - name: Actual Storage media upload verification
+        run: |
+          eval "$(supabase status -o env)"
+          TEST_SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" node scripts/test-media-postgres.ts
+      - name: Outreach log, CSV export and chart queries
+        run: node scripts/test-admin-tools-postgres.ts
       - name: Privacy erasure, audit attribution and AI budget policies
         run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -v ON_ERROR_STOP=1 -f supabase/tests/operations.sql
       - name: Stop isolated database
