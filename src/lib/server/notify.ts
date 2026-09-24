@@ -59,10 +59,13 @@ async function claimAndDeliverNotification(
   return outcome;
 }
 
-type Email = {
+export type Email = {
   subject: string;
   text: string;
   replyTo?: string | null;
+  /** Defaults to the firm's inbox. Candidate-facing mail must pass the recipient. */
+  to?: string[];
+  attachments?: { filename: string; content: string; content_type?: string }[];
 };
 
 /** Redacts anything that looks like a credential and truncates for storage. */
@@ -94,10 +97,11 @@ export async function sendNotificationEmail(
       },
       body: JSON.stringify({
         from: FROM,
-        to: TO,
+        to: email.to?.length ? email.to : TO,
         ...(email.replyTo ? { reply_to: email.replyTo } : {}),
         subject: email.subject,
         text: email.text,
+        ...(email.attachments?.length ? { attachments: email.attachments } : {}),
       }),
     });
 

@@ -1,14 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AdminHeader } from "@/routes/admin";
 import { adminGetAnalyticsFn } from "@/lib/functions";
+import { adminChartsFn } from "@/lib/admin-tools-functions";
+import { AdminCharts } from "@/components/app/AdminCharts";
 
 export const Route = createFileRoute("/admin/analytics")({
-  loader: () => adminGetAnalyticsFn(),
+  loader: async () => {
+    const [data, charts] = await Promise.all([adminGetAnalyticsFn(), adminChartsFn()]);
+    return { data, charts };
+  },
   component: AnalyticsPage,
 });
 
+const EXPORT_LINKS = [
+  { kind: "candidates", label: "Candidates" },
+  { kind: "pipeline", label: "All pipelines" },
+  { kind: "bookings", label: "Consultations" },
+  { kind: "enquiries", label: "Enquiries" },
+];
+
 function AnalyticsPage() {
-  const data = Route.useLoaderData();
+  const { data, charts } = Route.useLoaderData();
 
   const resolutionRate =
     data.total_queries > 0
@@ -24,6 +36,20 @@ function AnalyticsPage() {
     <>
       <AdminHeader title="Analytics" sub="Platform activity overview" />
 
+      <div className="flex flex-wrap items-center gap-2 mb-8">
+        <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-ink-mute mr-1">Export CSV</span>
+        {EXPORT_LINKS.map((e) => (
+          <a
+            key={e.kind}
+            href={`/api/admin/export/${e.kind}`}
+            className="text-[12px] px-3.5 py-1.5 border border-rule rounded-full text-ink-soft hover:border-ink hover:text-ink transition-colors"
+          >
+            {e.label}
+          </a>
+        ))}
+        <span className="text-[11px] text-ink-mute basis-full mt-1">Exports contain personal data. Each download is recorded in the audit log; store and share files only as your data-protection policy allows.</span>
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
         <Tile label="Total candidates" value={data.total_candidates} />
         <Tile label="CVs parsed" value={data.parsed_candidates} />
@@ -33,6 +59,10 @@ function AnalyticsPage() {
           unit="/100"
         />
         <Tile label="Open mandates" value={data.open_jobs} />
+      </div>
+
+      <div className="mb-10">
+        <AdminCharts data={charts} />
       </div>
 
       <h2 className="font-display font-light text-xl tracking-[-0.02em] mb-4">HR module</h2>

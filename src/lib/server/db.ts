@@ -458,6 +458,10 @@ export async function getMatchesForCandidate(
 export type FaqTopic = {
   transcript?: string|null;
   reviewed_at?: number|null;
+  answer?: string | null;
+  video_key?: string | null;
+  captions_key?: string | null;
+  thumbnail_key?: string | null;
   id: string;
   title: string;
   category: string;
@@ -492,6 +496,10 @@ function rowToFaqTopic(row: Record<string, unknown>): FaqTopic {
   return {
     transcript: (row.transcript as string|null)??null,
     reviewed_at: row.reviewed_at==null?null:Number(row.reviewed_at),
+    answer: (row.answer as string | null) ?? null,
+    video_key: (row.video_key as string | null) ?? null,
+    captions_key: (row.captions_key as string | null) ?? null,
+    thumbnail_key: (row.thumbnail_key as string | null) ?? null,
     id: String(row.id),
     title: String(row.title),
     category: String(row.category),
@@ -569,6 +577,7 @@ export async function getFaqTopic(env: AppEnv, id: string): Promise<FaqTopic | n
 
 export type FaqTopicInput = {
   title: string;
+  answer?: string | null;
   category: string;
   keywords: string[];
   sector_tag?: string | null;
@@ -581,23 +590,31 @@ export type FaqTopicInput = {
 export async function createFaqTopic(env: AppEnv, id: string, input: FaqTopicInput): Promise<void> {
   const now = Date.now();
   await env.DB.prepare(
-    `INSERT INTO faq_topics (id, title, category, keywords, sector_tag, video_url, thumbnail, duration_s, published, view_count, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+    env.DATA_BACKEND === "supabase"
+      ? `INSERT INTO faq_topics (id, title, category, keywords, sector_tag, video_url, thumbnail, duration_s, published, view_count, created_at, answer, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`
+      : `INSERT INTO faq_topics (id, title, category, keywords, sector_tag, video_url, thumbnail, duration_s, published, view_count, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
   ).bind(
     id, input.title, input.category, JSON.stringify(input.keywords),
     input.sector_tag ?? null, input.video_url ?? null, input.thumbnail ?? null,
     input.duration_s ?? null, input.published ? 1 : 0, now,
+    ...(env.DATA_BACKEND === "supabase" ? [input.answer || null, now] : []),
   ).run();
 }
 
 export async function updateFaqTopic(env: AppEnv, id: string, input: FaqTopicInput): Promise<void> {
   await env.DB.prepare(
-    `UPDATE faq_topics SET title=?, category=?, keywords=?, sector_tag=?, video_url=?, thumbnail=?, duration_s=?, published=?
-     WHERE id=?`,
+    env.DATA_BACKEND === "supabase"
+      ? `UPDATE faq_topics SET title=?, category=?, keywords=?, sector_tag=?, video_url=?, thumbnail=?, duration_s=?, published=?, answer=?, updated_at=?
+         WHERE id=?`
+      : `UPDATE faq_topics SET title=?, category=?, keywords=?, sector_tag=?, video_url=?, thumbnail=?, duration_s=?, published=?
+         WHERE id=?`,
   ).bind(
     input.title, input.category, JSON.stringify(input.keywords),
     input.sector_tag ?? null, input.video_url ?? null, input.thumbnail ?? null,
-    input.duration_s ?? null, input.published ? 1 : 0, id,
+    input.duration_s ?? null, input.published ? 1 : 0,
+    ...(env.DATA_BACKEND === "supabase" ? [input.answer || null, Date.now()] : []), id,
   ).run();
 }
 
@@ -659,6 +676,7 @@ export async function deleteJob(env: AppEnv, id: string): Promise<void> {
 // ── Bookings ─────────────────────────────────────────────────────────────────
 
 export type BookingRow = {
+  source?: string;
   provider_invitee_uri?: string | null;
   starts_at?: number | null;
   old_invitee_uri?: string | null;
@@ -805,7 +823,7 @@ export async function getAdminAnalytics(env: AppEnv): Promise<{
     env.DB.prepare(`SELECT COUNT(*) as n, SUM(CASE WHEN status='open' THEN 1 ELSE 0 END) as open FROM jobs`),
     env.DB.prepare(`SELECT COALESCE(SUM(view_count),0) as total FROM faq_topics`),
     env.DB.prepare(`SELECT COUNT(*) as n, SUM(resolved) as resolved, SUM(CASE WHEN ai_response IS NOT NULL THEN 1 ELSE 0 END) as ai FROM hr_queries`),
-    env.DB.prepare(env.DATA_BACKEND==='supabase'?`SELECT COUNT(*) as n, COUNT(DISTINCT i.query_id) AS converted FROM bookings b LEFT JOIN booking_intents i ON i.id=b.intent_id WHERE b.provider_invitee_uri IS NOT NULL AND b.status='confirmed'`:`SELECT COUNT(*) as n, 0 AS converted FROM bookings WHERE status='confirmed'`),
+    env.DB.prepare(env.DATA_BACKEND==='supabase'?`SELECT COUNT(*) as n, COUNT(DISTINCT COALESCE(b.query_id,i.query_id)) AS converted FROM bookings b LEFT JOIN booking_intents i ON i.id=b.intent_id WHERE b.source IN ('native','calendly') AND b.status='confirmed'`:`SELECT COUNT(*) as n, 0 AS converted FROM bookings WHERE status='confirmed'`),
   ]);
   const c = (candidates.results?.[0] ?? {}) as Record<string, number | null>;
   const j = (jobs.results?.[0] ?? {}) as Record<string, number>;

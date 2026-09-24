@@ -12,6 +12,7 @@ const CANDIDATE_SECTIONS: Section[] = [
   { to: "/app/jobs", label: "All jobs" },
   { to: "/app/activity", label: "My interests" },
   { to: "/app/hr", label: "HR & Law" },
+  { to: "/app/consultations", label: "Consultations" },
   { to: "/app/profile", label: "Profile" },
 ];
 

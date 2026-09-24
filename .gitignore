@@ -43,6 +43,7 @@ dist-ssr
 
 # Supabase CLI cache
 supabase/.temp/
+supabase/.branches/
 
 .deploy/
 staging-tests.json

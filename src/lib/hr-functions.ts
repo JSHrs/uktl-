@@ -14,6 +14,7 @@ import {
   retrieveHrSource,
 } from "./server/hr";
 import { enforceRateLimit } from "./server/ratelimit";
+import { signMedia } from "./server/media";
 const id = z.string().min(1).max(100);
 export const createHrQuestionFn = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) =>
@@ -77,7 +78,7 @@ export const getHrAnswerFn = createServerFn({ method: "GET" })
       const viewer = await requireViewer();
       journey = await getHrJourney(env, viewer.userId!, data.id);
     }
-    const topics = (await listFaqTopics(env)).filter((t) => t.reviewed_at && t.transcript);
+    const topics = (await listFaqTopics(env)).filter((t) => t.reviewed_at && (t.answer || (t.transcript && t.video_key)));
     const suggestions = journey
       ? rankFaqs(journey.question, topics, journey.category ?? undefined)
       : [];
@@ -137,7 +138,17 @@ export const answerHrQuestionFn = createServerFn({ method: "POST" })
   });
 export const publicVideoTopicsFn = createServerFn({ method: "GET" }).handler(async () => {
   const env = await getEnv();
-  return (await listFaqTopics(env)).filter((t) => t.reviewed_at && t.transcript);
+  // Only approved topics: a written answer, or a video with captions and transcript.
+  const topics = (await listFaqTopics(env)).filter(
+    (t) => t.reviewed_at && (t.answer || (t.transcript && t.video_key)),
+  );
+  let thumbs: Record<string, string> = {};
+  try {
+    thumbs = await signMedia(env, topics.map((t) => t.thumbnail_key), 3600);
+  } catch {
+    /* Posters are optional; the library still renders without them. */
+  }
+  return topics.map((t) => ({ ...t, thumbnail_url: t.thumbnail_key ? (thumbs[t.thumbnail_key] ?? null) : null }));
 });
 export const videoPlaybackFn = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => z.object({ id }).strict().parse(raw))
@@ -234,50 +245,5 @@ export const reviewHrSourceFn = createServerFn({ method: "POST" })
       .bind(data.active, Date.now(), viewer.userId!, data.id, data.hash)
       .first();
     if (!row) throw new Error("Source changed. Reload and review again.");
-    return { ok: true };
-  });
-export const reviewVideoFn = createServerFn({ method: "POST" })
-  .inputValidator((raw: unknown) =>
-    z
-      .object({
-        id,
-        transcript: z.string().trim().min(20).max(50000),
-        videoKey: z
-          .string()
-          .regex(/^videos\/[a-zA-Z0-9_./-]+\.(mp4|webm)$/)
-          .max(300),
-        captionsKey: z
-          .string()
-          .regex(/^videos\/[a-zA-Z0-9_./-]+\.vtt$/)
-          .max(300),
-      })
-      .strict()
-      .parse(raw),
-  )
-  .handler(async ({ data }) => {
-    await requireAdmin();
-    if (data.videoKey.includes("..") || data.captionsKey.includes(".."))
-      throw new Error("Invalid key");
-    const row = await (
-      await getEnv()
-    ).DB.prepare(
-      `UPDATE faq_topics SET transcript=?,video_key=?,captions_key=?,reviewed_at=? WHERE id=?
-       AND EXISTS(SELECT 1 FROM storage.objects WHERE bucket_id='uktl-videos' AND name=?)
-       AND EXISTS(SELECT 1 FROM storage.objects WHERE bucket_id='uktl-videos' AND name=?) RETURNING id`,
-    )
-      .bind(
-        data.transcript,
-        data.videoKey,
-        data.captionsKey,
-        Date.now(),
-        data.id,
-        data.videoKey,
-        data.captionsKey,
-      )
-      .first();
-    if (!row)
-      throw new Error(
-        "Topic or uploaded video/captions unavailable. Upload both assets before approval.",
-      );
     return { ok: true };
   });

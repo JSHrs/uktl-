@@ -36,6 +36,10 @@ export const RATE_LIMITS = {
   publicForm: { limit: 10, windowMs: 60 * 60 * 1000 },
   /** Outbound Reed sync (admin-triggered but bulk). */
   reedSync: { limit: 12, windowMs: 60 * 60 * 1000 },
+  /** Staff email to candidates. */
+  candidateOutreach: { limit: 60, windowMs: 60 * 60 * 1000 },
+  /** Bulk personal-data downloads. */
+  dataExport: { limit: 30, windowMs: 60 * 60 * 1000 },
 } as const satisfies Record<string, RateLimitRule>;
 
 export async function consumeRateLimit(

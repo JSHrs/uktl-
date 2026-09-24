@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, notFound, useNavigate, useRouter } from "@tanstack/react-router";
+import { FaqMediaPanel } from "@/components/app/FaqMediaPanel";
 import { adminCreateFaqFn, adminGetFaqFn, adminUpdateFaqFn } from "@/lib/functions";
 import type { FaqTopic } from "@/lib/server/db";
 import {
@@ -18,22 +19,27 @@ export const Route = createFileRoute("/admin/faq/$id")({
 
 function EditFaqPage() {
   const topic = Route.useLoaderData();
-  return <FaqForm mode="edit" initial={topic} />;
+  return (
+    <>
+      <FaqForm key={topic.id} mode="edit" initial={topic} />
+      <FaqMediaPanel topicId={topic.id} />
+    </>
+  );
 }
 
 // Shared form used by both new.tsx and $id.tsx
 export function FaqForm({ mode, initial }: { mode: "create" | "edit"; initial?: FaqTopic }) {
   const navigate = useNavigate();
+  const router = useRouter();
+  const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [title, setTitle] = useState(initial?.title ?? "");
+  const [answer, setAnswer] = useState(initial?.answer ?? "");
   const [category, setCategory] = useState(initial?.category ?? "dismissal");
   const [keywords, setKeywords] = useState((initial?.keywords ?? []).join(", "));
   const [sectorTag, setSectorTag] = useState(initial?.sector_tag ?? "");
-  const [videoUrl, setVideoUrl] = useState(initial?.video_url ?? "");
-  const [thumbnail, setThumbnail] = useState(initial?.thumbnail ?? "");
-  const [durationS, setDurationS] = useState(initial?.duration_s?.toString() ?? "");
   const [published, setPublished] = useState(initial ? !!initial.published : false);
 
   async function onSubmit(e: React.FormEvent) {
@@ -45,18 +51,23 @@ export function FaqForm({ mode, initial }: { mode: "create" | "edit"; initial?: 
       category,
       keywords: keywords.split(",").map((k) => k.trim()).filter(Boolean),
       sector_tag: sectorTag || null,
-      video_url: videoUrl || null,
-      thumbnail: thumbnail || null,
-      duration_s: durationS ? parseInt(durationS, 10) : null,
+      answer: answer.trim() || null,
+      // Legacy external links are preserved untouched; new media is uploaded below.
+      video_url: initial?.video_url ?? null,
+      thumbnail: initial?.thumbnail ?? null,
+      duration_s: initial?.duration_s ?? null,
       published,
     };
     try {
       if (mode === "create") {
-        await adminCreateFaqFn({ data: payload });
-        await navigate({ to: "/admin/faq" });
+        const { id } = await adminCreateFaqFn({ data: payload });
+        // Straight to the topic page so media can be uploaded and the topic approved.
+        await navigate({ to: "/admin/faq/$id", params: { id } });
       } else {
         await adminUpdateFaqFn({ data: { id: initial!.id, ...payload } });
-        await navigate({ to: "/admin/faq" });
+        await router.invalidate();
+        setBusy(false);
+        setSaved(true);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
@@ -70,9 +81,17 @@ export function FaqForm({ mode, initial }: { mode: "create" | "edit"; initial?: 
         title={mode === "create" ? "Add FAQ topic" : "Edit FAQ topic"}
         sub={mode === "edit" ? initial?.title : undefined}
       />
-      <form onSubmit={onSubmit} className="max-w-xl space-y-5">
+      <form onSubmit={onSubmit} className="max-w-2xl space-y-5">
         <AdminField label="Title">
           <input className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="e.g. What counts as unfair dismissal?" />
+        </AdminField>
+
+        <AdminField
+          label="Written answer"
+          hint="Plain text shown to candidates in the HR library. Blank lines start a new paragraph. Keep it general guidance, cite ACAS or GOV.UK where relevant, and avoid advice on an individual's case."
+        >
+          <textarea className={textareaCls} rows={12} maxLength={20000} value={answer} onChange={(e) => { setAnswer(e.target.value); setSaved(false); }} placeholder="Explain the rule in plain English, what the candidate can do next, and where to find official guidance." />
+          <span className="block text-right text-[11px] text-ink-mute tabular-nums">{answer.length.toLocaleString()} / 20,000</span>
         </AdminField>
 
         <AdminField label="Category">
@@ -93,32 +112,23 @@ export function FaqForm({ mode, initial }: { mode: "create" | "edit"; initial?: 
           </select>
         </AdminField>
 
-        <AdminField label="Video URL" hint="Supabase Storage public URL or CDN URL for the MP4.">
-          <input className={inputCls} type="url" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://…/storage/v1/object/public/videos/…mp4" />
-        </AdminField>
-
-        <AdminField label="Thumbnail URL" hint="Optional still image for the card and video poster.">
-          <input className={inputCls} type="url" value={thumbnail} onChange={(e) => setThumbnail(e.target.value)} placeholder="https://…/thumbnail.jpg" />
-        </AdminField>
-
-        <AdminField label="Duration (seconds)">
-          <input className={inputCls} type="number" min={1} value={durationS} onChange={(e) => setDurationS(e.target.value)} placeholder="e.g. 187" />
-        </AdminField>
-
         <label className="flex items-center gap-3 cursor-pointer">
           <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} className="w-4 h-4 accent-ink" />
-          <span className="text-sm text-ink">Published — visible in the HR video library</span>
+          <span className="text-sm text-ink">Published — visible in the HR library once approved below</span>
         </label>
 
+        {saved && !error && (
+          <p role="status" className="text-sm text-accent">Saved. Changes to an approved topic need approving again below.</p>
+        )}
         {error && (
           <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">{error}</div>
         )}
 
         <div className="flex gap-3 pt-2">
           <AdminBtn variant="primary" type="submit" disabled={busy}>
-            {busy ? "Saving…" : mode === "create" ? "Create topic" : "Save changes"}
+            {busy ? "Saving…" : mode === "create" ? "Create topic and add media" : "Save changes"}
           </AdminBtn>
-          <AdminBtn onClick={() => navigate({ to: "/admin/faq" })}>Cancel</AdminBtn>
+          <AdminBtn onClick={() => navigate({ to: "/admin/faq" })}>{mode === "edit" ? "Back to topics" : "Cancel"}</AdminBtn>
         </div>
       </form>
     </>
