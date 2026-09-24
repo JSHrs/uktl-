@@ -10,11 +10,12 @@ import {
   retrieveHrSource,
 } from "../src/lib/server/hr.ts";
 import {
-  createBookingIntent,
-  bookingIntentStatus,
-  processCalendlyWebhook,
+  availableSlots,
+  reserveConsultation,
+  cancelConsultation,
+  listMyConsultations,
   deliverBookingEvent,
-} from "../src/lib/server/calendly.ts";
+} from "../src/lib/server/calendar.ts";
 import { getAdminAnalytics } from "../src/lib/server/db.ts";
 const url =
   process.env.TEST_DATABASE_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
@@ -35,10 +36,7 @@ try {
     const env = {
       DATA_BACKEND: "supabase",
       ANTHROPIC_API_KEY: "fake-test-key",
-      CALENDLY_URL: "https://calendly.com/fixture/consultation",
-      CALENDLY_API_TOKEN: "fake-token",
-      CALENDLY_WEBHOOK_SECRET: "fake-signing",
-      CALENDLY_EVENT_TYPE_URI: `https://api.calendly.com/event_types/${crypto.randomUUID()}`,
+      SITE_URL: "https://uktl.example",
       DB: {
         prepare(query: string) {
           let values: unknown[] = [];
@@ -157,142 +155,88 @@ try {
       false,
       "reimport requires human approval",
     );
-    await assert.rejects(createBookingIntent(env, other, other + "@example.invalid", journey.id));
-    const intent = await createBookingIntent(env, user, email, journey.id);
-    const eventUri = `https://api.calendly.com/scheduled_events/${crypto.randomUUID()}`,
-      inviteeUri = `${eventUri}/invitees/${crypto.randomUUID()}`;
-    let time = Date.now(),
-      status = "active",
-      createdAt = new Date(time).toISOString();
-    const fixture = () => ({
-      uri: inviteeUri,
-      email,
-      name: "Synthetic Fixture",
-      status,
-      event: eventUri,
-      created_at: createdAt,
-      updated_at: new Date(time).toISOString(),
-      tracking: { utm_content: intent.id },
-      cancel_url: `https://calendly.com/cancellations/${crypto.randomUUID()}`,
-      reschedule_url: `https://calendly.com/reschedulings/${crypto.randomUUID()}`,
-    });
-    globalThis.fetch = async (input) =>
-      String(input) === inviteeUri
-        ? Response.json({ resource: fixture() })
-        : Response.json({
-            resource: {
-              uri: eventUri,
-              event_type: env.CALENDLY_EVENT_TYPE_URI,
-              start_time: new Date(time + 86400000).toISOString(),
-              end_time: new Date(time + 90000000).toISOString(),
-            },
-          });
-    const raw = JSON.stringify({ event: "invitee.created", payload: { uri: inviteeUri } });
-    const received = await processCalendlyWebhook(env, raw);
-    assert.ok(received.eventId);
-    await processCalendlyWebhook(env, raw);
-    assert.equal(
-      Number((await tx`SELECT count(*) AS n FROM booking_events`)[0].n),
-      1,
-      "duplicate webhook creates no duplicate notification",
+    // ── Native consultation calendar ──
+    await tx`UPDATE booking_settings SET slot_minutes=30,buffer_minutes=10,min_notice_hours=0,max_days_ahead=14,daily_limit=48`;
+    await tx`DELETE FROM availability_rules`;
+    for (let d = 1; d <= 7; d++)
+      await tx`INSERT INTO availability_rules(weekday,start_minute,end_minute,created_at) VALUES(${d},0,1440,1)`;
+    const offer = await availableSlots(env);
+    assert.ok(offer.slots.length > 100);
+    const [first, second, , fourth] = offer.slots.filter((s) => s.start > Date.now() + 3600000);
+    const person = { userId: user, email, name: "Synthetic Fixture" };
+    await assert.rejects(
+      reserveConsultation(env, { ...person, startsAt: first.start + 60000 }),
+      "off-grid times are refused",
     );
-    const booking = (await bookingIntentStatus(env, user, intent.id))[0];
-    assert.equal(booking.status, "confirmed");
-    await assert.rejects(bookingIntentStatus(env, other, intent.id));
-    assert.equal(
-      (await deliverBookingEvent(env, received.eventId!)).status,
-      "skipped",
-      "missing Resend does not imply delivery",
+    await assert.rejects(
+      reserveConsultation(env, { userId: other, email: other + "@example.invalid", name: "Other", startsAt: first.start, queryId: journey.id }),
+      "another user's HR question cannot be attached",
     );
+    const booked = await reserveConsultation(env, { ...person, startsAt: first.start, queryId: journey.id, topic: "Pay" });
+    await assert.rejects(
+      reserveConsultation(env, { userId: other, email: other + "@example.invalid", name: "Other", startsAt: first.start }),
+      /not available|just been taken/,
+    );
+    await assert.rejects(
+      reserveConsultation(env, { userId: other, email: other + "@example.invalid", name: "Other", startsAt: second.start }),
+      "10-minute buffer blocks the adjacent slot",
+    );
+    // Direct SQL bypassing the application still cannot double-book.
+    const race = await tx`SELECT reserve_consultation('cons_race',${other}::uuid,'o@example.invalid','Other',NULL,NULL,NULL,NULL,${first.start}::bigint,${first.end}::bigint,0::bigint,${first.start - 3600000}::bigint,${first.start + 3600000}::bigint,48,'Video',NULL) AS outcome`;
+    assert.equal(race[0].outcome, "slot_taken");
+    await assert.rejects(
+      tx.savepoint((sp) => sp`INSERT INTO bookings(id,created_at,contact_email,status,source,auth_user_id,starts_at,ends_at) VALUES('cons_forged',1,'x@example.invalid','confirmed','native',${other},${first.start + 60000},${first.end + 60000})`),
+      "exclusion constraint refuses overlapping confirmed native bookings",
+    );
+    const secondBooking = await reserveConsultation(env, { ...person, startsAt: fourth.start });
+    await assert.rejects(
+      reserveConsultation(env, { ...person, startsAt: offer.slots[offer.slots.length - 1].start }),
+      /up to 2 upcoming/,
+    );
+    // Reschedule is atomic: a failed new slot leaves the original appointment intact.
+    await assert.rejects(reserveConsultation(env, { ...person, startsAt: first.start, replaces: secondBooking.id }));
+    assert.equal((await listMyConsultations(env, user)).filter((b) => b.status === "confirmed").length, 2);
+    const moved = await reserveConsultation(env, { ...person, startsAt: offer.slots[offer.slots.length - 1].start, replaces: secondBooking.id });
+    const mine = await listMyConsultations(env, user);
+    assert.equal(mine.find((b) => b.id === secondBooking.id)!.rescheduled_to, moved.id);
+    assert.equal(mine.filter((b) => b.status === "confirmed").length, 2);
+    await assert.rejects(cancelConsultation(env, booked.id, other), "another candidate cannot cancel");
+    const cancelled = await cancelConsultation(env, booked.id, user);
+    await assert.rejects(cancelConsultation(env, booked.id, user), "double cancel is refused");
+    assert.deepEqual(
+      (await tx`SELECT id FROM booking_events ORDER BY id`).map((r) => r.id).sort(),
+      [`${booked.id}:cancelled`, `${booked.id}:confirmed`, `${moved.id}:confirmed`, `${secondBooking.id}:confirmed`].sort(),
+    );
+    assert.equal((await deliverBookingEvent(env, booked.eventId)).status, "skipped", "missing Resend does not imply delivery");
     env.RESEND_API_KEY = "test-only-resend";
-    let sends = 0;
-    const calendlyFetch = globalThis.fetch;
-    globalThis.fetch = async () => {
-      sends++;
+    const sent: any[] = [];
+    globalThis.fetch = async (_url, init) => {
+      sent.push(JSON.parse(String(init?.body)));
       return Response.json({ id: "synthetic-email" });
     };
-    assert.equal((await deliverBookingEvent(env, received.eventId!)).status, "sent");
-    await deliverBookingEvent(env, received.eventId!);
-    assert.equal(sends, 1);
-    globalThis.fetch = calendlyFetch;
-    time += 1000;
-    status = "canceled";
-    await processCalendlyWebhook(env, raw);
-    assert.equal((await bookingIntentStatus(env, user, intent.id))[0].status, "cancelled");
-    status = "active";
-    time -= 1000;
-    await processCalendlyWebhook(env, raw);
-    assert.equal(
-      (await bookingIntentStatus(env, user, intent.id))[0].status,
-      "cancelled",
-      "old active event cannot resurrect cancellation",
-    );
-    assert.equal(Number((await tx`SELECT count(*) AS n FROM booking_events`)[0].n), 2);
+    assert.equal((await deliverBookingEvent(env, booked.eventId)).status, "sent");
+    await deliverBookingEvent(env, booked.eventId);
+    assert.equal(sent.length, 2, "one candidate and one team email, never resent");
+    assert.deepEqual(sent[0].to, [email]);
+    assert.equal(sent[0].attachments[0].filename, "consultation.ics");
+    assert.deepEqual(sent[1].to, ["info@uktalentlink.co.uk"]);
+    await deliverBookingEvent(env, cancelled.eventId);
+    assert.match(sent[2].subject, /cancelled/);
     const metrics = await getAdminAnalytics(env);
     assert.equal(metrics.ai_queries, 1);
     assert.equal(metrics.resolved_queries, 1);
-    assert.equal(metrics.converted_queries, 0);
-    // A real reschedule is a new invitee, not a browser-side edit of the old row.
-    const replacementUri = `${eventUri}/invitees/${crypto.randomUUID()}`;
-    globalThis.fetch = async (input) =>
-      String(input) === replacementUri
-        ? Response.json({
-            resource: {
-              ...fixture(),
-              uri: replacementUri,
-              old_invitee: inviteeUri,
-              updated_at: new Date(time + 2000).toISOString(),
-            },
-          })
-        : Response.json({
-            resource: {
-              uri: eventUri,
-              event_type: env.CALENDLY_EVENT_TYPE_URI,
-              start_time: new Date(time + 172800000).toISOString(),
-              end_time: new Date(time + 176400000).toISOString(),
-            },
-          });
-    await processCalendlyWebhook(
-      env,
-      JSON.stringify({ event: "invitee.created", payload: { uri: replacementUri } }),
-    );
-    assert.equal((await bookingIntentStatus(env, user, intent.id)).length, 2);
+    assert.equal(metrics.total_bookings, 1, "only the rescheduled appointment remains confirmed");
+    assert.equal(metrics.converted_queries, 0, "the cancelled appointment no longer converts the question");
+    for (const table of ["booking_settings", "availability_rules", "availability_blocks", "candidate_messages"]) {
+      const grants =
+        await tx`SELECT has_table_privilege('anon',${"recruitment." + table},'SELECT') AS a,has_table_privilege('authenticated',${"recruitment." + table},'SELECT') AS u`;
+      assert.equal(grants[0].a, false);
+      assert.equal(grants[0].u, false);
+    }
     assert.equal(
-      (
-        await tx`SELECT old_invitee_uri FROM bookings WHERE provider_invitee_uri=${replacementUri}`
-      )[0].old_invitee_uri,
-      inviteeUri,
+      (await tx`SELECT has_function_privilege('authenticated','recruitment.reserve_consultation(text,uuid,text,text,text,text,text,text,bigint,bigint,bigint,bigint,bigint,integer,text,text)','EXECUTE') AS x`)[0].x,
+      false,
     );
-    assert.equal(
-      (await getAdminAnalytics(env)).converted_queries,
-      1,
-      "one question counted once across appointments",
-    );
-    // Matching a guessed email without the correct provider-tracked intent is insufficient.
-    const unlinkedUri = `${eventUri}/invitees/${crypto.randomUUID()}`;
-    globalThis.fetch = async (input) =>
-      String(input) === unlinkedUri
-        ? Response.json({
-            resource: { ...fixture(), uri: unlinkedUri, email: "different@example.invalid" },
-          })
-        : Response.json({
-            resource: {
-              uri: eventUri,
-              event_type: env.CALENDLY_EVENT_TYPE_URI,
-              start_time: new Date(time + 86400000).toISOString(),
-              end_time: new Date(time + 90000000).toISOString(),
-            },
-          });
-    await processCalendlyWebhook(
-      env,
-      JSON.stringify({ event: "invitee.created", payload: { uri: unlinkedUri } }),
-    );
-    assert.equal(
-      (await tx`SELECT auth_user_id FROM bookings WHERE provider_invitee_uri=${unlinkedUri}`)[0]
-        .auth_user_id,
-      null,
-    );
-    assert.equal((await bookingIntentStatus(env, user, intent.id)).length, 2);
     await tx`UPDATE faq_topics SET title='Changed after review' WHERE id=${topic}`;
     assert.equal(
       (await tx`SELECT reviewed_at FROM faq_topics WHERE id=${topic}`)[0].reviewed_at,
@@ -318,5 +262,5 @@ try {
   await sql.end();
 }
 console.log(
-  "PASS: HR ownership/revisions, reviewed source bounds, deduplicated plays, verified booking replay/order, notification idempotency and analytics; synthetic fixtures rolled back",
+  "PASS: HR ownership/revisions, reviewed source bounds, deduplicated plays, native calendar locking/buffers/limits/reschedule, notification idempotency and analytics; synthetic fixtures rolled back",
 );

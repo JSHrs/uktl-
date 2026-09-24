@@ -31,7 +31,6 @@ bucket_name = "talent-compass-cvs"
 [vars]
 SUPABASE_URL      = "https://REPLACE_WITH_SUPABASE_PROJECT_REF.supabase.co"
 SUPABASE_ANON_KEY = "REPLACE_WITH_SUPABASE_ANON_KEY"
-CALENDLY_URL      = ""   # Set to client's Calendly embed URL once provided
 SITE_URL          = "http://localhost:5173"   # Public origin; must also be in Supabase Auth > Redirect URLs
 
 # ── Secrets (set via `wrangler secret put`) ────────────────────────────────────
@@ -64,7 +63,6 @@ binding = "ASSETS"
 [env.staging.vars]
 SUPABASE_URL      = "https://REPLACE_WITH_SUPABASE_PROJECT_REF.supabase.co"
 SUPABASE_ANON_KEY = "REPLACE_WITH_SUPABASE_ANON_KEY"
-CALENDLY_URL      = ""
 SITE_URL          = "https://talent-compass-staging.REPLACE_WITH_WORKERS_SUBDOMAIN.workers.dev"
 
 # ── Environment: production ───────────────────────────────────────────────────
@@ -90,5 +88,4 @@ binding = "ASSETS"
 DATA_BACKEND = "supabase"
 SUPABASE_URL      = "https://fvkffdeindboirukscfq.supabase.co"
 SUPABASE_ANON_KEY = "REPLACE_WITH_SUPABASE_ANON_KEY"
-CALENDLY_URL      = ""
 SITE_URL          = "" # Configure the verified production origin before deployment

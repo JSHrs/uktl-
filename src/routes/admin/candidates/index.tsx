@@ -3,7 +3,8 @@ import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { adminDeleteCandidateFn, listCandidatesFn } from "@/lib/functions";
 import type { CandidateRow } from "@/lib/server/db";
-import { Route as AdminRoute, AdminHeader, AdminTable, AdminTr, AdminTd, AdminBtn } from "../../admin";
+import { Route as AdminRoute, AdminHeader,
+  ExportLink, AdminTable, AdminTr, AdminTd, AdminBtn } from "../../admin";
 import { ScoreBar, StatusPill } from "@/components/app/AppLayout";
 
 export const Route = createFileRoute("/admin/candidates/")({
@@ -47,6 +48,7 @@ function AdminCandidatesList() {
       <AdminHeader
         title="Candidates"
         sub={`${candidates.filter((c: CandidateRow) => c.status === "parsed").length} parsed · ${candidates.length} total`}
+        actions={<ExportLink kind="candidates" />}
       />
 
       <div className="mb-5">

@@ -19,6 +19,14 @@ export function HrVideo({ topic }: { topic: FaqTopic }) {
   return (
     <section className="border border-rule rounded-md p-5">
       <h2 className="font-display text-xl">{topic.title}</h2>
+      {topic.answer && (
+        <div className="my-4 space-y-3 text-ink-soft leading-relaxed max-w-[65ch]">
+          {topic.answer.split(/\n{2,}/).map((para, i) => (
+            <p key={i} className="whitespace-pre-line">{para}</p>
+          ))}
+        </div>
+      )}
+      {topic.video_key && (<>
       {urls ? (
         <video
           className="w-full my-4"
@@ -36,8 +44,9 @@ export function HrVideo({ topic }: { topic: FaqTopic }) {
         </video>
       ) : null}
       <button className="underline my-3" disabled={busy} onClick={load}>
-        {busy ? "Loading…" : urls ? "Refresh video link" : "Load video"}
+        {busy ? "Loading…" : urls ? "Refresh video link" : "Watch the video"}
       </button>
+      </>)}
       {error && <p role="alert">{error}</p>}
       {topic.transcript && (
         <details>

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useRouter, useRouteContext } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { EmptyState, PageHeader, Pill, ScoreBar, Section } from "@/components/app/AppLayout";
@@ -19,6 +19,8 @@ type Filter = MatchStage | "all";
 
 function JobDetailPage() {
   const { job, matches, interests, canManage } = Route.useLoaderData();
+  const { session } = useRouteContext({ from: "__root__" });
+  const isAdmin = session.isAdmin;
   const router = useRouter();
   const [filter, setFilter] = useState<Filter>("all");
   const [busy, setBusy] = useState<string | null>(null);
@@ -65,6 +67,16 @@ function JobDetailPage() {
           job.company
             ? `${job.company} · ${job.seniority ?? ""}`
             : `Confidential · ${job.seniority ?? ""}`
+        }
+        actions={
+          isAdmin && matches.length > 0 ? (
+            <a
+              href={`/api/admin/export/pipeline?job=${encodeURIComponent(job.id)}`}
+              className="text-[13px] px-[18px] py-2.5 border border-rule rounded-full text-ink-soft hover:border-ink hover:text-ink transition-colors"
+            >
+              Export pipeline CSV
+            </a>
+          ) : undefined
         }
       />
 

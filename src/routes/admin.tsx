@@ -27,7 +27,7 @@ const NAV = [
   { to: "/admin/hr", label: "HR content review" },
   { to: "/admin/jobs", label: "Mandates" },
   { to: "/admin/candidates", label: "Candidates" },
-  { to: "/admin/bookings", label: "Bookings" },
+  { to: "/admin/bookings", label: "Consultations" },
   { to: "/admin/enquiries", label: "Enquiries" },
   { to: "/admin/analytics", label: "Analytics" },
   { to: "/admin/processing", label: "CV processing" },
@@ -89,6 +89,20 @@ function AdminLayout() {
 }
 
 // ── Shared admin UI primitives ────────────────────────────────────────────────
+
+/** Admin-only CSV download link (the server also enforces admin + MFA and audits it). */
+export function ExportLink({ kind, job, label = "Export CSV" }: { kind: "candidates" | "pipeline" | "enquiries" | "bookings"; job?: string; label?: string }) {
+  const { staffRole } = Route.useRouteContext();
+  if (staffRole !== "admin") return null;
+  return (
+    <a
+      href={`/api/admin/export/${kind}${job ? `?job=${encodeURIComponent(job)}` : ""}`}
+      className="text-[12px] px-3.5 py-1.5 border border-rule rounded-full text-ink-soft hover:border-ink hover:text-ink transition-colors"
+    >
+      {label}
+    </a>
+  );
+}
 
 export function AdminHeader({
   title,

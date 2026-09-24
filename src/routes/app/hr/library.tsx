@@ -51,13 +51,13 @@ function LibraryPage() {
         eyebrow="HR & Employment Law"
         title={
           <>
-            Video{" "}
+            Guidance{" "}
             <em className="not-italic italic font-normal text-ink-soft">
               library
             </em>
           </>
         }
-        lede="Browse all available HR and employment law guidance videos. Accessible without submitting a question."
+        lede="Browse reviewed HR and employment-law guides and videos. General information, not advice on your individual case."
         actions={
           <Link
             to="/app/hr"
@@ -72,7 +72,7 @@ function LibraryPage() {
       <div className="flex flex-wrap gap-3 mb-8">
         <input
           type="search"
-          placeholder="Search videos…"
+          placeholder="Search guidance…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="border border-rule rounded-full px-4 py-2 text-sm bg-paper text-ink placeholder:text-ink-mute focus:outline-none focus:border-ink transition-colors min-w-[200px]"
@@ -111,13 +111,13 @@ function LibraryPage() {
 
       {/* Count */}
       <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute mb-5">
-        — {filtered.length} video{filtered.length !== 1 ? "s" : ""}
+        — {filtered.length} guide{filtered.length !== 1 ? "s" : ""}
       </div>
 
       {/* Grid */}
       {filtered.length === 0 ? (
         <div className="border border-rule border-dashed rounded-md p-10 text-center text-ink-soft text-sm">
-          No videos match your filters.{" "}
+          No guides match your filters.{" "}
           <button
             onClick={() => { setQuery(""); setActiveCategory(""); setActiveSector(""); }}
             className="underline"
@@ -136,7 +136,7 @@ function LibraryPage() {
   );
 }
 
-function VideoCard({ topic }: { topic: FaqTopic }) {
+function VideoCard({ topic }: { topic: FaqTopic & { thumbnail_url?: string | null } }) {
   return (
     <Link
       to="/app/hr/answer"
@@ -148,16 +148,16 @@ function VideoCard({ topic }: { topic: FaqTopic }) {
         className="bg-paper-deep flex items-center justify-center flex-shrink-0"
         style={{ aspectRatio: "16/9" }}
       >
-        {topic.thumbnail ? (
+        {topic.thumbnail_url || topic.thumbnail ? (
           <img
-            src={topic.thumbnail}
+            src={topic.thumbnail_url || topic.thumbnail!}
             alt=""
             className="w-full h-full object-cover"
           />
         ) : (
           <div className="flex flex-col items-center gap-2 text-ink-mute">
             <div className="w-10 h-10 rounded-full border border-rule flex items-center justify-center group-hover:border-ink transition-colors">
-              <span className="text-base">▶</span>
+              <span className="text-base" aria-hidden>{topic.video_key ? "▶" : "¶"}</span>
             </div>
           </div>
         )}
@@ -178,12 +178,14 @@ function VideoCard({ topic }: { topic: FaqTopic }) {
             )}
           </span>
           <span className="font-mono text-[10px] text-ink-mute">
-            {topic.duration_s ? formatDuration(topic.duration_s) : "—"}
+            {topic.video_key ? (topic.duration_s ? formatDuration(topic.duration_s) : "Video") : "Written guide"}
           </span>
         </div>
-        <div className="font-mono text-[10px] text-ink-mute">
-          {topic.view_count.toLocaleString()} recorded signed-in plays
-        </div>
+        {topic.video_key ? (
+          <div className="font-mono text-[10px] text-ink-mute">
+            {topic.view_count.toLocaleString()} recorded signed-in plays
+          </div>
+        ) : null}
       </div>
     </Link>
   );
