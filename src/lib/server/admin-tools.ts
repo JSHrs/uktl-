@@ -12,7 +12,7 @@ import type { OutreachTemplate } from "../outreach-templates.ts";
 export function csvCell(value: unknown): string {
   if (value === null || value === undefined) return '""';
   let text = typeof value === "string" ? value : String(value);
-  if (/^[=+\-@\t\r]/.test(text)) text = "'" + text;
+  if (/^[\s]*[=+\-@]|^[\t\r\n]/.test(text)) text = "'" + text;
   return `"${text.replace(/"/g, '""')}"`;
 }
 
@@ -35,7 +35,7 @@ export const EXPORTS = {
     ],
     sql: `SELECT id,name,email,phone,location,headline,seniority,total_years_experience,quality_score,status,
             CASE WHEN auth_user_id IS NULL THEN 'no' ELSE 'yes' END AS has_account,created_at
-            FROM candidates ORDER BY created_at DESC LIMIT 10000`,
+            FROM candidates ORDER BY created_at DESC LIMIT 10001`,
   },
   pipeline: {
     label: "Mandate pipeline",
@@ -45,7 +45,7 @@ export const EXPORTS = {
     ],
     sql: `SELECT j.title AS job_title,j.company,m.candidate_id,c.name,c.email,m.score,m.stage,m.stage_updated_at
             FROM matches m JOIN jobs j ON j.id=m.job_id JOIN candidates c ON c.id=m.candidate_id
-           WHERE (? = '' OR m.job_id = ?) ORDER BY j.title,m.score DESC LIMIT 20000`,
+           WHERE (? = '' OR m.job_id = ?) ORDER BY j.title,m.score DESC LIMIT 20001`,
   },
   enquiries: {
     label: "Enquiries",
@@ -53,7 +53,7 @@ export const EXPORTS = {
       ["created", "Received"], ["name", "Name"], ["email", "Email"], ["company", "Company"],
       ["enquiry_type", "Type"], ["status", "Status"], ["message", "Message"],
     ],
-    sql: `SELECT created_at,name,email,company,enquiry_type,status,message FROM enquiries ORDER BY created_at DESC LIMIT 10000`,
+    sql: `SELECT created_at,name,email,company,enquiry_type,status,message FROM enquiries ORDER BY created_at DESC LIMIT 10001`,
   },
   bookings: {
     label: "Consultations",
@@ -63,7 +63,7 @@ export const EXPORTS = {
       ["source", "Source"], ["created", "Booked"],
     ],
     sql: `SELECT starts_at,ends_at,status,contact_name,contact_email,contact_phone,topic_area,cancelled_by,source,created_at
-            FROM bookings ORDER BY COALESCE(starts_at,created_at) DESC LIMIT 10000`,
+            FROM bookings ORDER BY COALESCE(starts_at,created_at) DESC LIMIT 10001`,
   },
 } as const;
 export type ExportKind = keyof typeof EXPORTS;
@@ -79,6 +79,8 @@ export async function buildExport(env: AppEnv, kind: ExportKind, actorId: string
       "INSERT INTO audit_events(actor_user_id,actor_kind,action,entity_type,entity_id,metadata) VALUES(?::uuid,'user','export',?,?,jsonb_build_object('job_id',NULLIF(?::text,'')))",
     ).bind(actorId, "csv", kind, jobId),
   ]);
+  if ((result.results?.length ?? 0) > (kind === "pipeline" ? 20000 : 10000))
+    throw new Error("Export exceeds the row limit. Narrow the scope or request a managed export.");
   const rows = ((result.results ?? []) as Record<string, unknown>[]).map((r) => ({
     ...r,
     created: iso(r.created_at),
@@ -87,6 +89,8 @@ export async function buildExport(env: AppEnv, kind: ExportKind, actorId: string
     stage_updated: iso(r.stage_updated_at),
   }));
   const csv = toCsv(spec.columns.map(([key, label]) => ({ key, label })), rows);
+  if (new TextEncoder().encode(csv).length > 10 * 1024 * 1024)
+    throw new Error("Export exceeds the file-size limit. Request a managed export.");
   const stamp = new Date(now).toISOString().slice(0, 10);
   return { csv, rows: rows.length, filename: `uktl-${kind}${jobId ? "-" + jobId.replace(/[^\w-]/g, "") : ""}-${stamp}.csv` };
 }
@@ -166,7 +170,11 @@ export async function sendCandidateMessage(env: AppEnv, input: OutreachInput, no
   if (!recipient.email) throw new Error("This candidate has no valid email address on file");
   const id = crypto.randomUUID();
   // Refuses an identical message to the same candidate within 10 minutes (double submit).
-  const created = await env.DB.prepare(
+  const [, created] = await env.DB.batch([
+    // A separate statement after this lock gets a fresh READ COMMITTED snapshot.
+    // Concurrent identical sends cannot both pass the NOT EXISTS check.
+    env.DB.prepare("SELECT pg_advisory_xact_lock(hashtextextended(?,74143))").bind(input.candidateId),
+    env.DB.prepare(
     `INSERT INTO candidate_messages(id,candidate_id,job_id,sent_by,template,to_email,subject,body,status,created_at,updated_at)
      SELECT ?::uuid,?,?,?::uuid,?,?,?,?,'sending',?,?
       WHERE NOT EXISTS(SELECT 1 FROM candidate_messages WHERE candidate_id=? AND subject=? AND body=? AND created_at>?)
@@ -174,8 +182,8 @@ export async function sendCandidateMessage(env: AppEnv, input: OutreachInput, no
   )
     .bind(id, input.candidateId, input.jobId || null, input.sentBy, input.template, recipient.email, input.subject, input.body, now, now,
       input.candidateId, input.subject, input.body, now - 600000)
-    .first();
-  if (!created) throw new Error("This message was already sent in the last 10 minutes");
+  ]);
+  if (!created.results?.length) throw new Error("This message was already sent in the last 10 minutes");
   const outcome = await sendNotificationEmail(
     env,
     { to: [recipient.email], subject: input.subject, text: input.body + FOOTER, replyTo: input.replyTo || null },

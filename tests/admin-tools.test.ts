@@ -1,15 +1,34 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { csvCell, toCsv, weekStart } from "../src/lib/server/admin-tools.ts";
-import { sniffMedia, mediaKey, isMediaKey } from "../src/lib/server/media.ts";
+import { csvCell, toCsv, weekStart, buildExport } from "../src/lib/server/admin-tools.ts";
+import { sniffMedia, mediaKey, isMediaKey, mediaPrefix } from "../src/lib/server/media.ts";
 import { OUTREACH_TEMPLATES, fillTemplate } from "../src/lib/outreach-templates.ts";
 
 test("CSV cells are quoted and spreadsheet formulas are neutralised", () => {
-  for (const f of ["=1+1", "+44 7000", "-2", "@SUM(A1)", "\tx", "\rx"]) assert.ok(csvCell(f).startsWith(`"'`), f);
+  for (const f of ["=1+1", "+44 7000", "-2", "@SUM(A1)", "\tx", "\rx", "\nx", "  =1+1"]) assert.ok(csvCell(f).startsWith(`"'`), f);
   assert.equal(csvCell('say "hi", ok'), '"say ""hi"", ok"');
   assert.equal(csvCell(null), '""');
   assert.equal(csvCell(42), '"42"');
   assert.equal(toCsv([{ key: "a", label: "A" }], [{ a: "line\nbreak" }]), '﻿"A"\r\n"line\nbreak"\r\n');
+});
+
+test("media verification cancels after its prefix even when Range is ignored", async () => {
+  let cancelled = false;
+  const response = new Response(new ReadableStream({
+    start(controller) { controller.enqueue(new Uint8Array(65536).fill(42)); },
+    cancel() { cancelled = true; },
+  }));
+  assert.deepEqual(await mediaPrefix(response), new Uint8Array(32).fill(42));
+  assert.equal(cancelled, true);
+  await assert.rejects(mediaPrefix(new Response(null, {status: 503})));
+});
+
+test("CSV exports reject excess rows rather than silently truncating", async () => {
+  const env = {DATA_BACKEND: "supabase", DB: {
+    prepare() {return {bind() {return this;}};},
+    async batch() {return [{results: Array.from({length:10001},()=>({}))}, {results:[]}];},
+  }} as any;
+  await assert.rejects(buildExport(env,"candidates","actor"), /row limit/);
 });
 
 test("weeks start on Monday 00:00 UTC", () => {

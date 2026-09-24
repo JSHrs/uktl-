@@ -14,6 +14,26 @@ import type { AppEnv } from "./env";
  */
 export const MEDIA_BUCKET = "uktl-videos";
 
+/** Read only the signature, even when a server ignores Range and returns 100 MB. */
+export async function mediaPrefix(response: Response): Promise<Uint8Array> {
+  if (!response.ok || !response.body) throw new Error("Upload could not be verified");
+  const reader = response.body.getReader();
+  const prefix = new Uint8Array(32);
+  let length = 0;
+  try {
+    while (length < prefix.length) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      const part = value.subarray(0, prefix.length - length);
+      prefix.set(part, length);
+      length += part.length;
+    }
+  } finally {
+    await reader.cancel();
+  }
+  return prefix.subarray(0, length);
+}
+
 export const MEDIA_KINDS = {
   video: {
     column: "video_key",
@@ -116,7 +136,7 @@ export async function attachMedia(env: AppEnv, topicId: string, kind: MediaKind,
     headers: { Range: "bytes=0-31" },
     signal: AbortSignal.timeout(15000),
   });
-  const bytes = new Uint8Array(await head.arrayBuffer()).slice(0, 32);
+  const bytes = await mediaPrefix(head);
   if (!head.ok || !sniffMedia(bytes, expected)) return reject("File contents do not match an accepted format");
 
   const previous = await env.DB.prepare(`SELECT ${spec.column} AS key FROM faq_topics WHERE id=?`)
