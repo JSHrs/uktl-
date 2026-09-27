@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { SocialSignIn } from "@/components/app/SocialSignIn";
+import { oauthProvidersFn } from "@/lib/oauth-functions";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { candidateRegisterFn } from "@/lib/functions";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
@@ -7,10 +9,12 @@ export const Route = createFileRoute("/auth/register")({
   beforeLoad: ({ context }) => {
     if (context.session.userId) throw redirect({ to: "/app/upload" });
   },
+  loader: () => oauthProvidersFn(),
   component: RegisterPage,
 });
 
 function RegisterPage() {
+  const providers = Route.useLoaderData();
   const router = useRouter();
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [error, setError] = useState<string | null>(null);
@@ -88,6 +92,10 @@ function RegisterPage() {
       </div>
 
       <p className="text-xs text-ink-soft my-4">Before creating an account, read <Link to="/privacy" className="underline">how your information is used</Link> and <Link to="/terms" className="underline">using Talent Compass</Link>.</p>
+      <div className="mb-5">
+        <SocialSignIn providers={providers} redirect={"/app/upload"} mode="register" />
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="register-name" className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
