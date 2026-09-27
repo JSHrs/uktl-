@@ -20,9 +20,30 @@ Required runtime configuration: `DATA_BACKEND=supabase`, project URL and public 
 
 Staff access uses named verified Supabase users, current `recruitment.staff_users` membership and MFA. `ADMIN_PASSWORD_HASH` and `JWT_SECRET` do not enable current staff access. Public profile writes are scoped to the authenticated user; the private recruitment adapter still uses a privileged server connection, so every server action must authorize itself.
 
+## Hosting on Lovable: required server settings
+
+Lovable builds project UKTL (`b976b2a4-fea6-43dc-a8da-72d7238985c7`) from `main`, so merged changes are picked up automatically. Its server runtime reads **server-side environment variables/secrets set in the Lovable project**; nothing is read from files in the repository. If they are missing, sign-in shows "Sign-in is temporarily unavailable", and the exact missing setting is written to the server log.
+
+| Variable | Needed for | Notes |
+|---|---|---|
+| `SUPABASE_URL` | all sign-in, including Google/Apple | `https://<project-ref>.supabase.co`. `VITE_SUPABASE_URL` is accepted as a fallback. |
+| `SUPABASE_ANON_KEY` | all sign-in | Public key. `VITE_SUPABASE_ANON_KEY` / `VITE_SUPABASE_PUBLISHABLE_KEY` are accepted as fallbacks. |
+| `DATABASE_URL` | sign-in rate limits and all data | Supabase **transaction pooler** URL (port 6543). Secret. Sign-in fails closed without it. |
+| `SUPABASE_SERVICE_ROLE_KEY` | CV storage, staff tools | Secret. Never use a `VITE_` name. |
+| `SITE_URL` | email links, Google/Apple return address | Optional. Defaults to the address the request arrived on. Set `https://uktl.lovable.app` (or the custom domain) for production. |
+| `DATA_BACKEND` | — | Optional outside Cloudflare; defaults to `supabase`. |
+| `RESEND_API_KEY`, `ANTHROPIC_API_KEY`, `CRON_SECRET`, `CV_SCAN_URL`, `CV_SCAN_TOKEN`, `REED_API_KEY` | email, CV parsing, scheduled jobs, scanning, Reed | Secrets. See COMMUNICATIONS_RUNBOOK.md and OPERATIONS_RUNBOOK.md. |
+
+In Supabase → Authentication → URL Configuration, the redirect allow-list must contain every address candidates use:
+- `https://uktl.lovable.app/auth/callback`
+- `https://id-preview--b976b2a4-fea6-43dc-a8da-72d7238985c7.lovable.app/auth/callback`
+- any custom domain + `/auth/callback`
+
+Set the Site URL to the production address.
+
 ## Google and Apple sign-in (candidates)
 
-The login and sign-up pages show "Continue with Apple/Google" only for providers the Supabase project reports as enabled, so nothing appears until this is done. Staff still sign in with email, password and MFA at `/admin/login`.
+The login and sign-up pages always show "Continue with Apple" and "Continue with Google". Until a provider is enabled in the Supabase project, its button tells the candidate to use email for now. Staff still sign in with email, password and MFA at `/admin/login`.
 
 1. **Google.** In Google Cloud Console → APIs & Services → Credentials, create an OAuth client ID of type *Web application*.
    - Authorised redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`.

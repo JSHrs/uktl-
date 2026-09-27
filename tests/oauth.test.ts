@@ -16,3 +16,18 @@ test("OAuth flow cookies round-trip and are bounded in time, origin and content"
   assert.equal(decodeFlow(undefined, now), null);
   assert.equal(decodeFlow("%%%", now), null);
 });
+
+import { assertSameSupabaseProject, databaseUrlRef, supabaseUrlRef } from "../src/lib/server/supabase-project.ts";
+test("sign-in and database must be the same Supabase project", () => {
+  const a = "abcdefghijklmnopqrst", b = "upjfkkjrmguuhuzkalji";
+  assert.equal(supabaseUrlRef(`https://${a}.supabase.co`), a);
+  assert.equal(databaseUrlRef(`postgresql://postgres.${a}:pw@aws-0-eu-west-2.pooler.supabase.com:6543/postgres`), a);
+  assert.equal(databaseUrlRef(`postgresql://postgres:pw@db.${a}.supabase.co:5432/postgres`), a);
+  assertSameSupabaseProject({ SUPABASE_URL: `https://${a}.supabase.co`, DATABASE_URL: `postgresql://postgres.${a}:pw@x.pooler.supabase.com:6543/postgres` });
+  assert.throws(
+    () => assertSameSupabaseProject({ SUPABASE_URL: `https://${b}.supabase.co`, DATABASE_URL: `postgresql://postgres.${a}:pw@x.pooler.supabase.com:6543/postgres` }),
+    /different Supabase projects/,
+  );
+  // Unrecognisable URLs (local, custom domains) are not guessed at.
+  assertSameSupabaseProject({ SUPABASE_URL: "http://127.0.0.1:54321", DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:54322/postgres" });
+});

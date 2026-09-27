@@ -22,7 +22,9 @@ const email = `oauth-${userId.slice(0, 8)}@example.invalid`;
 try {
   const providers = await enabledProviders(env, Date.now(), true);
   assert.deepEqual([...providers].sort(), ["apple", "google"], "providers come from the Auth server's settings");
-  assert.deepEqual(await enabledProviders({ ...env, SITE_URL: undefined }, Date.now(), true), [], "no site URL, no buttons");
+  assert.deepEqual(await enabledProviders({ ...env, SUPABASE_URL: undefined }, Date.now(), true), [], "no Supabase URL, nothing enabled");
+  // Without SITE_URL (e.g. a Lovable preview) the redirect needs a request origin; outside a request it refuses.
+  await assert.rejects(beginOAuthFlow({ ...env, SITE_URL: undefined }, "google", "/app"));
 
   // Start: Supabase authorize URL with a PKCE challenge; the verifier stays server-side.
   const google = await beginOAuthFlow(env, "google", "/app/jobs?x=1");

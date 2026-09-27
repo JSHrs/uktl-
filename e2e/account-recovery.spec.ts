@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures";
+import { MIN_PASSWORD_LENGTH } from "../src/lib/password-policy";
 test("recovery offers password reset rather than sign-in only", async ({ page }) => {
   await page.goto("/auth/forgot");
   await expect(page.getByRole("heading", { name: "Reset password" })).toBeVisible();
@@ -19,18 +20,23 @@ test("incomplete callback clears sensitive fragment and rejects link", async ({ 
   await expect(page.getByRole("heading", { name: "That link didn't work" })).toBeVisible();
   await expect(page).not.toHaveURL(/access_token/);
 });
-test("sign-up and reset forms require 8-character passwords", async ({ page }) => {
+test("sign-up form enforces the configured minimum password length", async ({ page }) => {
   await page.goto("/auth/register");
   const password = page.locator("#register-password");
-  await expect(password).toHaveAttribute("minlength", "8");
-  await expect(page.getByText("(min 8 chars)")).toBeVisible();
-  await password.fill("Abc12345");
+  await expect(password).toHaveAttribute("minlength", String(MIN_PASSWORD_LENGTH));
+  await expect(page.getByText(`(min ${MIN_PASSWORD_LENGTH} chars)`)).toBeVisible();
+  await password.fill("Ab1".padEnd(MIN_PASSWORD_LENGTH, "x"));
   expect(await password.evaluate((el: HTMLInputElement) => el.validity.tooShort)).toBe(false);
 });
-test("social sign-in shows no dead buttons and a forged callback code signs nobody in", async ({ page }) => {
-  // Development has no Supabase Auth settings, so no provider is reported as enabled.
-  await page.goto("/auth/login");
-  await expect(page.getByRole("button", { name: /continue with (google|apple)/i })).toHaveCount(0);
+test("Apple and Google sign-in always show, and a forged callback code signs nobody in", async ({ page }) => {
+  for (const path of ["/auth/login", "/auth/register"]) {
+    await page.goto(path);
+    await expect(page.getByRole("button", { name: "Continue with Apple" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Continue with Google" })).toBeVisible();
+  }
+  // Development has no Supabase Auth settings, so the button explains rather than failing.
+  await page.getByRole("button", { name: "Continue with Google" }).click();
+  await expect(page.getByRole("status").filter({ hasText: /use your email/i })).toBeVisible();
   await page.goto("/auth/callback?code=forged-code-123456");
   await expect(page.getByText(/expired or was started in another browser|could not be completed|temporarily/i)).toBeVisible();
   await page.goto("/app");

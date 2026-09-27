@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getCookie, setCookie, deleteCookie } from "@tanstack/start-server-core";
 import type { AppEnv } from "./env";
 import { safeRedirect } from "../safe-redirect.ts";
+import { authCallbackUrl } from "./site-url.ts";
 
 /**
  * Candidate sign-in with Google or Apple through Supabase Auth, PKCE flow,
@@ -37,7 +38,10 @@ function memoryStorage(initial: Record<string, string> = {}) {
 }
 
 function pkceClient(env: AppEnv, storage: ReturnType<typeof memoryStorage>) {
-  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw new Error("Authentication is not configured");
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+    console.error("[auth] not configured: SUPABASE_URL / SUPABASE_ANON_KEY missing");
+    throw new Error("Sign-in is temporarily unavailable. Please try again shortly.");
+  }
   return createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
     auth: {
       flowType: "pkce",
@@ -52,8 +56,7 @@ function pkceClient(env: AppEnv, storage: ReturnType<typeof memoryStorage>) {
 }
 
 export function callbackUrl(env: AppEnv) {
-  if (!env.SITE_URL) throw new Error("SITE_URL not configured");
-  return `${env.SITE_URL.replace(/\/+$/, "")}/auth/callback`;
+  return authCallbackUrl(env);
 }
 
 export function encodeFlow(flow: Flow) {
@@ -79,7 +82,7 @@ export function decodeFlow(raw: string | undefined, now = Date.now()): Flow | nu
 let cachedProviders: { at: number; value: OAuthProvider[] } | null = null;
 export async function enabledProviders(env: AppEnv, now = Date.now(), fresh = false): Promise<OAuthProvider[]> {
   if (!fresh && cachedProviders && now - cachedProviders.at < 300000) return cachedProviders.value;
-  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY || !env.SITE_URL) return [];
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) return [];
   try {
     const res = await fetch(`${env.SUPABASE_URL.replace(/\/+$/, "")}/auth/v1/settings`, {
       headers: { apikey: env.SUPABASE_ANON_KEY },
