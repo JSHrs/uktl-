@@ -27,12 +27,23 @@ Lovable builds project UKTL (`b976b2a4-fea6-43dc-a8da-72d7238985c7`) from `main`
 | Variable | Needed for | Notes |
 |---|---|---|
 | `SUPABASE_URL` | all sign-in, including Google/Apple | `https://<project-ref>.supabase.co`. `VITE_SUPABASE_URL` is accepted as a fallback. |
-| `SUPABASE_ANON_KEY` | all sign-in | Public key. `VITE_SUPABASE_ANON_KEY` / `VITE_SUPABASE_PUBLISHABLE_KEY` are accepted as fallbacks. |
+| `SUPABASE_ANON_KEY` | all sign-in | Public key. Lovable's `SUPABASE_PUBLISHABLE_KEY`, or `VITE_SUPABASE_ANON_KEY` / `VITE_SUPABASE_PUBLISHABLE_KEY`, is accepted instead. |
 | `DATABASE_URL` | sign-in rate limits and all data | Supabase **transaction pooler** URL (port 6543). Secret. Sign-in fails closed without it. |
 | `SUPABASE_SERVICE_ROLE_KEY` | CV storage, staff tools | Secret. Never use a `VITE_` name. |
 | `SITE_URL` | email links, Google/Apple return address | Optional. Defaults to the address the request arrived on. Set `https://uktl.lovable.app` (or the custom domain) for production. |
 | `DATA_BACKEND` | — | Optional outside Cloudflare; defaults to `supabase`. |
 | `RESEND_API_KEY`, `ANTHROPIC_API_KEY`, `CRON_SECRET`, `CV_SCAN_URL`, `CV_SCAN_TOKEN`, `REED_API_KEY` | email, CV parsing, scheduled jobs, scanning, Reed | Secrets. See COMMUNICATIONS_RUNBOOK.md and OPERATIONS_RUNBOOK.md. |
+
+**Same project rule:** `SUPABASE_URL` and `DATABASE_URL` must belong to the same Supabase project. If they don't, sign-in refuses to run and the log says `…point at different Supabase projects`. Lovable's "Connect Supabase" integration only supplies the URL and public key. It does not create UKTL's tables, and it does not supply `DATABASE_URL`.
+
+### Connecting Lovable to the UKTL database, step by step
+
+1. **Connect the right project.** In Lovable, disconnect any Supabase project that is not UKTL's, then connect the UKTL project. The UKTL reference is recorded in SUPABASE_INSTALLATION.md. Lovable regenerates `.env` with its URL and public key.
+2. **Copy the database connection string.** In the Supabase dashboard for that project, click **Connect** → **Connection string** → **Transaction pooler** (port 6543). Copy the URI and replace `[YOUR-PASSWORD]` with the database password. If the password is unknown, reset it under Project Settings → Database.
+3. **Copy the service-role key.** In the Supabase dashboard, go to Project Settings → API Keys and copy the **service_role** / **secret** key. Never paste it into chat, code or any `VITE_` variable.
+4. **Add the secrets in Lovable.** Add these as project secrets / server environment variables: `DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and, for production, `SITE_URL`. The label differs between Lovable versions; asking Lovable's chat to "add secrets DATABASE_URL and SUPABASE_SERVICE_ROLE_KEY" opens its secure entry form.
+5. **Create UKTL's tables.** Apply the repository's `supabase/migrations` to that project with `supabase link --project-ref <ref>`, then `supabase db push --dry-run` and `supabase db push`. Connecting alone does not create tables.
+6. **Allow the redirect addresses.** Add the redirect URLs below in Supabase Auth, then register a test account on the preview.
 
 In Supabase → Authentication → URL Configuration, the redirect allow-list must contain every address candidates use:
 - `https://uktl.lovable.app/auth/callback`
