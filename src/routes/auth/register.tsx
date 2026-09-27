@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { candidateRegisterFn } from "@/lib/functions";
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 
 export const Route = createFileRoute("/auth/register")({
   beforeLoad: ({ context }) => {
@@ -28,8 +29,8 @@ function RegisterPage() {
       setError("Passwords do not match.");
       return;
     }
-    if (form.password.length < 12) {
-      setError("Password must be at least 12 characters.");
+    if (form.password.length < MIN_PASSWORD_LENGTH) {
+      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
       return;
     }
     setLoading(true);
@@ -121,14 +122,14 @@ function RegisterPage() {
 
         <div>
           <label htmlFor="register-password" className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
-            Password <span className="normal-case tracking-normal font-sans text-[11px]">(min 12 chars)</span>
+            Password <span className="normal-case tracking-normal font-sans text-[11px]">(min {MIN_PASSWORD_LENGTH} chars)</span>
           </label>
           <input id="register-password"
             type="password"
             value={form.password}
             onChange={set("password")}
             required
-            minLength={12}
+            minLength={MIN_PASSWORD_LENGTH}
             autoComplete="new-password"
             placeholder="••••••••"
             className="w-full border border-rule rounded-md px-4 py-3 text-sm bg-paper text-ink placeholder:text-ink-mute focus:outline-none focus:border-ink transition-colors"

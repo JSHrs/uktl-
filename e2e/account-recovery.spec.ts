@@ -19,3 +19,11 @@ test("incomplete callback clears sensitive fragment and rejects link", async ({ 
   await expect(page.getByRole("heading", { name: "That link didn't work" })).toBeVisible();
   await expect(page).not.toHaveURL(/access_token/);
 });
+test("sign-up and reset forms require 8-character passwords", async ({ page }) => {
+  await page.goto("/auth/register");
+  const password = page.locator("#register-password");
+  await expect(password).toHaveAttribute("minlength", "8");
+  await expect(page.getByText("(min 8 chars)")).toBeVisible();
+  await password.fill("Abc12345");
+  expect(await password.evaluate((el: HTMLInputElement) => el.validity.tooShort)).toBe(false);
+});
