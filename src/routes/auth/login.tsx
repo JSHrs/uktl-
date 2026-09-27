@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { SocialSignIn } from "@/components/app/SocialSignIn";
+import { oauthProvidersFn } from "@/lib/oauth-functions";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -11,10 +13,12 @@ export const Route = createFileRoute("/auth/login")({
   beforeLoad: ({ context, search }) => {
     if (context.session.userId) throw redirect({ href: safeRedirect(search.redirect) });
   },
+  loader: () => oauthProvidersFn(),
   component: LoginPage,
 });
 
 function LoginPage() {
+  const providers = Route.useLoaderData();
   const router = useRouter();
   const search = Route.useSearch();
   const [email, setEmail] = useState("");
@@ -53,6 +57,10 @@ function LoginPage() {
         <p className="text-sm text-ink-soft mt-2">
           See your CV score, your job matches and HR guidance.
         </p>
+      </div>
+
+      <div className="mb-5">
+        <SocialSignIn providers={providers} redirect={search.redirect} mode="login" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">

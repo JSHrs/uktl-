@@ -19,3 +19,20 @@ test("incomplete callback clears sensitive fragment and rejects link", async ({ 
   await expect(page.getByRole("heading", { name: "That link didn't work" })).toBeVisible();
   await expect(page).not.toHaveURL(/access_token/);
 });
+test("sign-up and reset forms require 8-character passwords", async ({ page }) => {
+  await page.goto("/auth/register");
+  const password = page.locator("#register-password");
+  await expect(password).toHaveAttribute("minlength", "8");
+  await expect(page.getByText("(min 8 chars)")).toBeVisible();
+  await password.fill("Abc12345");
+  expect(await password.evaluate((el: HTMLInputElement) => el.validity.tooShort)).toBe(false);
+});
+test("social sign-in shows no dead buttons and a forged callback code signs nobody in", async ({ page }) => {
+  // Development has no Supabase Auth settings, so no provider is reported as enabled.
+  await page.goto("/auth/login");
+  await expect(page.getByRole("button", { name: /continue with (google|apple)/i })).toHaveCount(0);
+  await page.goto("/auth/callback?code=forged-code-123456");
+  await expect(page.getByText(/expired or was started in another browser|could not be completed|temporarily/i)).toBeVisible();
+  await page.goto("/app");
+  await expect(page).toHaveURL(/\/auth\/login/);
+});

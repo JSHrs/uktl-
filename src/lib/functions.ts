@@ -5,6 +5,7 @@ import { storeRegisteredCv } from "./server/upload-lifecycle";
 import { saveCandidateDecision, undoCandidateDecision, listCandidateDecisions, listJobInterests } from "./server/discovery";
 import { validateCvUpload } from "./server/upload-validation";
 import { createServerFn } from "@tanstack/react-start";
+import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "./password-policy";
 import { getRequestHeader } from "@tanstack/start-server-core";
 import { z } from "zod";
 
@@ -608,7 +609,7 @@ export const candidateRegisterFn = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) =>
     z.object({
       email: z.string().email(),
-      password: z.string().min(12).max(128),
+      password: z.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH),
       name: z.string().min(1),
     }).parse(raw),
   )
@@ -909,7 +910,7 @@ export const candidateResetRequestFn = createServerFn({ method: "POST" })
     return { ok: true };
   });
 export const candidateSetPasswordFn = createServerFn({ method: "POST" })
-  .inputValidator((raw: unknown) => z.object({ password: z.string().min(12).max(128) }).parse(raw))
+  .inputValidator((raw: unknown) => z.object({ password: z.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH) }).parse(raw))
   .handler(async ({ data }) => {
     const { getAuthenticatedSupabase, clearSessionCookies } = await import("./supabase");
     const { client, user } = await getAuthenticatedSupabase();
