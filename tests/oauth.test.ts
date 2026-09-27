@@ -31,3 +31,32 @@ test("sign-in and database must be the same Supabase project", () => {
   // Unrecognisable URLs (local, custom domains) are not guessed at.
   assertSameSupabaseProject({ SUPABASE_URL: "http://127.0.0.1:54321", DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:54322/postgres" });
 });
+
+import { resolveServerEnv } from "../src/lib/server/env-resolve.ts";
+test("UKTL_ settings win over Lovable Cloud's and never mix with them", () => {
+  const cloud = {
+    SUPABASE_URL: "https://jwfycrmrgwslxyxvirfn.supabase.co",
+    SUPABASE_PUBLISHABLE_KEY: "sb_publishable_cloud",
+    SUPABASE_SERVICE_ROLE_KEY: "cloud-service",
+  };
+  // Lovable Cloud alone: its public values are used (nothing else configured).
+  assert.equal(resolveServerEnv(cloud).SUPABASE_URL, cloud.SUPABASE_URL);
+  assert.equal(resolveServerEnv(cloud).SUPABASE_ANON_KEY, "sb_publishable_cloud");
+  assert.equal(resolveServerEnv(cloud).DATA_BACKEND, "supabase");
+  const uktl = {
+    ...cloud,
+    UKTL_SUPABASE_URL: "https://fvkffdeindboirukscfq.supabase.co",
+    UKTL_SUPABASE_ANON_KEY: "uktl-anon",
+    UKTL_DATABASE_URL: "postgresql://postgres.fvkffdeindboirukscfq:pw@aws-0-eu-west-1.pooler.supabase.com:6543/postgres",
+    UKTL_SUPABASE_SERVICE_ROLE_KEY: "uktl-service",
+  };
+  const env = resolveServerEnv(uktl);
+  assert.equal(env.SUPABASE_URL, uktl.UKTL_SUPABASE_URL);
+  assert.equal(env.SUPABASE_ANON_KEY, "uktl-anon");
+  assert.equal(env.SUPABASE_SERVICE_ROLE_KEY, "uktl-service");
+  assert.equal(env.DATABASE_URL, uktl.UKTL_DATABASE_URL);
+  // A partly configured UKTL project never borrows Lovable Cloud's keys.
+  const partial = resolveServerEnv({ ...cloud, UKTL_SUPABASE_URL: uktl.UKTL_SUPABASE_URL });
+  assert.equal(partial.SUPABASE_ANON_KEY, undefined);
+  assert.equal(partial.SUPABASE_SERVICE_ROLE_KEY, undefined);
+});

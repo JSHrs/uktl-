@@ -47,7 +47,7 @@ wrangler.toml          the ONLY Wrangler config (never add wrangler.json/jsonc �
 .github/workflows/     CI
 ```
 
-**Hosting:** Lovable (project `b976b2a4-…`) builds from `main` and reads server env vars from its project settings. The required list is in DEPLOYMENT.md "Hosting on Lovable". Outside Workers, `DATA_BACKEND` defaults to `supabase`, the public Supabase URL/key may come from `VITE_SUPABASE_*`, and `SITE_URL` falls back to the request origin (`server/site-url.ts`).
+**Hosting:** Lovable (project `b976b2a4-…`) builds from `main` and reads server env vars from its project settings. The required list is in DEPLOYMENT.md "Hosting on Lovable". Lovable Cloud (empty project `jwfycrmrgwslxyxvirfn`) is enabled but unused: UKTL's settings are supplied as `UKTL_`-prefixed secrets, which take precedence over the Lovable-managed `SUPABASE_*`. Outside Workers, `DATA_BACKEND` defaults to `supabase`, the public Supabase URL/key may come from `VITE_SUPABASE_*`, and `SITE_URL` falls back to the request origin (`server/site-url.ts`).
 
 ## Hard rules
 

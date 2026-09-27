@@ -34,6 +34,8 @@ Lovable builds project UKTL (`b976b2a4-fea6-43dc-a8da-72d7238985c7`) from `main`
 | `DATA_BACKEND` | — | Optional outside Cloudflare; defaults to `supabase`. |
 | `RESEND_API_KEY`, `ANTHROPIC_API_KEY`, `CRON_SECRET`, `CV_SCAN_URL`, `CV_SCAN_TOKEN`, `REED_API_KEY` | email, CV parsing, scheduled jobs, scanning, Reed | Secrets. See COMMUNICATIONS_RUNBOOK.md and OPERATIONS_RUNBOOK.md. |
 
+**Lovable Cloud clash:** Lovable Cloud (enabled on this project on 27 September; empty project `jwfycrmrgwslxyxvirfn`) manages its own `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_SERVICE_ROLE_KEY`. UKTL's values therefore go in as **`UKTL_SUPABASE_URL`, `UKTL_SUPABASE_ANON_KEY`, `UKTL_DATABASE_URL` and `UKTL_SUPABASE_SERVICE_ROLE_KEY`** (and optionally `UKTL_SITE_URL`). A `UKTL_` value always takes precedence over the unprefixed name.
+
 **Same project rule:** `SUPABASE_URL` and `DATABASE_URL` must belong to the same Supabase project. If they don't, sign-in refuses to run and the log says `…point at different Supabase projects`. Lovable's "Connect Supabase" integration only supplies the URL and public key. It does not create UKTL's tables, and it does not supply `DATABASE_URL`.
 
 ### Connecting Lovable to the UKTL database, step by step
