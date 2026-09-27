@@ -616,9 +616,12 @@ export const candidateRegisterFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { setSessionCookies } = await import("./supabase");
     const { createClient } = await import("@supabase/supabase-js");
-    const env = await getEnv();
+    const env = await getEnv().catch(() => {
+      throw new Error("Accounts are not available on this preview yet. Please try again on the live site.");
+    });
     await enforceRateLimit(env, "authAccount", getRequestHeader("cf-connecting-ip") ?? "unknown");
-    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw new Error("Supabase not configured");
+    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY)
+      throw new Error("Accounts are not available on this preview yet. Please try again on the live site.");
     const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
     const { data: authData, error } = await client.auth.signUp({
       email: data.email,
@@ -642,9 +645,12 @@ export const candidateLoginFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { setSessionCookies } = await import("./supabase");
     const { createClient } = await import("@supabase/supabase-js");
-    const env = await getEnv();
+    const env = await getEnv().catch(() => {
+      throw new Error("Accounts are not available on this preview yet. Please try again on the live site.");
+    });
     await enforceRateLimit(env, "authAccount", getRequestHeader("cf-connecting-ip") ?? "unknown");
-    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw new Error("Supabase not configured");
+    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY)
+      throw new Error("Accounts are not available on this preview yet. Please try again on the live site.");
     const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
     const { data: authData, error } = await client.auth.signInWithPassword({ email: data.email, password: data.password });
     if (error) throw new Error(error.message);
