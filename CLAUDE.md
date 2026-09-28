@@ -47,6 +47,8 @@ wrangler.toml          the ONLY Wrangler config (never add wrangler.json/jsonc â
 .github/workflows/     CI
 ```
 
+**Database transport:** by default every batch goes over HTTPS to `public.uktl_run_batch` (migration `20260928150251`, service-role only, SECURITY INVOKER, single SELECT/INSERT/UPDATE/DELETE/WITH statements, one transaction per batch) via `server/http-database.ts`; values are inlined as quoted literals by `inlineQuery` in `server/postgres.ts`. Lovable runs on Cloudflare Workers, which cannot verify the Postgres pooler's Supabase-issued certificate, so direct connections time out there. `DB_TRANSPORT=postgres` + `DATABASE_URL` selects the direct adapter elsewhere. App SQL reads `auth.users` only through the `recruitment.auth_accounts` view.
+
 **Hosting:** Lovable (project `b976b2a4-â€¦`) builds from `main` and reads server env vars from its project settings. The required list is in DEPLOYMENT.md "Hosting on Lovable". Lovable Cloud (empty project `jwfycrmrgwslxyxvirfn`) is enabled but unused: UKTL's settings are supplied as `UKTL_`-prefixed secrets, which take precedence over the Lovable-managed `SUPABASE_*`. Outside Workers, `DATA_BACKEND` defaults to `supabase`, the public Supabase URL/key may come from `VITE_SUPABASE_*`, and `SITE_URL` falls back to the request origin (`server/site-url.ts`).
 
 ## Hard rules

@@ -28,7 +28,7 @@ Lovable builds project UKTL (`b976b2a4-fea6-43dc-a8da-72d7238985c7`) from `main`
 |---|---|---|
 | `SUPABASE_URL` | all sign-in, including Google/Apple | `https://<project-ref>.supabase.co`. `VITE_SUPABASE_URL` is accepted as a fallback. |
 | `SUPABASE_ANON_KEY` | all sign-in | Public key. Lovable's `SUPABASE_PUBLISHABLE_KEY`, or `VITE_SUPABASE_ANON_KEY` / `VITE_SUPABASE_PUBLISHABLE_KEY`, is accepted instead. |
-| `DATABASE_URL` | sign-in rate limits and all data | Supabase **transaction pooler** URL (port 6543). Secret. Sign-in fails closed without it. |
+| `DATABASE_URL` | only when `DB_TRANSPORT=postgres` | Not needed on Lovable. By default the app reaches the database over HTTPS through `public.uktl_run_batch` (service-role key), because Cloudflare Workers cannot verify the pooler's Supabase-issued TLS certificate (connections time out). |
 | `SUPABASE_SERVICE_ROLE_KEY` | CV storage, staff tools | Secret. Never use a `VITE_` name. |
 | `SITE_URL` | email links, Google/Apple return address | Optional. Defaults to the address the request arrived on. Set `https://uktl.lovable.app` (or the custom domain) for production. |
 | `DATA_BACKEND` | — | Optional outside Cloudflare; defaults to `supabase`. |

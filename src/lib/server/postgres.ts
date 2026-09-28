@@ -3,7 +3,7 @@ import type {} from "./env";
 
 // SQL text is application-owned; values always travel separately as parameters.
 // Tokenize literals/comments so question marks inside them are never rewritten.
-export function postgresQuery(query: string, values: unknown[]) {
+function rewritePlaceholders(query: string, values: unknown[], render: (n: number) => string) {
   let index = 0;
   let numbered = false;
   let anonymous = false;
@@ -18,14 +18,49 @@ export function postgresQuery(query: string, values: unknown[]) {
       const n = explicit ? Number(token.slice(1)) : ++index;
       if (n < 1 || n > values.length) throw new Error("SQL parameter count mismatch");
       used.add(n);
-      return `$${n}`;
+      return render(n);
     },
   );
   if ((numbered && anonymous) || used.size !== values.length) {
     throw new Error("SQL parameter count mismatch");
   }
   if (values.some((v) => v === undefined)) throw new Error("Undefined SQL parameter");
-  return { sql, values };
+  return sql;
+}
+
+export function postgresQuery(query: string, values: unknown[]) {
+  return { sql: rewritePlaceholders(query, values, (n) => `$${n}`), values };
+}
+
+/**
+ * A value as a Postgres string literal of unknown type, so the server infers
+ * its type from context exactly as it would for a bound parameter
+ * ('42' compares with bigint, '…'::uuid casts). standard_conforming_strings is
+ * on in Supabase, so doubling single quotes is the complete escape; NUL bytes
+ * cannot appear in Postgres text and are refused.
+ */
+export function sqlLiteral(value: unknown): string {
+  if (value === null) return "NULL";
+  let text: string;
+  if (typeof value === "string") text = value;
+  else if (typeof value === "number") {
+    if (!Number.isFinite(value)) throw new Error("Non-finite SQL number");
+    text = String(value);
+  } else if (typeof value === "bigint" || typeof value === "boolean") text = String(value);
+  else if (value instanceof Date) text = value.toISOString();
+  else if (typeof value === "object") text = JSON.stringify(value);
+  else throw new Error("Unsupported SQL parameter type");
+  if (text.includes("\u0000")) throw new Error("NUL byte in SQL parameter");
+  return `'${text.replace(/'/g, "''")}'`;
+}
+
+/** The statement with every placeholder replaced by a quoted literal (HTTPS bridge). */
+export function inlineQuery(query: string, values: unknown[]) {
+  const template = query.trim().replace(/;+\s*$/, "");
+  // One statement per entry: a semicolon outside quotes/comments is refused.
+  const outside = template.replace(/'(?:''|[^'])*'|"(?:""|[^"])*"|--[^\n]*|\/\*[\s\S]*?\*\//g, "");
+  if (outside.includes(";")) throw new Error("One SQL statement per batch entry");
+  return rewritePlaceholders(template, values, (n) => sqlLiteral(values[n - 1]));
 }
 
 function safeInteger(value: string) {
