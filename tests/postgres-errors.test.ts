@@ -24,3 +24,23 @@ test("stalled operations time out instead of hanging the request", async () => {
   await assert.rejects(withTimeout(new Promise(() => {}), 20, "operation timed out"), /operation timed out/);
   assert.equal(await withTimeout(Promise.resolve(7), 1000, "x"), 7);
 });
+
+import { sqlLiteral, inlineQuery } from "../src/lib/server/postgres.ts";
+test("inlined literals are quoted safely and placeholders inside quotes are untouched", () => {
+  assert.equal(sqlLiteral(null), "NULL");
+  assert.equal(sqlLiteral("O'Brien"), "'O''Brien'");
+  assert.equal(sqlLiteral(42), "'42'");
+  assert.equal(sqlLiteral(true), "'true'");
+  assert.equal(sqlLiteral({ a: "b'c" }), `'{"a":"b''c"}'`);
+  assert.throws(() => sqlLiteral(Number.NaN));
+  assert.throws(() => sqlLiteral("a\u0000b"));
+  assert.throws(() => sqlLiteral(() => 1));
+  assert.equal(
+    inlineQuery("SELECT '?' AS q, ? AS a, ?::uuid AS b -- ?\n", ["x'; DROP TABLE t; --", null]),
+    "SELECT '?' AS q, 'x''; DROP TABLE t; --' AS a, NULL::uuid AS b -- ?",
+  );
+  assert.equal(inlineQuery("UPDATE t SET a=?1, b=?1 WHERE c=?2;", [1, 2]), "UPDATE t SET a='1', b='1' WHERE c='2'");
+  assert.throws(() => inlineQuery("SELECT 1; DROP TABLE t", []), /One SQL statement/);
+  assert.equal(inlineQuery("SELECT ';' AS s", []), "SELECT ';' AS s");
+  assert.throws(() => inlineQuery("SELECT ?", []), /parameter count/);
+});

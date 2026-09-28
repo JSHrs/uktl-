@@ -2,7 +2,7 @@
 // `cloudflare:workers` is only resolvable inside the Workers runtime, so we
 // dynamic-import it. Other server runtimes use explicitly configured Supabase credentials.
 
-import { createPostgresDatabase } from "./postgres";
+import { createDatabase } from "./database";
 import { createPrivateCvStorage } from "./storage";
 import { assertSameSupabaseProject } from "./supabase-project";
 import { resolveServerEnv } from "./env-resolve";
@@ -14,6 +14,8 @@ export type AppEnv = {
   MICROSOFT_CALENDAR_CLIENT_SECRET?: string;
   CALENDAR_ENCRYPTION_KEY?: string;
   DATA_BACKEND?: "d1" | "supabase";
+  /** "https" (default when the service key is set) or "postgres"; see server/database.ts. */
+  DB_TRANSPORT?: "https" | "postgres";
   DATABASE_URL?: string;
   CRON_SECRET?: string;
   CV_SCAN_URL?: string;
@@ -70,8 +72,7 @@ export function configureBackend(env: AppEnv): AppEnv {
     // Resolve credentials on use: missing data credentials must not prevent
     // Supabase sign-in or turn into a silent fallback to the legacy database.
     get DB() {
-      if (!env.DATABASE_URL) throw new Error("DATABASE_URL is not configured");
-      return (database ??= createPostgresDatabase(env.DATABASE_URL));
+      return (database ??= createDatabase(env));
     },
     get CV_BUCKET() {
       if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
