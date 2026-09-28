@@ -6,6 +6,7 @@ import { saveCandidateDecision, undoCandidateDecision, listCandidateDecisions, l
 import { validateCvUpload } from "./server/upload-validation";
 import { createServerFn } from "@tanstack/react-start";
 import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "./password-policy";
+import { authCallbackUrl } from "./server/site-url";
 import { getRequestHeader } from "@tanstack/start-server-core";
 import { z } from "zod";
 
@@ -80,9 +81,12 @@ function newId(): string {
 
 const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
-function authCallbackUrl(env: { SITE_URL?: string }): string {
-  if (!env.SITE_URL) throw new Error("SITE_URL not configured");
-  return `${env.SITE_URL.replace(/\/+$/, "")}/auth/callback`;
+
+
+/** Visitors see a plain message; operators see the precise cause in server logs. */
+function authUnavailable(cause: string): never {
+  console.error(`[auth] not configured: ${cause}`);
+  throw new Error("Sign-in is temporarily unavailable. Please try again shortly.");
 }
 
 export const getViewerFn = createServerFn({ method: "GET" }).handler(async () => getViewer());
@@ -616,19 +620,16 @@ export const candidateRegisterFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { setSessionCookies } = await import("./supabase");
     const { createClient } = await import("@supabase/supabase-js");
-    const env = await getEnv().catch(() => {
-      throw new Error("Accounts are not available on this preview yet. Please try again on the live site.");
-    });
+    const env = await getEnv().catch((e: unknown) => authUnavailable(e instanceof Error ? e.message : "server environment"));
     await enforceRateLimit(env, "authAccount", getRequestHeader("cf-connecting-ip") ?? "unknown");
-    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY)
-      throw new Error("Accounts are not available on this preview yet. Please try again on the live site.");
+    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) authUnavailable("SUPABASE_URL / SUPABASE_ANON_KEY missing");
     const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
     const { data: authData, error } = await client.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
         data: { name: data.name },
-        emailRedirectTo: env.SITE_URL ? authCallbackUrl(env) : undefined,
+        emailRedirectTo: authCallbackUrl(env),
       },
     });
     if (error) throw new Error(error.message);
@@ -645,12 +646,9 @@ export const candidateLoginFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { setSessionCookies } = await import("./supabase");
     const { createClient } = await import("@supabase/supabase-js");
-    const env = await getEnv().catch(() => {
-      throw new Error("Accounts are not available on this preview yet. Please try again on the live site.");
-    });
+    const env = await getEnv().catch((e: unknown) => authUnavailable(e instanceof Error ? e.message : "server environment"));
     await enforceRateLimit(env, "authAccount", getRequestHeader("cf-connecting-ip") ?? "unknown");
-    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY)
-      throw new Error("Accounts are not available on this preview yet. Please try again on the live site.");
+    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) authUnavailable("SUPABASE_URL / SUPABASE_ANON_KEY missing");
     const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
     const { data: authData, error } = await client.auth.signInWithPassword({ email: data.email, password: data.password });
     if (error) throw new Error(error.message);
@@ -675,7 +673,7 @@ export const candidateMagicLinkFn = createServerFn({ method: "POST" })
     const { createClient } = await import("@supabase/supabase-js");
     const env = await getEnv();
     await enforceRateLimit(env, "authRecovery", getRequestHeader("cf-connecting-ip") ?? "unknown");
-    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw new Error("Supabase not configured");
+    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) authUnavailable("SUPABASE_URL / SUPABASE_ANON_KEY missing");
     const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
     const { error } = await client.auth.signInWithOtp({
       email: data.email,
@@ -697,7 +695,7 @@ export const candidateSessionFromTokensFn = createServerFn({ method: "POST" })
     const { setSessionCookies } = await import("./supabase");
     const { createClient } = await import("@supabase/supabase-js");
     const env = await getEnv();
-    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) throw new Error("Supabase not configured");
+    if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) authUnavailable("SUPABASE_URL / SUPABASE_ANON_KEY missing");
     const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
     const { data: authData, error } = await client.auth.setSession({
       access_token: data.access_token,

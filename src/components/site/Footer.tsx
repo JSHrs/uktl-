@@ -58,7 +58,7 @@ export function Footer() {
           <FooterCol title="Candidates">
             <FooterLink to="/auth/register">Create an account</FooterLink>
             <FooterLink to="/auth/login">Sign in</FooterLink>
-            <FooterLink to="/app/upload">Upload your CV</FooterLink>
+            <FooterLink to="/auth/register">Sign up free</FooterLink>
             <FooterLink to="/app/jobs">Open roles</FooterLink>
           </FooterCol>
 

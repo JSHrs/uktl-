@@ -4,6 +4,8 @@
 
 import { createPostgresDatabase } from "./postgres";
 import { createPrivateCvStorage } from "./storage";
+import { assertSameSupabaseProject } from "./supabase-project";
+import { resolveServerEnv } from "./env-resolve";
 
 export type AppEnv = {
   GOOGLE_CALENDAR_CLIENT_ID?: string;
@@ -46,18 +48,16 @@ export async function getEnv(): Promise<AppEnv> {
   try {
     const mod = (await import("cloudflare:workers")) as unknown as { env: AppEnv };
     if (mod.env.DATA_BACKEND === "supabase" || mod.env.DB) {
+      if (mod.env.DATA_BACKEND === "supabase") assertSameSupabaseProject(mod.env);
       cached = configureBackend(mod.env);
       return cached;
     }
   } catch { /* Lovable's server runtime uses server-only environment variables. */ }
-  const values = typeof process !== "undefined" ? process.env : {};
-  if (values.DATA_BACKEND !== "supabase")
-    throw new Error("Server backend is not configured. Set DATA_BACKEND=supabase and the server credentials.");
-  const keys = ["DATA_BACKEND", "DATABASE_URL", "SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY",
-    "SITE_URL", "CRON_SECRET", "CV_SCAN_URL", "CV_SCAN_TOKEN", "ANTHROPIC_API_KEY", "PARSE_PROVIDER", "PARSE_MODEL",
-    "AI_HOURLY_CALL_LIMIT", "REED_API_KEY", "RESEND_API_KEY", "GOOGLE_CALENDAR_CLIENT_ID", "GOOGLE_CALENDAR_CLIENT_SECRET",
-    "MICROSOFT_CALENDAR_CLIENT_ID", "MICROSOFT_CALENDAR_CLIENT_SECRET", "CALENDAR_ENCRYPTION_KEY"];
-  cached = configureBackend(Object.fromEntries(keys.map(key => [key, values[key]])) as unknown as AppEnv);
+  const values: Record<string, string | undefined> = typeof process !== "undefined" ? process.env : {};
+  const resolved = resolveServerEnv(values) as unknown as AppEnv;
+  if (resolved.DATA_BACKEND !== "supabase") throw new Error("Only the Supabase backend is available outside Cloudflare Workers");
+  assertSameSupabaseProject(resolved);
+  cached = configureBackend(resolved);
   return cached;
 }
 

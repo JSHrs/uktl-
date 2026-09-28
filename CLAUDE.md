@@ -47,6 +47,8 @@ wrangler.toml          the ONLY Wrangler config (never add wrangler.json/jsonc �
 .github/workflows/     CI
 ```
 
+**Hosting:** Lovable (project `b976b2a4-…`) builds from `main` and reads server env vars from its project settings. The required list is in DEPLOYMENT.md "Hosting on Lovable". Lovable Cloud (empty project `jwfycrmrgwslxyxvirfn`) is enabled but unused: UKTL's settings are supplied as `UKTL_`-prefixed secrets, which take precedence over the Lovable-managed `SUPABASE_*`. Outside Workers, `DATA_BACKEND` defaults to `supabase`, the public Supabase URL/key may come from `VITE_SUPABASE_*`, and `SITE_URL` falls back to the request origin (`server/site-url.ts`).
+
 ## Hard rules
 
 1. **Server functions live in `src/lib/functions.ts`, never under `src/lib/server/`.** The Lovable wrapper enables TanStack import-protection with `client.files: ["**/server/**"]`; a route importing anything under `server/` fails the client build. Server-only modules stay under `server/` and are only imported from `functions.ts` (top-level imports are dead-code-eliminated from the client bundle).
@@ -73,7 +75,7 @@ The root route loads the session once per navigation (`getSessionFn` → `contex
 - Staff use named Supabase Auth accounts. `recruitment.staff_users` is authoritative; user metadata never grants staff rights. Every privileged server action checks current membership, a verified email, a live Auth session and MFA through `get_my_staff_access`.
 - Admins manage content and operations. Consultants read recruitment records and update match stages; candidate deletion and content management remain admin-only.
 - `/admin/login` authenticates email/password; `/auth/security` enrolls/verifies TOTP. No shared-password cookie fallback exists. Legacy `auth.ts` and its regression tests are historical and are not used by current staff authorization.
-- Candidates can also use Google or Apple (`server/oauth.ts`, `oauth-functions.ts`). The flow is server-side PKCE: the verifier sits in a 10-minute httpOnly cookie and `/auth/callback` exchanges `?code=` for the normal session cookies. Buttons render only for providers that Supabase's `/auth/v1/settings` reports as enabled. Provider setup is in DEPLOYMENT.md. Staff never use social sign-in.
+- Candidates can also use Google or Apple (`server/oauth.ts`, `oauth-functions.ts`). The flow is server-side PKCE: the verifier sits in a 10-minute httpOnly cookie and `/auth/callback` exchanges `?code=` for the normal session cookies. Both buttons always render (owner's decision); one not enabled in Supabase (`/auth/v1/settings`) shows a "use email for now" notice. Provider setup is in DEPLOYMENT.md. Staff never use social sign-in.
 - Candidates use server-verified Supabase sessions in httpOnly cookies. Profile edits use their own RLS client. Callback tokens are verified by Auth; recovery links lead to `/auth/reset`, update the password and revoke sessions.
 - Configure the exact HTTPS `SITE_URL` + `/auth/callback` in Supabase Auth. Resend SMTP handles Auth email. Provider credentials stay in server secrets.
 - Stage 1 and subsequent release requirements are in `DEVELOPMENT_GATES.md`; skipped authenticated tests never pass a stage.

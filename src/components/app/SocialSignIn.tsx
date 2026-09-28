@@ -25,13 +25,24 @@ function AppleMark() {
   );
 }
 
-/** Google and Apple sign-in. Renders nothing unless a provider is switched on in Supabase Auth. */
+/**
+ * Google and Apple sign-in. Both buttons always show (owner's decision); one that
+ * is not yet switched on in Supabase Auth explains that instead of failing.
+ */
 export function SocialSignIn({ providers, redirect, mode }: { providers: Provider[]; redirect?: string; mode: "login" | "register" }) {
   const [busy, setBusy] = useState<Provider | null>(null);
   const [error, setError] = useState<string | null>(null);
-  if (providers.length === 0) return null;
+  const [notice, setNotice] = useState<string | null>(null);
 
   async function start(provider: Provider) {
+    setNotice(null);
+    if (!providers.includes(provider)) {
+      setError(null);
+      setNotice(
+        `${provider === "apple" ? "Apple" : "Google"} sign-in is being switched on. Please use your email below for now.`,
+      );
+      return;
+    }
     setBusy(provider);
     setError(null);
     try {
@@ -45,7 +56,7 @@ export function SocialSignIn({ providers, redirect, mode }: { providers: Provide
   }
 
   // Apple (ink on paper; inverts in dark mode per Apple's guidelines) first, then Google.
-  const order: Provider[] = (["apple", "google"] as Provider[]).filter((p) => providers.includes(p));
+  const order: Provider[] = ["apple", "google"];
   return (
     <div className="space-y-3">
       {order.map((p) => (
@@ -62,6 +73,11 @@ export function SocialSignIn({ providers, redirect, mode }: { providers: Provide
           {busy === p ? "Redirecting…" : LABEL[p]}
         </button>
       ))}
+      {notice && (
+        <p role="status" className="text-sm text-ink-soft">
+          {notice}
+        </p>
+      )}
       {error && (
         <p role="alert" className="text-sm text-red-700 dark:text-red-300">
           {error}
