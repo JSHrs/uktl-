@@ -34,6 +34,42 @@ function safeInteger(value: string) {
   return n;
 }
 
+/** Upper bound for one batch, so a stalled connection can never hang a request. */
+export const OPERATION_TIMEOUT_MS = 25000;
+
+export function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(Object.assign(new Error(label), { code: "UKTL_TIMEOUT" })), ms);
+    }),
+  ]).finally(() => clearTimeout(timer));
+}
+
+/**
+ * A log-safe description of a database failure: error class and code always;
+ * the message only for connection-level failures (network, TLS, authentication,
+ * timeouts), with anything resembling a URL, credential or email removed.
+ * Query/data errors (SQLSTATE classes 22/23/42…) never log their message.
+ */
+export function describeDatabaseError(error: unknown) {
+  const e = (error ?? {}) as { name?: string; code?: string; errno?: string | number; message?: string };
+  const code = typeof e.code === "string" ? e.code : e.errno != null ? String(e.errno) : undefined;
+  const connectionLevel =
+    !code ||
+    /^(08|28|53|57|3D|UKTL_|E[A-Z]+|CONNECT|CERT|ERR_TLS|SELF_SIGNED|UNABLE_TO|DEPTH_ZERO)/.test(code) ||
+    /tls|ssl|certificate|handshake|socket|connect|timeout|timed out|password|authentication|tenant|ENOTFOUND|refused/i.test(e.message ?? "");
+  const message = connectionLevel
+    ? (e.message ?? "")
+        .replace(/\b\w+:\/\/\S+/g, "[url]")
+        .replace(/\S+@\S+/g, "[redacted]")
+        .replace(/password=\S+/gi, "password=[redacted]")
+        .slice(0, 200)
+    : undefined;
+  return { name: e.name ?? typeof error, code, message };
+}
+
 export function createPostgresDatabase(connectionString: string, actorId: string | null = null): D1Database {
   const url = new URL(connectionString);
   if (!["postgres:", "postgresql:"].includes(url.protocol)) {
@@ -55,7 +91,7 @@ export function createPostgresDatabase(connectionString: string, actorId: string
       types: { epoch: { to: 20, from: [20], serialize: String, parse: safeInteger } },
     });
     try {
-      const result = await client.begin(async (tx) => {
+      const result = await withTimeout(client.begin(async (tx) => {
         await tx.unsafe("SET LOCAL search_path = recruitment, pg_catalog");
         await tx.unsafe("SELECT set_config('uktl.actor_id', $1, true)", [actorId ?? ""]);
         await tx.unsafe("SET LOCAL statement_timeout = '15s'");
@@ -67,13 +103,17 @@ export function createPostgresDatabase(connectionString: string, actorId: string
           results.push({ success: true, results: Array.from(rows), meta: { changes: rows.count } });
         }
         return results;
-      });
+      }), OPERATION_TIMEOUT_MS, "operation timed out");
       return result as D1Result[];
-    } catch {
-      // Provider errors may contain SQL values, credentials or candidate data.
+    } catch (error) {
+      // Provider errors may contain SQL values, credentials or candidate data:
+      // only the classified cause is logged, never the raw message or query.
+      console.error("[db] operation failed", describeDatabaseError(error));
       throw new Error("Database operation failed");
     } finally {
-      await client.end({ timeout: 5 });
+      // Never let closing the socket hold the response open (Workers sockets can
+      // stall on close after a failed handshake).
+      await withTimeout(client.end({ timeout: 2 }), 3000, "close timed out").catch(() => undefined);
     }
   }
 
