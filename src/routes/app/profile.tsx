@@ -11,6 +11,9 @@ import {
 import { PageHeader, Pill, ScoreBar, Section, StatCard } from "@/components/app/AppLayout";
 
 export const Route = createFileRoute("/app/profile")({
+  // ?edit opens the editor directly (e.g. from the dashboard's "Complete profile").
+  validateSearch: (s: Record<string, unknown>): { edit?: boolean } =>
+    s.edit === true || s.edit === "true" || s.edit === 1 || s.edit === "1" ? { edit: true } : {},
   loader: async () => {
     const [session, profileData] = await Promise.all([
       getCandidateSessionFn(),
@@ -39,7 +42,8 @@ function ProfilePage() {
   const { session, profileData } = Route.useLoaderData();
   const router = useRouter();
 
-  const [editing, setEditing] = useState(false);
+  const search = Route.useSearch();
+  const [editing, setEditing] = useState(!!search.edit);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     name: profileData.profile?.name ?? "",
@@ -80,6 +84,7 @@ function ProfilePage() {
       });
       setEditing(false);
       toast.success("Profile saved");
+      await router.navigate({ to: "/app/profile", search: {}, replace: true });
       router.invalidate();
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Save failed");
@@ -194,7 +199,10 @@ function ProfilePage() {
               {saving ? "Saving…" : "Save changes"}
             </button>
             <button
-              onClick={() => setEditing(false)}
+              onClick={() => {
+                setEditing(false);
+                if (search.edit) void router.navigate({ to: "/app/profile", search: {}, replace: true });
+              }}
               className="text-[13px] px-5 py-2 border border-rule rounded-full hover:border-ink transition-colors"
             >
               Cancel
