@@ -3,6 +3,7 @@ import { getCookie, setCookie, deleteCookie } from "@tanstack/start-server-core"
 import type { AppEnv } from "./env";
 import { safeRedirect } from "../safe-redirect.ts";
 import { authCallbackUrl } from "./site-url.ts";
+import { sessionCookieAttributes } from "./cookie-policy.ts";
 
 /**
  * Candidate sign-in with Google or Apple through Supabase Auth, PKCE flow,
@@ -133,13 +134,13 @@ export async function completeOAuthFlow(env: AppEnv, flowCookie: string | undefi
 
 export async function startOAuth(env: AppEnv, provider: OAuthProvider, redirect: string | undefined) {
   const { url, flow } = await beginOAuthFlow(env, provider, redirect);
-  await setCookie(FLOW_COOKIE, flow, { httpOnly: true, secure: true, sameSite: "lax", maxAge: FLOW_TTL_SECONDS, path: "/" });
+  await setCookie(FLOW_COOKIE, flow, { httpOnly: true, secure: true, ...sessionCookieAttributes(), maxAge: FLOW_TTL_SECONDS, path: "/" });
   return { url };
 }
 
 export async function finishOAuth(env: AppEnv, code: string, flowId: string | undefined) {
   const cookie = getCookie(FLOW_COOKIE);
   // One attempt per flow, whatever happens next.
-  await deleteCookie(FLOW_COOKIE, { path: "/" });
+  await deleteCookie(FLOW_COOKIE, { path: "/", secure: true, ...sessionCookieAttributes() });
   return completeOAuthFlow(env, cookie, code, flowId);
 }
