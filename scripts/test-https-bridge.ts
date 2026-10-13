@@ -68,6 +68,9 @@ try {
   const audit = await sql`SELECT actor_user_id FROM recruitment.audit_events WHERE entity_type='jobs' AND entity_id=${jobId} ORDER BY id`;
   assert.ok(audit.length >= 2 && audit.every((a) => a.actor_user_id === staff), "audit rows attributed to the request's actor");
 
+  // Production campaign/CV batches must stay atomic beyond the old 200 limit.
+  const large = await env.DB.batch(Array.from({length:1002},()=>env.DB.prepare("SELECT 1 AS n")));
+  assert.equal(large.length,1002);
   // A failing statement rolls back the whole batch.
   await assert.rejects(
     env.DB.batch([
