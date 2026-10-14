@@ -47,7 +47,7 @@ wrangler.toml          the ONLY Wrangler config (never add wrangler.json/jsonc �
 .github/workflows/     CI
 ```
 
-**Database transport:** by default every batch goes over HTTPS to `public.uktl_run_batch` (migration `20260928150251`, service-role only, SECURITY INVOKER, single SELECT/INSERT/UPDATE/DELETE/WITH statements, one transaction per batch) via `server/http-database.ts`; values are inlined as quoted literals by `inlineQuery` in `server/postgres.ts`. Lovable runs on Cloudflare Workers, which cannot verify the Postgres pooler's Supabase-issued certificate, so direct connections time out there. `DB_TRANSPORT=postgres` + `DATABASE_URL` selects the direct adapter elsewhere. App SQL reads `auth.users` only through the `recruitment.auth_accounts` view.
+**Database transport:** by default every batch goes over HTTPS to `public.uktl_run_batch` (migration `20260928151337`, expanded by the bounded atomic batch migration, service-role only, SECURITY INVOKER, single SELECT/INSERT/UPDATE/DELETE/WITH statements, one transaction per batch) via `server/http-database.ts`; values are inlined as quoted literals by `inlineQuery` in `server/postgres.ts`. Lovable runs on Cloudflare Workers, which cannot verify the Postgres pooler's Supabase-issued certificate, so direct connections time out there. `DB_TRANSPORT=postgres` + `DATABASE_URL` selects the direct adapter elsewhere. App SQL reads `auth.users` only through the `recruitment.auth_accounts` view.
 
 **Hosting:** Lovable (project `b976b2a4-…`) builds from `main` and reads server env vars from its project settings. The required list is in DEPLOYMENT.md "Hosting on Lovable". Lovable Cloud (empty project `jwfycrmrgwslxyxvirfn`) is enabled but unused: UKTL's settings are supplied as `UKTL_`-prefixed secrets, which take precedence over the Lovable-managed `SUPABASE_*`. Outside Workers, `DATA_BACKEND` defaults to `supabase`, the public Supabase URL/key may come from `VITE_SUPABASE_*`, and `SITE_URL` falls back to the request origin (`server/site-url.ts`).
 
@@ -65,9 +65,10 @@ wrangler.toml          the ONLY Wrangler config (never add wrangler.json/jsonc �
 
 ## Who uses the site
 
-UKTL is one recruitment firm. There are exactly two kinds of user, and no client/employer logins:
+UKTL is one recruitment firm. The owner expanded Phase 1 on 13 October 2026 to include candidate, employer and staff accounts. Employer is a self-service account type, not privileged staff access:
 
 - **Candidates** — sign up (Supabase), upload their CV, see their own score, matches and HR guidance. Everything under `/app` requires sign-in (guard in `src/routes/app.tsx`); a candidate only ever sees their own records.
+- **Employers** — select the employer account type in Profile after registering. `/employer` offers hiring contact and account type controls. No candidate records, CVs, shortlists or staff tools are exposed. `public.account_roles` is owner-scoped; staff privileges still come only from `recruitment.staff_users`.
 - **Firm staff** — the admin dashboard (`/admin`) plus the staff views of a candidate record and a mandate pipeline (`/app/candidates`, `/app/candidates/:id`, `/app/jobs/:id`). Staff-only actions are hidden from candidates and enforced server-side.
 
 The root route loads the session once per navigation (`getSessionFn` → `context.session`); the shared header (`src/components/site/Nav.tsx`) and all route guards read it from there. After signing in or out, call `router.invalidate()` so the header updates.
@@ -106,7 +107,7 @@ The root route loads the session once per navigation (`getSessionFn` → `contex
 
 ## Known gaps (not bugs — unbuilt)
 
-Scheduled Reed sync (manual button only) · bulk/scheduled candidate email campaigns (one-to-one outreach exists) · candidate-visible message history · appointment reminder emails · staff calendar sync (Google/Outlook) · AI-assisted (non-rules) candidate ranking · D1 legacy support for calendar, media upload, outreach, exports and mandate fill (Supabase-only).
+See PHASE_1_ACCEPTANCE.md for current evidence and blockers. Reed scheduling, campaigns, candidate messages, appointment reminders and Google/Outlook synchronization have code; live provider activation and acceptance are not complete. Ranking remains rules-based with separate Claude evidence review. D1 calendar/communications support is not implemented. The labelled browser-only CV simulation never writes recruitment data or disables live scanning.
 
 
 ## Launch hardening verification

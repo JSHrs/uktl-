@@ -27,7 +27,7 @@ function NotFoundComponent() {
   );
 }
 
-export type Session = { userId: string | null; email: string | null; isStaff: boolean; isAdmin: boolean };
+export type Session = { userId: string | null; email: string | null; isStaff: boolean; isAdmin: boolean; staffRole?: "admin" | "consultant" | null; accountRole?: "candidate" | "employer" };
 
 const SIGNED_OUT: Session = { userId: null, email: null, isStaff: false, isAdmin: false };
 
