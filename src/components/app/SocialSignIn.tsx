@@ -55,8 +55,7 @@ export function SocialSignIn({ providers, redirect, mode }: { providers: Provide
     }
   }
 
-  // Apple (ink on paper; inverts in dark mode per Apple's guidelines) first, then Google.
-  const order: Provider[] = ["apple", "google"];
+  const order: Provider[] = ["google", "apple"];
   return (
     <div className="space-y-3">
       {order.map((p) => (
@@ -65,9 +64,7 @@ export function SocialSignIn({ providers, redirect, mode }: { providers: Provide
           type="button"
           disabled={busy !== null}
           onClick={() => start(p)}
-          className={`w-full flex items-center justify-center gap-3 rounded-md px-4 py-3 text-sm font-medium transition-opacity disabled:opacity-50 ${
-            p === "apple" ? "bg-ink text-paper hover:opacity-90" : "border border-rule bg-paper text-ink hover:border-ink"
-          }`}
+          className="w-full flex items-center justify-center gap-3 rounded-md border border-rule bg-paper text-ink px-4 py-2.5 text-sm font-medium hover:bg-paper-deep transition-colors disabled:opacity-50"
         >
           {p === "apple" ? <AppleMark /> : <GoogleMark />}
           {busy === p ? "Redirecting…" : LABEL[p]}
@@ -83,14 +80,9 @@ export function SocialSignIn({ providers, redirect, mode }: { providers: Provide
           {error}
         </p>
       )}
-      <p className="text-[11px] text-ink-mute text-center">
-        {mode === "register"
-          ? "Creates your UK Talent Link account with the email from that account."
-          : "Uses the email on that account. New here? This creates your account."}
-      </p>
-      <div className="flex items-center gap-3 pt-1" aria-hidden="true">
+      <div className="flex items-center gap-3 pt-2" aria-hidden="true">
         <span className="h-px flex-1 bg-rule" />
-        <span className="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-mute">or with email</span>
+        <span className="text-xs text-ink-mute">or</span>
         <span className="h-px flex-1 bg-rule" />
       </div>
     </div>
