@@ -1,3 +1,10 @@
+# Current requested changes
+- [ ] Remove Google and Apple sign-in and registration buttons for now.
+- [ ] Add a visible staff account registration entry without granting public admin privileges.
+- [ ] Align the admin simulation with actual recruitment operations.
+- [ ] Verify the updated sign-in and simulated admin workflows.
+- [ ] Connect Vercel — blocked: no direct Lovable Vercel connection; requires manual repository import and hosting setup.
+
 # Simulation pass
 - [x] Prebuilt candidate dashboard, sequential setup and sample CV assessment.
 - [x] Admin preview, candidate pipeline, topic management and settings.
