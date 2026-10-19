@@ -7,9 +7,10 @@ import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 
 export const Route = createFileRoute("/auth/register")({
   beforeLoad: ({ context }) => {
-    if (context.session.userId) throw redirect({ to: "/app/upload" });
+    if (context.session.userId) throw redirect({ to: "/app" });
   },
   loader: () => oauthProvidersFn(),
+  head: () => ({ meta: [{ title: "Create your account — Talent Compass" }, { name: "description", content: "Join Talent Compass and start your guided career profile." }, { property: "og:title", content: "Create your account — Talent Compass" }, { property: "og:description", content: "Join UK Talent Link and build your career profile." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: RegisterPage,
 });
 
@@ -93,7 +94,7 @@ function RegisterPage() {
 
       <p className="text-xs text-ink-soft my-4">Before creating an account, read <Link to="/privacy" className="underline">how your information is used</Link> and <Link to="/terms" className="underline">using Talent Compass</Link>.</p>
       <div className="mb-5">
-        <SocialSignIn providers={providers} redirect={"/app/upload"} mode="register" />
+        <SocialSignIn providers={providers} redirect={"/app"} mode="register" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -178,6 +179,7 @@ function RegisterPage() {
         </p>
       </form>
 
+      <Link to="/simulation" search={{ role: "candidate" }} className="block mt-6 text-center text-sm underline">Try the prebuilt candidate experience →</Link>
       <div className="mt-6 text-center text-sm text-ink-mute">
         Already have an account?{" "}
         <Link to="/auth/login" className="text-ink underline">

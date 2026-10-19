@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { adminLoginFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/admin/login")({
-  head: () => ({ meta: [{ name: "robots", content: "noindex, nofollow" }] }),
+  head: () => ({ meta: [{ title: "Staff sign in — UK Talent Link" }, { name: "description", content: "Secure access for UK Talent Link staff." }, { property: "og:title", content: "Staff sign in — UK Talent Link" }, { property: "og:description", content: "Access your recruitment operations workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { name: "robots", content: "noindex, nofollow" }] }),
   component: LoginPage,
 });
 
@@ -35,6 +35,7 @@ function LoginPage() {
   return (
     <div className="min-h-screen bg-paper flex items-center justify-center">
       <div className="w-full max-w-sm px-6">
+        <Link to="/auth/login" className="inline-block mb-6 text-sm underline">← Back to sign in</Link>
         <div className="mb-8">
           <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-mute mb-1">
             UK Talent Link
@@ -79,8 +80,9 @@ function LoginPage() {
           </button>
         </form>
 
+        <Link to="/simulation" search={{ role: "admin" }} className="block mt-6 text-center text-sm underline">Open prebuilt admin preview →</Link>
         <p className="mt-6 text-xs text-ink-mute text-center">
-          Authorised consultants only.
+          Staff accounts are invitation-only. Ask your administrator for access.
         </p>
 
       </div>
