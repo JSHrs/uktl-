@@ -44,7 +44,7 @@ function RegisterPage() {
         setSuccess(true);
       } else {
         await router.invalidate();
-        await router.navigate({ to: "/app/upload" });
+        await router.navigate({ to: "/app" });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed. Please try again.");

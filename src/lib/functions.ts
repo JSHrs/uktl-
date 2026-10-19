@@ -635,20 +635,33 @@ export const candidateRegisterFn = createServerFn({ method: "POST" })
     const env = await getEnv().catch((e: unknown) => authUnavailable(e instanceof Error ? e.message : "server environment"));
     await enforceRateLimit(env, "authAccount", getRequestHeader("cf-connecting-ip") ?? "unknown");
     if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) authUnavailable("SUPABASE_URL / SUPABASE_ANON_KEY missing");
-    const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
-    const { data: authData, error } = await client.auth.signUp({
+    if (!env.SUPABASE_SERVICE_ROLE_KEY) authUnavailable("SUPABASE_SERVICE_ROLE_KEY missing");
+    // Owner decision: no email confirmation step. Create the account pre-confirmed,
+    // sign the user straight in, and send a welcome email instead.
+    const admin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { error: createError } = await admin.auth.admin.createUser({
       email: data.email,
       password: data.password,
-      options: {
-        data: { name: data.name },
-        emailRedirectTo: authCallbackUrl(env),
-      },
+      email_confirm: true,
+      user_metadata: { name: data.name },
     });
-    if (error) throw new Error(error.message);
-    if (authData.session) {
-      await setSessionCookies(authData.session.access_token, authData.session.refresh_token, authData.session.expires_in);
+    if (createError) {
+      const msg = /already|registered|exists/i.test(createError.message)
+        ? "An account with this email already exists. Please sign in instead."
+        : createError.message;
+      throw new Error(msg);
     }
-    return { userId: authData.user?.id ?? null, needsConfirmation: !authData.session };
+    const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+    const { data: authData, error } = await client.auth.signInWithPassword({ email: data.email, password: data.password });
+    if (error || !authData.session) throw new Error(error?.message ?? "Account created. Please sign in.");
+    await setSessionCookies(authData.session.access_token, authData.session.refresh_token, authData.session.expires_in);
+    const { sendNotificationEmail } = await import("./server/notify");
+    await sendNotificationEmail(env, {
+      to: [data.email],
+      subject: "Welcome to UK Talent Link",
+      text: `Hi ${data.name},\n\nWelcome to UK Talent Link. Your account is ready — sign in any time to upload your CV, see your matches and explore HR guidance.\n\nThe UK Talent Link team`,
+    }, `uktl-welcome-${authData.user.id}`).catch(() => undefined);
+    return { userId: authData.user.id, needsConfirmation: false };
   });
 
 export const candidateLoginFn = createServerFn({ method: "POST" })
