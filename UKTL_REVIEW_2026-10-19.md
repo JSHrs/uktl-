@@ -13,7 +13,7 @@ The repository implements candidate CV processing, profile/assessment/history, m
 - The decorative Fraunces display family was replaced with Geist for clearer, consistent text. A screenshot comparison is still required before accepting the visual result.
 - Candidate preview now opens with completed setup and assessment. Onboarding can be replayed. Job cards expand to evidence, gaps and reversible local interest actions. Admin mock actions expose editable result previews and session activity; analytics can open candidate outcomes, and queue/booking attention labels reflect local actions.
 - Previews remain fictional, browser-memory-only; no recruitment API call, invitation, email or real application is made by these actions. Video content remains explicitly a placeholder, not a playable final media asset.
-- Existing `npm ci` failed because package.json and package-lock.json disagree, including Lovable config and TanStack versions.
+- Existing `npm ci` failed because package.json and package-lock.json disagreed, including Lovable config and TanStack versions. Reconciled the lockfile with `npm install`; installation completed successfully.
 
 ## Identity and backend limitation
 
@@ -28,4 +28,4 @@ The repo config points to Supabase `jwfycrmrgwslxyxvirfn`. The connected Supabas
 
 ## Validation
 
-Nine dependency-free account-routing and existing simulation tests passed. Added browser regression scenarios for completed onboarding, expanded match/interest actions and editable admin results. Full build, type checking, browser execution and live account testing must be reported separately; source inspection and HTTP 200 alone do not prove them.
+Twenty targeted account-routing, session-security, staff-access and simulation tests passed. TypeScript (`tsc --noEmit`) and the production build (`npm run build`) passed. Added two browser regression scenarios for completed onboarding, expanded match/interest actions and editable admin results. Both were blocked at browser launch because Chromium was absent; Playwright browser installation returned invalid ZIP archives. No browser interaction or screenshot result is claimed. Live account membership and login/navigation timings remain unverified.
