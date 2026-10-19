@@ -15,6 +15,7 @@ export const Route = createFileRoute("/auth/login")({
     if (context.session.userId) throw redirect({ href: accountDestination(context.session, safeRedirect(search.redirect)) });
   },
   loader: () => oauthProvidersFn(),
+  head: () => ({ meta: [{ title: "Sign in — Talent Compass" }, { name: "description", content: "Sign in to your UK Talent Link career workspace." }, { property: "og:title", content: "Sign in — Talent Compass" }, { property: "og:description", content: "Access your career profile and recruitment workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: LoginPage,
 });
 
@@ -111,6 +112,7 @@ function LoginPage() {
       </form>
       {linkSent && <p role="status" className="mt-3 text-sm">If this email has an account, check your inbox for a sign-in link.</p>}
 
+      <Link to="/simulation" search={{ role: "candidate" }} className="block text-center mt-5 text-sm underline">Try candidate preview →</Link>
       <div className="mt-6 text-center space-y-3 text-sm text-ink-mute">
         <div>
           <Link to="/auth/forgot" className="hover:text-ink underline">Forgot password?</Link>

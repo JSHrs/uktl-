@@ -33,7 +33,9 @@ const SIGNED_OUT: Session = { userId: null, email: null, isStaff: false, isAdmin
 
 export const Route = createRootRoute({
   // Re-evaluated on every navigation, so sign-in/out is reflected everywhere at once.
-  beforeLoad: async (): Promise<{ session: Session }> => {
+  beforeLoad: async ({ location }): Promise<{ session: Session }> => {
+    // Public sample UI has no account reads; real routes retain their normal session check.
+    if (location.pathname === "/simulation") return { session: SIGNED_OUT };
     try {
       return { session: await getSessionFn() };
     } catch {
