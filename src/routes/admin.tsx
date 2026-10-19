@@ -1,7 +1,7 @@
 import { DataError } from "@/components/app/DataError";
 import type { ReactNode } from "react";
 import { createFileRoute, Link, Outlet, redirect, useRouter } from "@tanstack/react-router";
-import { adminLogoutFn, adminSessionFn } from "@/lib/functions";
+import { adminLogoutFn } from "@/lib/functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -9,13 +9,13 @@ export const Route = createFileRoute("/admin")({
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  beforeLoad: async ({ location }) => {
+  beforeLoad: ({ context, location }) => {
     if (location.pathname.startsWith("/admin/login")) return { staffRole: null };
-    const access = await adminSessionFn();
-    if (access.mfaRequired) throw redirect({ to: "/auth/security" });
-    if (!access.valid) throw redirect({ to: "/admin/login" });
-    if (access.role === "consultant" && !location.pathname.startsWith("/admin/candidates")) throw redirect({ to: "/admin/candidates" });
-    return { staffRole: access.role };
+    const { session } = context;
+    if (session.staffRole && !session.isStaff) throw redirect({ to: "/auth/security" });
+    if (!session.isStaff) throw redirect({ to: "/admin/login" });
+    if (session.staffRole === "consultant" && !location.pathname.startsWith("/admin/candidates")) throw redirect({ to: "/admin/candidates" });
+    return { staffRole: session.staffRole ?? null };
   },
   errorComponent: DataError,
   component: AdminLayout,

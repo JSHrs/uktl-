@@ -98,9 +98,12 @@ export const getViewerFn = createServerFn({ method: "GET" }).handler(async () =>
 export const getSessionFn = createServerFn({ method: "GET" }).handler(async () => {
   const { getCandidateSession } = await import("./supabase");
   const user = await getCandidateSession();
-  const access = user.userId ? await getStaffAccess() : NO_STAFF_ACCESS;
   const { getAuthenticatedSupabase } = await import("./supabase");
-  const accountRole = user.userId ? await readAccountRole((await getAuthenticatedSupabase()).client, user.userId) : "candidate" as const;
+  // Reuse one verified client; role checks are independent network requests.
+  const authenticated = user.userId ? await getAuthenticatedSupabase() : null;
+  const [access, accountRole] = authenticated
+    ? await Promise.all([readStaffAccess(authenticated.client), readAccountRole(authenticated.client, user.userId!)])
+    : [NO_STAFF_ACCESS, "candidate" as const];
   return {
     userId: user.userId,
     email: user.email,
@@ -108,6 +111,8 @@ export const getSessionFn = createServerFn({ method: "GET" }).handler(async () =
     isAdmin: hasStaffAccess(access, true),
     staffRole: access.role,
     accountRole,
+    displayName: typeof authenticated?.user.user_metadata?.name === "string" ? authenticated.user.user_metadata.name : null,
+    staffRequested: authenticated?.user.user_metadata?.account_intent === "staff",
   };
 });
 
@@ -414,12 +419,12 @@ export const adminLoginFn = createServerFn({ method: "POST" })
     if (error || !signed.session) return { ok: false as const, error: "Invalid staff credentials" };
     const verified = await client.auth.getUser(signed.session.access_token);
     const access = verified.data.user?.email_confirmed_at ? await readStaffAccess(client) : null;
-    if (!access?.role) {
+    if (!access?.role && verified.data.user?.user_metadata?.account_intent !== "staff") {
       await client.auth.signOut({ scope: "local" });
       return { ok: false as const, error: "Invalid staff credentials" };
     }
     await setSessionCookies(signed.session.access_token, signed.session.refresh_token, signed.session.expires_in);
-    return { ok: true as const };
+    return { ok: true as const, pendingApproval: !access?.role };
   });
 export const adminSessionFn = createServerFn({ method: "GET" }).handler(async () => {
   const access = await getStaffAccess();
@@ -627,6 +632,7 @@ export const candidateRegisterFn = createServerFn({ method: "POST" })
       email: z.string().email(),
       password: z.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH),
       name: z.string().min(1),
+      staffIntent: z.boolean().optional(),
     }).parse(raw),
   )
   .handler(async ({ data }) => {
@@ -643,7 +649,7 @@ export const candidateRegisterFn = createServerFn({ method: "POST" })
       email: data.email,
       password: data.password,
       email_confirm: true,
-      user_metadata: { name: data.name },
+      user_metadata: { name: data.name, account_intent: data.staffIntent ? "staff" : "candidate" },
     });
     if (createError) {
       const msg = /already|registered|exists/i.test(createError.message)
@@ -678,9 +684,8 @@ export const candidateLoginFn = createServerFn({ method: "POST" })
     const { data: authData, error } = await client.auth.signInWithPassword({ email: data.email, password: data.password });
     if (error) throw new Error(error.message);
     await setSessionCookies(authData.session.access_token, authData.session.refresh_token, authData.session.expires_in);
-    const access = await readStaffAccess(client);
-    const accountRole = await readAccountRole(client, authData.user.id);
-    return { userId: authData.user.id, email: authData.user.email, staffRole: access.role, isStaff: hasStaffAccess(access), accountRole };
+    const [access, accountRole] = await Promise.all([readStaffAccess(client), readAccountRole(client, authData.user.id)]);
+    return { userId: authData.user.id, email: authData.user.email, staffRole: access.role, isStaff: hasStaffAccess(access), accountRole, staffRequested: authData.user.user_metadata?.account_intent === "staff" };
   });
 
 export const candidateLogoutFn = createServerFn({ method: "POST" }).handler(async () => {

@@ -1,3 +1,4 @@
+import { SocialSignIn } from "@/components/app/SocialSignIn";
 import { useState } from "react";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -33,7 +34,6 @@ function LoginPage() {
     try {
       const result = await candidateLoginFn({ data: { email, password } });
       toast.success(`Signed in as ${result.email ?? email}`);
-      await router.invalidate();
       await router.navigate({ href: accountDestination(result, safeRedirect(search.redirect)) });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed. Please try again.");
@@ -55,6 +55,8 @@ function LoginPage() {
           Sign in
         </h1>
       </div>
+
+      <SocialSignIn mode="login" redirect={safeRedirect(search.redirect)} />
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -109,7 +111,7 @@ function LoginPage() {
         <div>
           <Link to="/auth/forgot" className="hover:text-ink underline">Forgot password?</Link>
           {" · "}
-          <button type="button" disabled={loading || !email} onClick={magicLink} className="hover:text-ink underline disabled:opacity-50 disabled:no-underline">Email me a link</button>
+          <button type="button" disabled={loading || !email} onClick={magicLink} className="hover:text-ink underline disabled:opacity-50 disabled:no-underline">Email me a sign-in link</button>
         </div>
         <div>
           No account?{" "}

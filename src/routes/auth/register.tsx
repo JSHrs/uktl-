@@ -1,12 +1,14 @@
+import { SocialSignIn } from "@/components/app/SocialSignIn";
 import { useState } from "react";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
+import { registrationDestination } from "@/lib/account-role";
 import { candidateRegisterFn } from "@/lib/functions";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 
 export const Route = createFileRoute("/auth/register")({
   validateSearch: (search): { staff?: boolean } => ({ staff: search.staff === true || search.staff === "true" ? true : undefined }),
-  beforeLoad: ({ context }) => {
-    if (context.session.userId) throw redirect({ to: "/app" });
+  beforeLoad: ({ context, search }) => {
+    if (context.session.userId) throw redirect({ href: registrationDestination(context.session, search.staff) });
   },
   head: () => ({ meta: [{ title: "Create your account — Talent Compass" }, { name: "description", content: "Join Talent Compass and start your guided career profile." }, { property: "og:title", content: "Create your account — Talent Compass" }, { property: "og:description", content: "Join UK Talent Link and build your career profile." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: RegisterPage,
@@ -38,12 +40,11 @@ function RegisterPage() {
     }
     setLoading(true);
     try {
-      const result = await candidateRegisterFn({ data: { email: form.email, password: form.password, name: form.name } });
+      const result = await candidateRegisterFn({ data: { email: form.email, password: form.password, name: form.name, staffIntent: !!staff } });
       if (result.needsConfirmation) {
         setSuccess(true);
       } else {
-        await router.invalidate();
-        await router.navigate({ to: "/app" });
+        await router.navigate({ href: staff ? "/staff" : "/app" });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
@@ -91,6 +92,8 @@ function RegisterPage() {
       </div>
 
       <p className="text-xs text-ink-soft my-4">Before creating an account, read <Link to="/privacy" className="underline">how your information is used</Link> and <Link to="/terms" className="underline">using Talent Compass</Link>.</p>
+
+      {!staff && <SocialSignIn mode="register" />}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

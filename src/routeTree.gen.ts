@@ -21,6 +21,7 @@ import { Route as ReachRouteImport } from './routes/reach'
 import { Route as SectorsRouteImport } from './routes/sectors'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as SimulationRouteImport } from './routes/simulation'
+import { Route as StaffRouteImport } from './routes/staff'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
@@ -129,6 +130,11 @@ const ServicesRoute = ServicesRouteImport.update({
 const SimulationRoute = SimulationRouteImport.update({
   id: '/simulation',
   path: '/simulation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffRoute = StaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -391,6 +397,7 @@ export interface FileRoutesByFullPath {
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
   '/simulation': typeof SimulationRoute
+  '/staff': typeof StaffRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -452,6 +459,7 @@ export interface FileRoutesByTo {
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
   '/simulation': typeof SimulationRoute
+  '/staff': typeof StaffRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -516,6 +524,7 @@ export interface FileRoutesById {
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
   '/simulation': typeof SimulationRoute
+  '/staff': typeof StaffRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -581,6 +590,7 @@ export interface FileRouteTypes {
     | '/sectors'
     | '/services'
     | '/simulation'
+    | '/staff'
     | '/terms'
     | '/unsubscribe'
     | '/admin/analytics'
@@ -642,6 +652,7 @@ export interface FileRouteTypes {
     | '/sectors'
     | '/services'
     | '/simulation'
+    | '/staff'
     | '/terms'
     | '/unsubscribe'
     | '/admin/analytics'
@@ -705,6 +716,7 @@ export interface FileRouteTypes {
     | '/sectors'
     | '/services'
     | '/simulation'
+    | '/staff'
     | '/terms'
     | '/unsubscribe'
     | '/admin/analytics'
@@ -769,6 +781,7 @@ export interface RootRouteChildren {
   SectorsRoute: typeof SectorsRoute
   ServicesRoute: typeof ServicesRoute
   SimulationRoute: typeof SimulationRoute
+  StaffRoute: typeof StaffRoute
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   ApiCommunicationsRoute: typeof ApiCommunicationsRoute
@@ -866,6 +879,13 @@ declare module '@tanstack/react-router' {
       path: '/simulation'
       fullPath: '/simulation'
       preLoaderRoute: typeof SimulationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/staff': {
+      id: '/staff'
+      path: '/staff'
+      fullPath: '/staff'
+      preLoaderRoute: typeof StaffRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -1327,6 +1347,7 @@ const rootRouteChildren: RootRouteChildren = {
   SectorsRoute: SectorsRoute,
   ServicesRoute: ServicesRoute,
   SimulationRoute: SimulationRoute,
+  StaffRoute: StaffRoute,
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   ApiCommunicationsRoute: ApiCommunicationsRoute,

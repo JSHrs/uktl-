@@ -16,8 +16,11 @@ export async function requireStaff(): Promise<void> {
 }
 export async function getViewer(): Promise<Viewer> {
   const session = await getCandidateSession();
-  const access = session.userId ? await getStaffAccess() : NO_STAFF_ACCESS;
-  const isEmployer = session.userId ? (await readAccountRole((await getAuthenticatedSupabase()).client,session.userId)) === "employer" : false;
+  const authenticated = session.userId ? await getAuthenticatedSupabase() : null;
+  const [access, accountRole] = authenticated
+    ? await Promise.all([readStaffAccess(authenticated.client), readAccountRole(authenticated.client, session.userId!)])
+    : [NO_STAFF_ACCESS, "candidate"];
+  const isEmployer = accountRole === "employer";
   return { isAdmin: hasStaffAccess(access, true), isStaff: hasStaffAccess(access), isEmployer, userId: session.userId,
     staffRole: access.mfa_verified ? access.role : null };
 }

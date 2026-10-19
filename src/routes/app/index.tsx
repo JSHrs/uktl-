@@ -110,7 +110,7 @@ function DashboardPage() {
         title={
           <>
             {firstName ? `Welcome, ${firstName}` : "Welcome"}
-            <em className="not-italic italic font-normal text-ink-soft">.</em>
+            <span>.</span>
           </>
         }
         lede={

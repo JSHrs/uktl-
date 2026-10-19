@@ -63,14 +63,14 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-10 flex items-end justify-between gap-8">
+    <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-8">
       <div>
         <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-mute flex items-center gap-2.5">
           <span className="w-5 h-px bg-current" />
           {eyebrow}
         </div>
         <h1
-          className="font-display font-light leading-[1.02] tracking-[-0.025em] mt-3 text-ink"
+          className="font-display font-semibold leading-tight tracking-[-0.025em] mt-3 text-ink"
           style={{ fontSize: "clamp(28px, 3.5vw, 48px)", fontVariationSettings: '"opsz" 144, "SOFT" 50' }}
         >
           {title}
@@ -81,7 +81,7 @@ export function PageHeader({
           </p>
         )}
       </div>
-      {actions && <div className="flex items-center gap-3 shrink-0">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-3">{actions}</div>}
     </div>
   );
 }

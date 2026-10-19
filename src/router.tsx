@@ -59,6 +59,9 @@ export const getRouter = () => {
     routeTree,
     context: {},
     scrollRestoration: true,
+    defaultPendingMs: 150,
+    defaultPendingMinMs: 150,
+    defaultPendingComponent: () => <div role="status" aria-live="polite" className="p-8 text-sm text-ink-soft">Loading your workspace…</div>,
     defaultPreloadStaleTime: 0,
     defaultErrorComponent: DefaultErrorComponent,
   });

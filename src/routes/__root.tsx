@@ -27,7 +27,7 @@ function NotFoundComponent() {
   );
 }
 
-export type Session = { userId: string | null; email: string | null; isStaff: boolean; isAdmin: boolean; staffRole?: "admin" | "consultant" | null; accountRole?: "candidate" | "employer" };
+export type Session = { userId: string | null; email: string | null; isStaff: boolean; isAdmin: boolean; staffRequested?: boolean; displayName?: string | null; staffRole?: "admin" | "consultant" | null; accountRole?: "candidate" | "employer" };
 
 const SIGNED_OUT: Session = { userId: null, email: null, isStaff: false, isAdmin: false };
 
@@ -36,11 +36,8 @@ export const Route = createRootRoute({
   beforeLoad: async ({ location }): Promise<{ session: Session }> => {
     // Public sample UI has no account reads; real routes retain their normal session check.
     if (location.pathname === "/simulation") return { session: SIGNED_OUT };
-    try {
-      return { session: await getSessionFn() };
-    } catch {
-      return { session: SIGNED_OUT };
-    }
+    // A role-service failure must show a retryable error, not impersonate sign-out.
+    return { session: await getSessionFn() };
   },
   head: () => ({
     meta: [
@@ -51,12 +48,6 @@ export const Route = createRootRoute({
       { name: "twitter:site", content: "@uktalentlink" },
     ],
     links: [
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,200..900,30..100;1,9..144,200..900,30..100&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap",
-      },
       {
         rel: "stylesheet",
         href: appCss,

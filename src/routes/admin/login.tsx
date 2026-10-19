@@ -1,15 +1,21 @@
 import { useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useRouter, useNavigate } from "@tanstack/react-router";
 import { adminLoginFn } from "@/lib/functions";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/admin/login")({
+  beforeLoad: ({ context }) => {
+    if (context.session.staffRequested && !context.session.staffRole) throw redirect({ href: "/staff" });
+    if (context.session.staffRole) throw redirect({ href: context.session.isStaff ? (context.session.staffRole === "admin" ? "/admin" : "/admin/candidates") : "/auth/security" });
+  },
   head: () => ({ meta: [{ title: "Staff sign in — UK Talent Link" }, { name: "description", content: "Secure access for UK Talent Link staff." }, { property: "og:title", content: "Staff sign in — UK Talent Link" }, { property: "og:description", content: "Access your recruitment operations workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { name: "robots", content: "noindex, nofollow" }] }),
   component: LoginPage,
 });
 
 function LoginPage() {
   const navigate = useNavigate();
+  const router = useRouter();
+  const { session } = Route.useRouteContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +32,7 @@ function LoginPage() {
         setBusy(false);
         return;
       }
-      await navigate({ to: "/auth/security" });
+      await navigate({ to: result.pendingApproval ? "/staff" : "/auth/security" });
     } catch {
       setError("Login failed. Please try again.");
       setBusy(false);
@@ -46,6 +52,12 @@ function LoginPage() {
           </h1>
         </div>
 
+        {session.userId && !session.staffRole && <section role="status" className="mb-6 border border-rule rounded-md p-4 space-y-3 text-sm">
+          <h2 className="font-medium">Your account is ready. Staff approval is required.</h2>
+          <p>{session.email} has no active staff membership. Ask the account owner to approve your administrator or consultant role, then complete authenticator verification.</p>
+          <p>Creating an account does not grant access to candidate records or administrative tools.</p>
+          <Button variant="outline" onClick={() => void router.invalidate()}>Check access again</Button>
+        </section>}
         <form onSubmit={onSubmit} className="space-y-4">
           <div><label htmlFor="staff-email" className="block text-sm mb-2">Staff email</label>
             <input id="staff-email" type="email" autoComplete="username" required autoFocus value={email} onChange={e => setEmail(e.target.value)} placeholder="Staff email" className="w-full border border-rule rounded px-4 py-2.5" />
