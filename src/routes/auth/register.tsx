@@ -39,12 +39,11 @@ function RegisterPage() {
     }
     setLoading(true);
     try {
-      const result = await candidateRegisterFn({ data: { email: form.email, password: form.password, name: form.name } });
+      const result = await candidateRegisterFn({ data: { email: form.email, password: form.password, name: form.name, staffIntent: !!staff } });
       if (result.needsConfirmation) {
         setSuccess(true);
       } else {
-        await router.invalidate();
-        await router.navigate({ href: staff ? "/admin/login" : "/app" });
+        await router.navigate({ href: staff ? "/staff" : "/app" });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed. Please try again.");

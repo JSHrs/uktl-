@@ -41,9 +41,9 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --font-display: "Geist", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-body: "Geist", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  --font-mono: var(--font-body);
 
   --ease-publication: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-smooth: cubic-bezier(0.65, 0, 0.35, 1);
@@ -386,4 +386,21 @@
   .word > span { transform: none; }
   .route-path { stroke-dashoffset: 0; }
   .route-node { opacity: 1; }
+}
+
+/* One native type system across names, headings, navigation and controls. */
+html { overflow-x: clip; overscroll-behavior-x: none; }
+body { margin: 0; width: 100%; overflow-x: clip; }
+button, input, select, textarea { font-family: inherit; }
+.font-display, .font-display-soft { font-family: var(--font-body); font-variation-settings: normal !important; }
+h1, h2, h3 { line-height: 1.2; text-wrap: balance; overflow-wrap: anywhere; }
+h1 em, h2 em, h3 em, .font-display em { font: inherit; color: inherit; }
+main, section, article, .grid > * { min-width: 0; }
+img, video, canvas { max-width: 100%; }
+input, select, textarea { max-width: 100%; }
+@media (max-width: 767px) {
+  input, select, textarea { font-size: 16px; }
+  main { width: 100%; }
+  h1 { font-size: clamp(1.75rem, 7vw, 2.25rem) !important; }
+  h2 { font-size: clamp(1.25rem, 5vw, 1.75rem); }
 }

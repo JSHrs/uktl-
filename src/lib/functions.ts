@@ -111,6 +111,8 @@ export const getSessionFn = createServerFn({ method: "GET" }).handler(async () =
     isAdmin: hasStaffAccess(access, true),
     staffRole: access.role,
     accountRole,
+    displayName: typeof authenticated?.user.user_metadata?.name === "string" ? authenticated.user.user_metadata.name : null,
+    staffRequested: authenticated?.user.user_metadata?.account_intent === "staff",
   };
 });
 
@@ -630,6 +632,7 @@ export const candidateRegisterFn = createServerFn({ method: "POST" })
       email: z.string().email(),
       password: z.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH),
       name: z.string().min(1),
+      staffIntent: z.boolean().optional(),
     }).parse(raw),
   )
   .handler(async ({ data }) => {
@@ -646,7 +649,7 @@ export const candidateRegisterFn = createServerFn({ method: "POST" })
       email: data.email,
       password: data.password,
       email_confirm: true,
-      user_metadata: { name: data.name },
+      user_metadata: { name: data.name, account_intent: data.staffIntent ? "staff" : "candidate" },
     });
     if (createError) {
       const msg = /already|registered|exists/i.test(createError.message)
@@ -682,7 +685,7 @@ export const candidateLoginFn = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     await setSessionCookies(authData.session.access_token, authData.session.refresh_token, authData.session.expires_in);
     const [access, accountRole] = await Promise.all([readStaffAccess(client), readAccountRole(client, authData.user.id)]);
-    return { userId: authData.user.id, email: authData.user.email, staffRole: access.role, isStaff: hasStaffAccess(access), accountRole };
+    return { userId: authData.user.id, email: authData.user.email, staffRole: access.role, isStaff: hasStaffAccess(access), accountRole, staffRequested: authData.user.user_metadata?.account_intent === "staff" };
   });
 
 export const candidateLogoutFn = createServerFn({ method: "POST" }).handler(async () => {

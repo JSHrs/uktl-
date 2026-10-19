@@ -33,7 +33,6 @@ function LoginPage() {
     try {
       const result = await candidateLoginFn({ data: { email, password } });
       toast.success(`Signed in as ${result.email ?? email}`);
-      await router.invalidate();
       await router.navigate({ href: accountDestination(result, safeRedirect(search.redirect)) });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed. Please try again.");

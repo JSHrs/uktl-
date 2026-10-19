@@ -29,3 +29,13 @@ The repo config points to Supabase `jwfycrmrgwslxyxvirfn`. The connected Supabas
 ## Validation
 
 Twenty targeted account-routing, session-security, staff-access and simulation tests passed. TypeScript (`tsc --noEmit`) and the production build (`npm run build`) passed. Added two browser regression scenarios for completed onboarding, expanded match/interest actions and editable admin results. Both were blocked at browser launch because Chromium was absent; Playwright browser installation returned invalid ZIP archives. No browser interaction or screenshot result is claimed. Live account membership and login/navigation timings remain unverified.
+
+## Follow-up — staff routing, responsiveness and native typography
+
+Vercel's production SUPABASE_URL was read directly and confirmed as `fvkffdeindboirukscfq`, matching the connected project. The public repository .env points elsewhere, but the server environment takes precedence. The earlier backend-access uncertainty is resolved. A focused lookup found `jesseharrisode@gmail.com` and no `jessejnode85@gmail.com`; neither address had a staff membership row. No identity or membership was created or elevated.
+
+Staff-intent registration now persists an onboarding preference in user metadata and routes to a dedicated `/staff` onboarding dashboard. Subsequent login and direct candidate-dashboard entry respect that intent. This metadata never grants authority: approved database membership plus MFA still govern the actual admin/consultant workspace. Existing users without that preference retain their current role routing.
+
+Session verification and candidate-session checks now use request-keyed promise caches, eliminating duplicate checks inside one request without sharing identities across requests. Cookie changes invalidate them; in-request token refresh retains the verified in-flight result. Sign-in no longer invalidates the login route before navigating and repeating the same root session check. Vercel functions are configured for Dublin, alongside the confirmed Ireland database, rather than the previous US region.
+
+All application typography uses the native Apple/system sans-serif stack. External font downloads, decorative heading italics and variable display styling are removed. Header action rows wrap/stack, grid children can shrink, media fit their container, page-level horizontal overflow is clipped, and mobile inputs use 16px text to avoid focus zoom. Mobile visual acceptance still needs browser evidence; clipping alone is not proof that every layout fits.

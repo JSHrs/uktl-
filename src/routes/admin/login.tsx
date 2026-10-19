@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/admin/login")({
   beforeLoad: ({ context }) => {
+    if (context.session.staffRequested && !context.session.staffRole) throw redirect({ href: "/staff" });
     if (context.session.staffRole) throw redirect({ href: context.session.isStaff ? (context.session.staffRole === "admin" ? "/admin" : "/admin/candidates") : "/auth/security" });
   },
   head: () => ({ meta: [{ title: "Staff sign in — UK Talent Link" }, { name: "description", content: "Secure access for UK Talent Link staff." }, { property: "og:title", content: "Staff sign in — UK Talent Link" }, { property: "og:description", content: "Access your recruitment operations workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { name: "robots", content: "noindex, nofollow" }] }),
@@ -31,7 +32,6 @@ function LoginPage() {
         setBusy(false);
         return;
       }
-      await router.invalidate();
       await navigate({ to: "/auth/security" });
     } catch {
       setError("Login failed. Please try again.");

@@ -27,7 +27,7 @@ function NotFoundComponent() {
   );
 }
 
-export type Session = { userId: string | null; email: string | null; isStaff: boolean; isAdmin: boolean; staffRole?: "admin" | "consultant" | null; accountRole?: "candidate" | "employer" };
+export type Session = { userId: string | null; email: string | null; isStaff: boolean; isAdmin: boolean; staffRequested?: boolean; displayName?: string | null; staffRole?: "admin" | "consultant" | null; accountRole?: "candidate" | "employer" };
 
 const SIGNED_OUT: Session = { userId: null, email: null, isStaff: false, isAdmin: false };
 
@@ -48,12 +48,6 @@ export const Route = createRootRoute({
       { name: "twitter:site", content: "@uktalentlink" },
     ],
     links: [
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap",
-      },
       {
         rel: "stylesheet",
         href: appCss,
