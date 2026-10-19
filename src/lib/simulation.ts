@@ -5,7 +5,11 @@ export const simulationIdentity = (role: SimulationRole) => role === "admin"
 export const setupSteps = ["Your profile", "CV assessment", "Career preferences", "Ready to match"] as const;
 export function nextSetupStep(step: number) { return Math.min(3, step + 1); }
 export function simulationViews(role: SimulationRole) {
-  return role === "admin" ? ["dashboard", "candidates", "mandates", "topics", "settings"] : ["dashboard", "cv", "matches", "topics", "settings"];
+  return role === "admin" ? ["dashboard", "topics", "hr", "mandates", "candidates", "bookings", "enquiries", "campaigns", "calendar", "analytics", "processing", "operations", "settings"] : ["dashboard", "cv", "matches", "topics", "settings"];
+}
+export const simulationStages = ["Matched", "Screening", "Shortlisted", "Interviewing", "Offered", "Placed", "Rejected"] as const;
+export function simulateMandateStatus(status: string, action: "close" | "fill" | "reopen") {
+  return action === "reopen" ? "open" : action === "fill" ? "filled" : status === "filled" ? "filled" : "closed";
 }
 export const sampleTopics = [
   { id: "rights", title: "Your rights at work", category: "Employment law", duration: "4:20", video: true, body: "A sample overview of contracts, working time and workplace rights. Guidance depends on your circumstances; consult a qualified adviser for individual advice." },
