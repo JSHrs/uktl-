@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { SocialSignIn } from "@/components/app/SocialSignIn";
-import { oauthProvidersFn } from "@/lib/oauth-functions";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -14,13 +12,11 @@ export const Route = createFileRoute("/auth/login")({
   beforeLoad: ({ context, search }) => {
     if (context.session.userId) throw redirect({ href: accountDestination(context.session, safeRedirect(search.redirect)) });
   },
-  loader: () => oauthProvidersFn(),
   head: () => ({ meta: [{ title: "Sign in — Talent Compass" }, { name: "description", content: "Sign in to your UK Talent Link career workspace." }, { property: "og:title", content: "Sign in — Talent Compass" }, { property: "og:description", content: "Access your career profile and recruitment workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: LoginPage,
 });
 
 function LoginPage() {
-  const providers = Route.useLoaderData();
   const router = useRouter();
   const search = Route.useSearch();
   const [email, setEmail] = useState("");
@@ -58,10 +54,6 @@ function LoginPage() {
         >
           Sign in
         </h1>
-      </div>
-
-      <div className="mb-5">
-        <SocialSignIn providers={providers} redirect={search.redirect} mode="login" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
