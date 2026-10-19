@@ -10,14 +10,10 @@ The repository implements candidate CV processing, profile/assessment/history, m
 
 - Staff-labelled registration creates an ordinary account and previously redirected everyone to `/app`. It does not approve staff membership. Registration now respects existing verified roles and sends unapproved staff-intent users to a clear approval screen with an access recheck. MFA and server-side role checks remain mandatory. No named account has been elevated.
 - Session and viewer resolution created separate authenticated clients for sequential staff/account-role reads. They now share one client and run the independent role reads concurrently. Admin navigation reuses the root's verified session instead of making an additional staff-session round trip. No cross-user or persistent authorization cache was introduced. Root role-service failures now surface as errors instead of silently looking like signed-out users. Pending navigation receives visible feedback.
-- The decorative Fraunces display family was replaced with Geist for clearer, consistent text. A screenshot comparison is still required before accepting the visual result.
+- The decorative Fraunces display family was replaced with native system sans-serif for clearer, consistent text. A screenshot comparison is still required before accepting the visual result.
 - Candidate preview now opens with completed setup and assessment. Onboarding can be replayed. Job cards expand to evidence, gaps and reversible local interest actions. Admin mock actions expose editable result previews and session activity; analytics can open candidate outcomes, and queue/booking attention labels reflect local actions.
 - Previews remain fictional, browser-memory-only; no recruitment API call, invitation, email or real application is made by these actions. Video content remains explicitly a placeholder, not a playable final media asset.
 - Existing `npm ci` failed because package.json and package-lock.json disagreed, including Lovable config and TanStack versions. Reconciled the lockfile with `npm install`; installation completed successfully.
-
-## Identity and backend limitation
-
-The repo config points to Supabase `jwfycrmrgwslxyxvirfn`. The connected Supabase tool exposes UKTL `fvkffdeindboirukscfq`. They must not be treated as interchangeable or changed speculatively. The deployed server environment and the membership of `jessejnode85@gmail.com` have not been verified. Need the correct project's access to inspect the existing identity and approved membership; no password reset or privilege change is necessary for the code fix.
 
 ## Next development stages
 
@@ -32,7 +28,7 @@ Twenty targeted account-routing, session-security, staff-access and simulation t
 
 ## Follow-up — staff routing, responsiveness and native typography
 
-Vercel's production SUPABASE_URL was read directly and confirmed as `fvkffdeindboirukscfq`, matching the connected project. The public repository .env points elsewhere, but the server environment takes precedence. The earlier backend-access uncertainty is resolved. A focused lookup found `jesseharrisode@gmail.com` and no `jessejnode85@gmail.com`; neither address had a staff membership row. No identity or membership was created or elevated.
+Backend configuration was checked separately. Account-specific findings are excluded from this repository report.
 
 Staff-intent registration now persists an onboarding preference in user metadata and routes to a dedicated `/staff` onboarding dashboard. Subsequent login and direct candidate-dashboard entry respect that intent. This metadata never grants authority: approved database membership plus MFA still govern the actual admin/consultant workspace. Existing users without that preference retain their current role routing.
 

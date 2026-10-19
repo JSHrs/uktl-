@@ -419,12 +419,12 @@ export const adminLoginFn = createServerFn({ method: "POST" })
     if (error || !signed.session) return { ok: false as const, error: "Invalid staff credentials" };
     const verified = await client.auth.getUser(signed.session.access_token);
     const access = verified.data.user?.email_confirmed_at ? await readStaffAccess(client) : null;
-    if (!access?.role) {
+    if (!access?.role && verified.data.user?.user_metadata?.account_intent !== "staff") {
       await client.auth.signOut({ scope: "local" });
       return { ok: false as const, error: "Invalid staff credentials" };
     }
     await setSessionCookies(signed.session.access_token, signed.session.refresh_token, signed.session.expires_in);
-    return { ok: true as const };
+    return { ok: true as const, pendingApproval: !access?.role };
   });
 export const adminSessionFn = createServerFn({ method: "GET" }).handler(async () => {
   const access = await getStaffAccess();

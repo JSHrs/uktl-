@@ -32,7 +32,7 @@ function LoginPage() {
         setBusy(false);
         return;
       }
-      await navigate({ to: "/auth/security" });
+      await navigate({ to: result.pendingApproval ? "/staff" : "/auth/security" });
     } catch {
       setError("Login failed. Please try again.");
       setBusy(false);
