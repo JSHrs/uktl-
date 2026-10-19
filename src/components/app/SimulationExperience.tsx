@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Check, ChevronRight, FileText, LayoutDashboard, 
 import { Button } from "@/components/ui/button";
 import { nextSetupStep, sampleTopics, setupSteps, simulationIdentity, simulationViews, type SimulationRole } from "@/lib/simulation";
 import topicImage from "@/assets/approach-01.jpg";
+import { AdminSimulationWorkspace } from "@/components/app/AdminSimulationWorkspace";
 
 const fieldClass = "w-full min-w-0 rounded-md border border-rule bg-paper px-3 py-2.5 text-sm text-ink focus:outline-accent";
 const navItems = [
@@ -50,6 +51,9 @@ export function SimulationExperience({ initialRole, initialView = "dashboard" }:
   const topics = sampleTopics.filter(t => (category === "All topics" || t.category === category) && `${t.title} ${t.category}`.toLowerCase().includes(query.toLowerCase()));
   function changeView(id: string) { setView(id); setOpen(false); setTopicId(null); setNotice(""); }
   function switchRole(next: SimulationRole) { setRole(next); changeView("dashboard"); setSignedOut(false); }
+
+  const adminWorkspace = role === "admin" ? <AdminSimulationWorkspace initialView={view} onCandidate={() => switchRole("candidate")} /> : null;
+  if (adminWorkspace) return adminWorkspace;
 
   if (signedOut) return <div className="min-h-screen bg-paper text-ink grid place-items-center px-5"><section className="max-w-md w-full space-y-6"><Link to="/" className="inline-flex items-center gap-2 text-sm"><ArrowLeft size={16} /> Back to UK Talent Link</Link><p className="font-mono text-xs uppercase text-ink-mute">Talent Compass · Simulation</p><h1 className="font-display text-4xl">You're signed out.</h1><p className="text-sm text-ink-soft">No real account session has changed.</p><Button className="w-full" onClick={() => setSignedOut(false)}>Return to {role === "admin" ? "admin" : "candidate"} preview <ArrowRight /></Button><Button variant="outline" className="w-full" onClick={() => switchRole(role === "admin" ? "candidate" : "admin")}>Open {role === "admin" ? "candidate" : "admin"} preview</Button></section></div>;
 

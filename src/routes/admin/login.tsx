@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { adminLoginFn } from "@/lib/functions";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/admin/login")({
   head: () => ({ meta: [{ title: "Staff sign in — UK Talent Link" }, { name: "description", content: "Secure access for UK Talent Link staff." }, { property: "og:title", content: "Staff sign in — UK Talent Link" }, { property: "og:description", content: "Access your recruitment operations workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }, { name: "robots", content: "noindex, nofollow" }] }),
@@ -80,6 +81,7 @@ function LoginPage() {
           </button>
         </form>
 
+        <Button asChild variant="outline" className="w-full mt-5"><Link to="/auth/register" search={{ staff: true }}>Create a staff account</Link></Button>
         <Link to="/simulation" search={{ role: "admin" }} className="block mt-6 text-center text-sm underline">Open prebuilt admin preview →</Link>
         <p className="mt-6 text-xs text-ink-mute text-center">
           Staff accounts are invitation-only. Ask your administrator for access.

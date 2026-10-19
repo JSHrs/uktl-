@@ -1,21 +1,19 @@
 import { useState } from "react";
-import { SocialSignIn } from "@/components/app/SocialSignIn";
-import { oauthProvidersFn } from "@/lib/oauth-functions";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { candidateRegisterFn } from "@/lib/functions";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 
 export const Route = createFileRoute("/auth/register")({
+  validateSearch: (search): { staff?: boolean } => ({ staff: search.staff === true || search.staff === "true" ? true : undefined }),
   beforeLoad: ({ context }) => {
     if (context.session.userId) throw redirect({ to: "/app" });
   },
-  loader: () => oauthProvidersFn(),
   head: () => ({ meta: [{ title: "Create your account — Talent Compass" }, { name: "description", content: "Join Talent Compass and start your guided career profile." }, { property: "og:title", content: "Create your account — Talent Compass" }, { property: "og:description", content: "Join UK Talent Link and build your career profile." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: RegisterPage,
 });
 
 function RegisterPage() {
-  const providers = Route.useLoaderData();
+  const { staff } = Route.useSearch();
   const router = useRouter();
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [error, setError] = useState<string | null>(null);
@@ -79,23 +77,20 @@ function RegisterPage() {
     <div className="w-full max-w-[400px]">
       <div className="mb-8 text-center">
         <div className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-mute mb-3">
-          — Candidates
+          {staff ? "— UK Talent Link staff" : "— Candidates"}
         </div>
         <h1
           className="font-display font-light tracking-[-0.025em]"
           style={{ fontSize: "clamp(28px, 4vw, 36px)", fontVariationSettings: '"opsz" 144, "SOFT" 50' }}
         >
-          Create your account
+          {staff ? "Create a staff account" : "Create your account"}
         </h1>
         <p className="text-sm text-ink-soft mt-2">
-          Then upload your CV — we'll score it and match you to the roles we're recruiting for.
+          {staff ? "Create your account first. Your administrator must approve staff access before you can use the admin workspace; security verification is required." : "Then upload your CV — we'll score it and match you to the roles we're recruiting for."}
         </p>
       </div>
 
       <p className="text-xs text-ink-soft my-4">Before creating an account, read <Link to="/privacy" className="underline">how your information is used</Link> and <Link to="/terms" className="underline">using Talent Compass</Link>.</p>
-      <div className="mb-5">
-        <SocialSignIn providers={providers} redirect={"/app"} mode="register" />
-      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -179,10 +174,10 @@ function RegisterPage() {
         </p>
       </form>
 
-      <Link to="/simulation" search={{ role: "candidate" }} className="block mt-6 text-center text-sm underline">Try the prebuilt candidate experience →</Link>
+      <Link to="/simulation" search={{ role: staff ? "admin" : "candidate" }} className="block mt-6 text-center text-sm underline">{staff ? "Preview the admin workspace →" : "Try the prebuilt candidate experience →"}</Link>
       <div className="mt-6 text-center text-sm text-ink-mute">
         Already have an account?{" "}
-        <Link to="/auth/login" className="text-ink underline">
+        <Link to={staff ? "/admin/login" : "/auth/login"} className="text-ink underline">
           Sign in
         </Link>
       </div>
