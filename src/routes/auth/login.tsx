@@ -57,9 +57,6 @@ function LoginPage() {
         >
           Sign in
         </h1>
-        <p className="text-sm text-ink-soft mt-2">
-          Sign in to your candidate, employer or staff account. Staff verify their authenticator next.
-        </p>
       </div>
 
       <div className="mb-5">
@@ -112,23 +109,20 @@ function LoginPage() {
           {loading ? "Signing in…" : "Sign in"}
         </button>
       </form>
-      <button type="button" disabled={loading || !email} onClick={magicLink} className="w-full min-h-11 mt-3 border border-rule rounded-md p-3 text-sm disabled:opacity-50">Email me a sign-in link</button>
       {linkSent && <p role="status" className="mt-3 text-sm">If this email has an account, check your inbox for a sign-in link.</p>}
 
-      <div className="mt-6 text-center space-y-3">
+      <div className="mt-6 text-center space-y-3 text-sm text-ink-mute">
         <div>
-          <Link
-            to="/auth/forgot"
-            className="text-sm text-ink-mute hover:text-ink transition-colors underline"
-          >
-            Forgot your password?
-          </Link>
+          <Link to="/auth/forgot" className="hover:text-ink underline">Forgot password?</Link>
+          {" · "}
+          <button type="button" disabled={loading || !email} onClick={magicLink} className="hover:text-ink underline disabled:opacity-50 disabled:no-underline">Email me a link</button>
         </div>
-        <div className="text-sm text-ink-mute">
+        <div>
           No account?{" "}
-          <Link to="/auth/register" className="text-ink underline">
-            Register now
-          </Link>
+          <Link to="/auth/register" className="text-ink underline">Register</Link>
+        </div>
+        <div className="pt-3 border-t border-rule">
+          <Link to="/admin/login" className="hover:text-ink underline">Staff / admin sign in</Link>
         </div>
       </div>
     </div>
