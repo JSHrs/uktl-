@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 test('completed candidate preview expands a role and records local interest', async ({ page }) => {
   await page.goto('/simulation?role=candidate');
   await expect(page.getByText('4 of 4 complete')).toBeVisible();

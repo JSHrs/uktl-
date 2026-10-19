@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { oauthStartFn } from "@/lib/oauth-functions";
+import { oauthStartFn, oauthProvidersFn } from "@/lib/oauth-functions";
 
 type Provider = "google" | "apple";
 
@@ -29,14 +29,17 @@ function AppleMark() {
  * Google and Apple sign-in. Both buttons always show (owner's decision); one that
  * is not yet switched on in Supabase Auth explains that instead of failing.
  */
-export function SocialSignIn({ providers, redirect, mode }: { providers: Provider[]; redirect?: string; mode: "login" | "register" }) {
+export function SocialSignIn({ providers, redirect, mode }: { providers?: Provider[]; redirect?: string; mode: "login" | "register" }) {
   const [busy, setBusy] = useState<Provider | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   async function start(provider: Provider) {
     setNotice(null);
-    if (!providers.includes(provider)) {
+    setBusy(provider);
+    const available = providers ?? await oauthProvidersFn();
+    if (!available.includes(provider)) {
+      setBusy(null);
       setError(null);
       setNotice(
         `${provider === "apple" ? "Apple" : "Google"} sign-in is being switched on. Please use your email below for now.`,

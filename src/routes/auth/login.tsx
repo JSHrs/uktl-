@@ -1,3 +1,4 @@
+import { SocialSignIn } from "@/components/app/SocialSignIn";
 import { useState } from "react";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -55,6 +56,8 @@ function LoginPage() {
         </h1>
       </div>
 
+      <SocialSignIn mode="login" redirect={safeRedirect(search.redirect)} />
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="login-email" className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5">
@@ -108,7 +111,7 @@ function LoginPage() {
         <div>
           <Link to="/auth/forgot" className="hover:text-ink underline">Forgot password?</Link>
           {" · "}
-          <button type="button" disabled={loading || !email} onClick={magicLink} className="hover:text-ink underline disabled:opacity-50 disabled:no-underline">Email me a link</button>
+          <button type="button" disabled={loading || !email} onClick={magicLink} className="hover:text-ink underline disabled:opacity-50 disabled:no-underline">Email me a sign-in link</button>
         </div>
         <div>
           No account?{" "}

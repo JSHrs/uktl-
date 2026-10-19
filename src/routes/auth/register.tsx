@@ -1,3 +1,4 @@
+import { SocialSignIn } from "@/components/app/SocialSignIn";
 import { useState } from "react";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { registrationDestination } from "@/lib/account-role";
@@ -91,6 +92,8 @@ function RegisterPage() {
       </div>
 
       <p className="text-xs text-ink-soft my-4">Before creating an account, read <Link to="/privacy" className="underline">how your information is used</Link> and <Link to="/terms" className="underline">using Talent Compass</Link>.</p>
+
+      {!staff && <SocialSignIn mode="register" />}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
