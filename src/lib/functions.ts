@@ -98,9 +98,12 @@ export const getViewerFn = createServerFn({ method: "GET" }).handler(async () =>
 export const getSessionFn = createServerFn({ method: "GET" }).handler(async () => {
   const { getCandidateSession } = await import("./supabase");
   const user = await getCandidateSession();
-  const access = user.userId ? await getStaffAccess() : NO_STAFF_ACCESS;
   const { getAuthenticatedSupabase } = await import("./supabase");
-  const accountRole = user.userId ? await readAccountRole((await getAuthenticatedSupabase()).client, user.userId) : "candidate" as const;
+  // Reuse one verified client; role checks are independent network requests.
+  const authenticated = user.userId ? await getAuthenticatedSupabase() : null;
+  const [access, accountRole] = authenticated
+    ? await Promise.all([readStaffAccess(authenticated.client), readAccountRole(authenticated.client, user.userId!)])
+    : [NO_STAFF_ACCESS, "candidate" as const];
   return {
     userId: user.userId,
     email: user.email,
@@ -678,8 +681,7 @@ export const candidateLoginFn = createServerFn({ method: "POST" })
     const { data: authData, error } = await client.auth.signInWithPassword({ email: data.email, password: data.password });
     if (error) throw new Error(error.message);
     await setSessionCookies(authData.session.access_token, authData.session.refresh_token, authData.session.expires_in);
-    const access = await readStaffAccess(client);
-    const accountRole = await readAccountRole(client, authData.user.id);
+    const [access, accountRole] = await Promise.all([readStaffAccess(client), readAccountRole(client, authData.user.id)]);
     return { userId: authData.user.id, email: authData.user.email, staffRole: access.role, isStaff: hasStaffAccess(access), accountRole };
   });
 

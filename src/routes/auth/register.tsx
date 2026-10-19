@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
+import { registrationDestination } from "@/lib/account-role";
 import { candidateRegisterFn } from "@/lib/functions";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 
 export const Route = createFileRoute("/auth/register")({
   validateSearch: (search): { staff?: boolean } => ({ staff: search.staff === true || search.staff === "true" ? true : undefined }),
-  beforeLoad: ({ context }) => {
-    if (context.session.userId) throw redirect({ to: "/app" });
+  beforeLoad: ({ context, search }) => {
+    if (context.session.userId) throw redirect({ href: registrationDestination(context.session, search.staff) });
   },
   head: () => ({ meta: [{ title: "Create your account — Talent Compass" }, { name: "description", content: "Join Talent Compass and start your guided career profile." }, { property: "og:title", content: "Create your account — Talent Compass" }, { property: "og:description", content: "Join UK Talent Link and build your career profile." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: RegisterPage,
@@ -43,7 +44,7 @@ function RegisterPage() {
         setSuccess(true);
       } else {
         await router.invalidate();
-        await router.navigate({ to: "/app" });
+        await router.navigate({ href: staff ? "/admin/login" : "/app" });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed. Please try again.");

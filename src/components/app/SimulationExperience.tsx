@@ -33,9 +33,9 @@ export function SimulationExperience({ initialRole, initialView = "dashboard" }:
   const [open, setOpen] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
   const [step, setStep] = useState(0);
-  const [setupDone, setSetupDone] = useState(false);
+  const [setupDone, setSetupDone] = useState(true);
   const [profile, setProfile] = useState({ name: "Jesse Harris", location: "London", phone: "", sector: "Project management", region: "United Kingdom" });
-  const [assessed, setAssessed] = useState(initialView === "cv");
+  const [assessed, setAssessed] = useState(true);
   const [cvOpen, setCvOpen] = useState(false);
   const [savedJobs, setSavedJobs] = useState<string[]>([]);
   const [candidates, setCandidates] = useState(initialCandidates);
@@ -79,7 +79,7 @@ export function SimulationExperience({ initialRole, initialView = "dashboard" }:
           {step === 3 && <p className="text-sm text-ink-soft">Your example profile is ready, your sample CV scores 82/100, and three example roles are waiting.</p>}
           <div className="flex gap-3">{step > 0 && <Button variant="outline" type="button" onClick={() => setStep(step - 1)}><ArrowLeft />Back</Button>}<Button type="submit">{step === 3 ? "Finish setup" : step === 1 ? "Assess sample CV" : "Continue"}<ArrowRight /></Button></div>
         </form>}
-        {setupDone && <Button onClick={() => changeView("matches")}>View job matches <ArrowRight /></Button>}</section>
+        {setupDone && <div className="flex flex-wrap gap-3"><Button onClick={() => changeView("matches")}>View job matches <ArrowRight /></Button><Button variant="outline" onClick={() => { setSetupDone(false); setStep(0); }}>Replay onboarding</Button></div>}</section>
         <div className="grid sm:grid-cols-3 gap-4"><Metric label="CV quality" value={assessed ? "82 / 100" : "Ready to assess"} /><Metric label="Example matches" value="3" /><Metric label="Saved roles" value={String(savedJobs.length)} /></div>
         <section className="mt-8"><div className="flex justify-between items-center"><h2 className="font-display text-2xl">Your strongest match</h2><Button variant="link" onClick={() => changeView("matches")}>All matches <ArrowRight /></Button></div><JobRow job={jobs[0]} saved={savedJobs.includes(jobs[0].title)} onSave={() => setSavedJobs(prev => prev.includes(jobs[0].title) ? prev.filter(t => t !== jobs[0].title) : [...prev, jobs[0].title])} /></section>
       </>}
@@ -101,5 +101,10 @@ export function SimulationExperience({ initialRole, initialView = "dashboard" }:
 }
 
 function Metric({ label, value }: { label: string; value: string }) { return <div className="border border-rule rounded-md p-5"><p className="text-xs text-ink-mute">{label}</p><p className="font-display text-3xl mt-3">{value}</p></div>; }
-function JobRow({ job, saved, onSave }: { job: typeof jobs[number]; saved: boolean; onSave: () => void }) { return <article className="py-6 flex flex-wrap items-center justify-between gap-4"><div><p className="text-xs text-accent mb-2">{job.score}% sample match</p><h3 className="font-display text-2xl">{job.title}</h3><p className="text-sm text-ink-soft mt-2">{job.company} · {job.location}</p></div><Button variant={saved ? "secondary" : "outline"} onClick={onSave}>{saved ? <Check /> : <Briefcase />}{saved ? "Saved" : "Save role"}</Button></article>; }
+function JobRow({ job, saved, onSave }: { job: typeof jobs[number]; saved: boolean; onSave: () => void }) {
+  const [interested, setInterested] = useState(false);
+  return <article className="py-6 space-y-4"><div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-xs text-accent mb-2">{job.score}% sample match</p><h3 className="font-display text-2xl">{job.title}</h3><p className="text-sm text-ink-soft mt-2">{job.company} · {job.location}</p></div><Button variant={saved ? "secondary" : "outline"} onClick={onSave}>{saved ? <Check /> : <Briefcase />}{saved ? "Saved" : "Save role"}</Button></div>
+    <details className="border border-rule rounded-md p-4"><summary className="cursor-pointer text-sm font-medium">Explore role, match evidence and next steps</summary><div className="space-y-4 mt-4 text-sm"><p>Lead project delivery, manage budgets and coordinate stakeholders. This fictional role illustrates the completed recruitment journey.</p><dl className="space-y-2"><div><dt className="font-medium">Evidence from the sample CV</dt><dd>Eight years in delivery, a £2m programme and leadership of 12 people.</dd></div><div><dt className="font-medium">What needs checking</dt><dd>Availability, work authorisation and sector-specific experience require confirmation.</dd></div></dl><Button variant="outline" onClick={() => setInterested(!interested)}>{interested ? "Withdraw sample interest" : "Express sample interest"}</Button><p role="status">{interested ? "Interest recorded in this preview. Next: consultant review, shortlist, interview and outcome. No application was sent." : "No interest recorded. Saving a role does not submit an application."}</p></div></details>
+  </article>;
+}
 function CandidateTable({ candidates, onStage }: { candidates: typeof initialCandidates; onStage: (name: string, stage: string) => void }) { return <div className="overflow-x-auto border-y border-rule"><table className="w-full text-sm text-left"><thead><tr className="text-ink-mute border-b border-rule"><th className="py-3 font-normal">Candidate</th><th className="py-3 px-4 font-normal">CV score</th><th className="py-3 font-normal">Pipeline stage</th></tr></thead><tbody>{candidates.map(c => <tr key={c.name} className="border-b border-rule"><td className="py-4 pr-4"><p className="font-medium">{c.name}</p><p className="text-xs text-ink-soft mt-1">{c.title}</p></td><td className="px-4 text-accent">{c.score}/100</td><td className="py-4"><select aria-label={`Stage for ${c.name}`} className="border border-rule bg-paper rounded-md p-2 text-sm" value={c.stage} onChange={e => onStage(c.name, e.target.value)}>{["New", "Shortlisted", "Interview", "Placed"].map(s => <option key={s}>{s}</option>)}</select></td></tr>)}</tbody></table>{candidates.length === 0 && <p className="py-6 text-sm">No matching candidates.</p>}</div>; }

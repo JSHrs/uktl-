@@ -41,7 +41,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --font-display: "Fraunces", "Times New Roman", serif;
+  --font-display: "Geist", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-body: "Geist", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, monospace;
 
