@@ -26,15 +26,15 @@ const jobs = [
   { title: "Operations Manager", company: "Example services firm", location: "Riyadh · On-site", score: 78 },
 ];
 
-export function SimulationExperience({ initialRole }: { initialRole: SimulationRole }) {
+export function SimulationExperience({ initialRole, initialView = "dashboard" }: { initialRole: SimulationRole; initialView?: string }) {
   const [role, setRole] = useState(initialRole);
-  const [view, setView] = useState("dashboard");
+  const [view, setView] = useState(simulationViews(initialRole).includes(initialView) ? initialView : "dashboard");
   const [open, setOpen] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
   const [step, setStep] = useState(0);
   const [setupDone, setSetupDone] = useState(false);
   const [profile, setProfile] = useState({ name: "Jesse Harris", location: "London", phone: "", sector: "Project management", region: "United Kingdom" });
-  const [assessed, setAssessed] = useState(false);
+  const [assessed, setAssessed] = useState(initialView === "cv");
   const [cvOpen, setCvOpen] = useState(false);
   const [savedJobs, setSavedJobs] = useState<string[]>([]);
   const [candidates, setCandidates] = useState(initialCandidates);

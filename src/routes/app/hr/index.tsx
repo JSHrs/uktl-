@@ -61,6 +61,7 @@ function HrIndexPage() {
       />
 
       {/* Legal disclaimer */}
+      <Link to="/simulation" search={{ role: "candidate", view: "topics" }} className="inline-flex mb-6 text-sm underline">Open sample topics & video placeholders →</Link>
       <div className="max-w-[720px] mb-8 border border-rule bg-paper-deep/60 rounded-md px-5 py-3.5 flex gap-3 items-start">
         <span className="text-ink-mute mt-0.5 flex-shrink-0 font-mono text-xs">ℹ</span>
         <p className="text-sm text-ink-mute leading-relaxed">

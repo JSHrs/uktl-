@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { SimulationExperience } from "@/components/app/SimulationExperience";
 
 export const Route = createFileRoute("/simulation")({
-  validateSearch: (search): { role: "candidate" | "admin" } => ({ role: search.role === "admin" ? "admin" : "candidate" }),
+  validateSearch: (search): { role: "candidate" | "admin"; view?: string } => ({ role: search.role === "admin" ? "admin" : "candidate", view: typeof search.view === "string" ? search.view : undefined }),
   head: () => ({ meta: [
     { title: "Talent Compass — Candidate & Admin Simulation" },
     { name: "description", content: "Explore the Talent Compass candidate and admin sample workspaces, CV assessment and HR knowledge library." },
@@ -14,4 +14,4 @@ export const Route = createFileRoute("/simulation")({
   ] }),
   component: SimulationPage,
 });
-function SimulationPage() { const { role } = Route.useSearch(); return <SimulationExperience initialRole={role} />; }
+function SimulationPage() { const { role, view } = Route.useSearch(); return <SimulationExperience initialRole={role} initialView={view} />; }
