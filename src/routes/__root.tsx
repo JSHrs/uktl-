@@ -1,5 +1,6 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Toaster } from "sonner";
 import { getSessionFn } from "@/lib/functions";
 
@@ -73,7 +74,13 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function SessionQueries({children}:{children:React.ReactNode}) {
+  const [client]=useState(()=>new QueryClient({defaultOptions:{queries:{retry:false,staleTime:0,gcTime:60000}}}));
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+}
+
 function RootComponent() {
+  const {session}=Route.useRouteContext();
   // Marks the document once React has taken over; e2e tests wait for it before interacting.
   useEffect(() => {
     document.documentElement.dataset.hydrated = "true";
@@ -81,7 +88,7 @@ function RootComponent() {
 
   return (
     <>
-      <Outlet />
+      <SessionQueries key={session.userId??"anonymous"}><Outlet /></SessionQueries>
       <Toaster
         position="bottom-right"
         offset={20}

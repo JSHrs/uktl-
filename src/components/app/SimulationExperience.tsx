@@ -1,3 +1,4 @@
+import { SampleConversation } from "@/components/app/SampleConversation";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Check, ChevronRight, FileText, LayoutDashboard, LogOut, Menu, Play, Search, Settings, ShieldCheck, Users, Video, Briefcase, X } from "lucide-react";
@@ -13,6 +14,7 @@ const navItems = [
   { id: "matches", label: "Job matches", icon: Briefcase },
   { id: "candidates", label: "Candidates", icon: Users },
   { id: "mandates", label: "Mandates", icon: Briefcase },
+  { id: "messages", label: "Messages", icon: FileText },
   { id: "topics", label: "HR & knowledge", icon: Video },
   { id: "settings", label: "Settings", icon: Settings },
 ];
@@ -68,6 +70,7 @@ export function SimulationExperience({ initialRole, initialView = "dashboard" }:
     <main className="flex-1 min-w-0 px-5 md:px-10 py-6 md:py-8 max-w-[1440px]">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-rule pb-5 mb-8"><div className="flex items-center gap-2 text-xs text-ink-soft"><span className="w-2 h-2 rounded-full bg-accent" />Simulation · sample data only</div><div className="flex items-center gap-2"><Button size="sm" variant={role === "candidate" ? "default" : "outline"} onClick={() => switchRole("candidate")}>Candidate preview</Button><Button size="sm" variant={role === "admin" ? "default" : "outline"} onClick={() => switchRole("admin")}>Admin preview</Button></div></div>
       <header className="mb-8"><p className="font-mono text-[10px] uppercase text-ink-mute mb-3">{role === "admin" ? "UK Talent Link · Operations" : "Your next chapter"}</p><h1 className="font-display text-4xl md:text-5xl font-light">{view === "dashboard" ? `Welcome, Jesse.` : navItems.find(i => i.id === view)?.label}</h1><p className="text-sm text-ink-soft mt-3">{view === "dashboard" ? role === "admin" ? "Your recruitment workspace, ready for review." : "A clearer picture of your experience. A better direction for your career." : view === "cv" ? "Jesse Harris · Sample CV and prebuilt assessment" : view === "topics" ? "Practical perspectives for work and your career." : ""}</p></header>
+      {view === "messages" && <SampleConversation />}
       {notice && <p role="status" className="mb-5 border border-rule bg-accent-soft text-accent px-4 py-3 text-sm rounded-md">{notice}</p>}
 
       {view === "dashboard" && role === "candidate" && <>

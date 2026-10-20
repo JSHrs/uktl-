@@ -82,7 +82,7 @@ export function AdminCharts({ data }: { data: Charts }) {
   return (
     <div className="grid lg:grid-cols-2 gap-4">
       <div className="lg:col-span-2">
-        <Panel title="Weekly activity" note="Last 12 weeks · weeks start Monday (UTC)">
+        <Panel title="Weekly activity" note={`${data.series.length} weeks · Monday UTC · current week is partial`}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={series} margin={{ top: 8, right: 16, bottom: 0, left: -12 }}>
               <CartesianGrid stroke={p.rule} strokeDasharray="2 4" vertical={false} />
@@ -147,6 +147,7 @@ export function AdminCharts({ data }: { data: Charts }) {
           )}
         </Panel>
       </div>
+      <details className="lg:col-span-2 border border-rule rounded p-4"><summary className="cursor-pointer text-sm">View activity data as a table</summary><div className="overflow-x-auto mt-4"><table className="w-full text-sm"><caption className="sr-only">Weekly activity, UTC</caption><thead><tr>{["Week","CVs received","HR questions","Consultations"].map(h=><th key={h} className="text-left p-2">{h}</th>)}</tr></thead><tbody>{series.map(r=><tr key={r.week}>{[r.label,r.candidates,r.questions,r.bookings].map((v,i)=><td key={i} className="p-2 border-t border-rule">{v}</td>)}</tr>)}</tbody></table></div></details>
     </div>
   );
 }

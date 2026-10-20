@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, useRouteContext, useRouter, useRouterState } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut, Menu, Settings, X } from "lucide-react";
+import { ArrowLeft, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { signOutFn } from "@/lib/functions";
 
@@ -16,7 +16,7 @@ const CANDIDATE_SECTIONS: Section[] = [
   { to: "/app/hr", label: "HR & Law" },
   { to: "/app/consultations", label: "Consultations" },
   { to: "/app/messages", label: "Messages" },
-  { to: "/app/profile", label: "Profile" },
+  { to: "/app/profile", label: "Profile & settings" },
 ];
 
 // Staff reach the candidate area only to open a record or a mandate pipeline.
@@ -39,11 +39,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
   return <div className="min-h-screen bg-paper text-ink md:flex">
     <div className="md:hidden flex items-center justify-between px-5 py-4 border-b border-rule"><span className="font-display text-xl">Talent Compass</span><Button variant="ghost" size="icon" aria-label={open ? "Close account menu" : "Open account menu"} onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</Button></div>
-    <aside className={`${open ? "flex" : "hidden"} md:flex flex-col w-full md:w-60 md:h-screen md:sticky md:top-0 shrink-0 border-r border-rule bg-paper-deep/40 p-5`}>
+    <aside className={`${open ? "flex" : "hidden"} md:flex flex-col w-full md:w-60 md:h-screen md:overflow-y-auto md:sticky md:top-0 shrink-0 border-r border-rule bg-paper-deep/40 p-5`}>
       <Link to="/" className="flex items-center gap-2 text-xs text-ink-soft mb-7"><ArrowLeft size={14} />UK Talent Link</Link>
       <p className="font-display text-2xl mb-6">Talent Compass</p>
       <nav aria-label="Account" className="flex-1 space-y-1">{sections.map(item => <Link key={item.to} to={item.to} onClick={() => setOpen(false)} className={`flex px-3 py-3 text-sm rounded-md ${item.exact ? current === item.to ? "bg-paper border border-rule" : "text-ink-soft" : current.startsWith(item.to) ? "bg-paper border border-rule" : "text-ink-soft"}`}>{item.label}</Link>)}
-      <Link to="/app/profile" onClick={() => setOpen(false)} className="flex items-center gap-2 px-3 py-3 text-sm"><Settings size={16} />Settings</Link>
+      {session.isStaff && <Link to="/admin" className="flex px-3 py-3 text-sm">Back to staff workspace</Link>}
       <Link to="/simulation" search={{role: session.isStaff ? "admin" : "candidate"}} className="flex px-3 py-3 text-xs text-ink-soft">Open sample workspace →</Link></nav>
       <div className="mt-8 pt-4 border-t border-rule"><p className="text-xs break-all text-ink-mute">{session.email}</p><Button variant="ghost" className="w-full justify-start mt-3" onClick={signOut}><LogOut />Sign out</Button></div>
     </aside>

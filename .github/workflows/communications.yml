@@ -11,7 +11,7 @@ concurrency:
 jobs:
   tick:
     # Only the source repository sends. Mirrored workflows stay inert.
-    if: github.repository == 'devacnt/UKTL' && vars.COMMUNICATIONS_ENABLED == 'true'
+    if: github.repository == 'JSHrs/uktl-' && vars.COMMUNICATIONS_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

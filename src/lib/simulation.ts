@@ -5,7 +5,7 @@ export const simulationIdentity = (role: SimulationRole) => role === "admin"
 export const setupSteps = ["Your profile", "CV assessment", "Career preferences", "Ready to match"] as const;
 export function nextSetupStep(step: number) { return Math.min(3, step + 1); }
 export function simulationViews(role: SimulationRole) {
-  return role === "admin" ? ["dashboard", "topics", "hr", "mandates", "candidates", "bookings", "enquiries", "campaigns", "calendar", "analytics", "processing", "operations", "settings"] : ["dashboard", "cv", "matches", "topics", "settings"];
+  return role === "admin" ? ["dashboard", "topics", "hr", "mandates", "candidates", "messages", "bookings", "enquiries", "campaigns", "calendar", "analytics", "processing", "operations", "settings"] : ["dashboard", "cv", "matches", "messages", "topics", "settings"];
 }
 export const simulationStages = ["Matched", "Screening", "Shortlisted", "Interviewing", "Offered", "Placed", "Rejected"] as const;
 export function simulateMandateStatus(status: string, action: "close" | "fill" | "reopen") {
