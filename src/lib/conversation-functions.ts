@@ -7,7 +7,13 @@ import { readConversation, postConversation } from "./server/conversations";
 const candidateId = z.string().min(1).max(100).optional();
 export const conversationFn = createServerFn({ method: "GET" })
   .inputValidator((raw: unknown) =>
-    z.object({ candidateId, before: z.object({time:z.number().int().positive(),id:z.string().uuid()}).optional() }).strict().parse(raw),
+    z
+      .object({
+        candidateId,
+        before: z.object({ time: z.number().int().positive(), id: z.string().uuid() }).optional(),
+      })
+      .strict()
+      .parse(raw),
   )
   .handler(async ({ data }) =>
     readConversation(await getRequestEnv(), await requireViewer(), data.candidateId, data.before),

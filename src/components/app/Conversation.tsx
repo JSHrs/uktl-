@@ -7,10 +7,10 @@ export function Conversation({ candidateId }: { candidateId?: string }) {
     [error, setError] = useState("");
   const [requestId, setRequestId] = useState(() => crypto.randomUUID());
   const q = useInfiniteQuery({
-    initialPageParam: undefined as {time:number;id:string}|undefined,
+    initialPageParam: undefined as { time: number; id: string } | undefined,
     queryKey: ["conversation", candidateId ?? "mine"],
-    queryFn: ({pageParam}) => conversationFn({ data: { candidateId,before:pageParam } }),
-    getNextPageParam:(last)=>last.next,
+    queryFn: ({ pageParam }) => conversationFn({ data: { candidateId, before: pageParam } }),
+    getNextPageParam: (last) => last.next,
     refetchInterval: 30000,
     retry: false,
   });
@@ -58,24 +58,34 @@ export function Conversation({ candidateId }: { candidateId?: string }) {
       ) : (
         <>
           <ol className="space-y-3 my-5 max-h-[420px] overflow-y-auto">
-            {q.data?.pages.slice().reverse().flatMap(p=>p.messages).map((m) => (
-              <li
-                key={m.id}
-                className={`rounded-lg p-4 ${m.sender_kind === "staff" ? "bg-paper-deep" : "border border-rule"}`}
-              >
-                <p className="text-xs text-ink-soft">
-                  {m.sender_kind === "staff" ? "Recruitment team" : "Candidate"} ·{" "}
-                  {new Date(m.created_at).toLocaleString("en-GB")}
-                </p>
-                <p className="mt-2 whitespace-pre-wrap break-words text-sm">{m.body}</p>
-              </li>
-            ))}
+            {q.data?.pages
+              .slice()
+              .reverse()
+              .flatMap((p) => p.messages)
+              .map((m) => (
+                <li
+                  key={m.id}
+                  className={`rounded-lg p-4 ${m.sender_kind === "staff" ? "bg-paper-deep" : "border border-rule"}`}
+                >
+                  <p className="text-xs text-ink-soft">
+                    {m.sender_kind === "staff" ? "Recruitment team" : "Candidate"} ·{" "}
+                    {new Date(m.created_at).toLocaleString("en-GB")}
+                  </p>
+                  <p className="mt-2 whitespace-pre-wrap break-words text-sm">{m.body}</p>
+                </li>
+              ))}
           </ol>
           {q.data?.pages[0].messages.length === 0 && (
             <p className="my-5 text-sm">Start a conversation with the recruitment team.</p>
           )}
           {q.hasNextPage && (
-            <button className="text-sm underline mb-4" disabled={q.isFetchingNextPage} onClick={()=>void q.fetchNextPage()}>Load older messages</button>
+            <button
+              className="text-sm underline mb-4"
+              disabled={q.isFetchingNextPage}
+              onClick={() => void q.fetchNextPage()}
+            >
+              Load older messages
+            </button>
           )}
           <form onSubmit={send} className="space-y-3">
             <label className="block text-sm">

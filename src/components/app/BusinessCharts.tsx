@@ -1,7 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import type { BusinessAnalytics } from "@/lib/server/business-analytics";
-export function BusinessCharts({ data }: { data: BusinessAnalytics }) {
+export function BusinessCharts({
+  data,
+  onOpen,
+}: {
+  data: BusinessAnalytics;
+  onOpen?: (path: string) => void;
+}) {
   const panels = [
     { title: "Mandate status", rows: data.jobs, to: "/admin/jobs" },
     { title: "Enquiry workload", rows: data.enquiries, to: "/admin/enquiries" },
@@ -45,9 +51,15 @@ export function BusinessCharts({ data }: { data: BusinessAnalytics }) {
           <section key={p.title} className="min-w-0 border border-rule rounded-xl p-5">
             <div className="flex flex-wrap justify-between gap-2">
               <h3 className="font-semibold">{p.title}</h3>
-              <Link to={p.to} className="text-sm underline">
-                Open workspace
-              </Link>
+              {onOpen ? (
+                <button className="text-sm underline" onClick={() => onOpen(p.to)}>
+                  Open workspace
+                </button>
+              ) : (
+                <Link to={p.to} className="text-sm underline">
+                  Open workspace
+                </Link>
+              )}
             </div>
             {p.rows.length === 0 ? (
               <p className="py-12 text-center text-sm text-ink-soft">

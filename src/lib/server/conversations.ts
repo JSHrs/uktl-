@@ -26,19 +26,26 @@ export async function readConversation(
   env: AppEnv,
   viewer: Viewer,
   candidateId?: string,
-  before?: {time:number;id:string},
+  before?: { time: number; id: string },
 ) {
   const id = await conversationOwner(env, viewer, candidateId);
   const rows = await env.DB.prepare(
     `SELECT id,sender_kind,body,created_at FROM conversation_messages WHERE candidate_id=? AND (?::bigint IS NULL OR (created_at,id)<(?::bigint,?::uuid)) ORDER BY created_at DESC,id DESC LIMIT 51`,
   )
-    .bind(id, before?.time ?? null, before?.time ?? null,before?.id??null)
+    .bind(id, before?.time ?? null, before?.time ?? null, before?.id ?? null)
     .all<{ id: string; sender_kind: string; body: string; created_at: number }>();
   const messages = (rows.results ?? [])
     .slice(0, 50)
     .map((r) => ({ ...r, created_at: Number(r.created_at) }))
     .reverse();
-  return { candidateId: id, messages, next: (rows.results?.length ?? 0) > 50 && messages[0] ? {time:messages[0].created_at,id:messages[0].id} : undefined };
+  return {
+    candidateId: id,
+    messages,
+    next:
+      (rows.results?.length ?? 0) > 50 && messages[0]
+        ? { time: messages[0].created_at, id: messages[0].id }
+        : undefined,
+  };
 }
 export async function postConversation(
   env: AppEnv,

@@ -46,3 +46,10 @@ This review distinguishes code inspection, automated tests and authenticated liv
 5. Restore a backup into a separate project; reconcile schema and object counts; verify private storage and account isolation. Rehearse rollback to a known-good deployment without dropping additive tables. Verify alert delivery to the owner's chosen monitoring destination.
 
 No live email, calendar invitation, recruitment message or destructive restore is authorized by the code tests. No backup-restore result or latency improvement is claimed without measurements.
+
+## Validation evidence
+
+- All 120 local unit tests passed; TypeScript passed for the initial implementation.
+- Production build completed successfully. Local browser tests could not launch because the Chromium executable is absent; hosted CI supplies the browser matrix.
+- Preview browser inspection opened all 13 staff sample views (including analytics) and all five existing candidate sample views. All fit the 1363px viewport. Short/long page scrollbars changed available width, so stable scrollbar gutters were added.
+- The actual private pages have been reviewed in source, not certified through signed-in production sessions. Simulation data is not evidence of live service delivery or actual account permissions.
