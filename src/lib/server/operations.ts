@@ -76,6 +76,14 @@ export async function operationsSnapshot(env: AppEnv) {
   if (results.some((r) => !r.success || !r.results)) throw new Error("Operations data unavailable");
   return {
     checkedAt: now,
+    readiness: [
+      {name:"Email delivery",configured:!!env.RESEND_API_KEY,detail:"Requires a verified sender and a controlled delivery test."},
+      {name:"Private CV scanner",configured:!!env.CV_SCAN_URL && !!env.CV_SCAN_TOKEN,detail:"Requires clean/infected-file checks and signature-update monitoring."},
+      {name:"Scheduled workers",configured:(env.CRON_SECRET?.length??0)>=32,detail:"A configured secret is not proof the scheduler runs. Check the GitHub scheduled runs."},
+      {name:"Public site URL",configured:!!env.SITE_URL,detail:"Verify recovery links and OAuth redirects use the production origin."},
+      {name:"Google Calendar",configured:!!env.GOOGLE_CALENDAR_CLIENT_ID && !!env.GOOGLE_CALENDAR_CLIENT_SECRET && !!env.CALENDAR_ENCRYPTION_KEY,detail:"Connect and verify synchronization before accepting external busy-time bookings."},
+      {name:"Outlook Calendar",configured:!!env.MICROSOFT_CALENDAR_CLIENT_ID && !!env.MICROSOFT_CALENDAR_CLIENT_SECRET && !!env.CALENDAR_ENCRYPTION_KEY,detail:"Connect and verify synchronization before accepting external busy-time bookings."},
+    ],
     queue: results[0].results![0] as { failed: number; expired: number; overdue: number },
     sync: results[1].results as Record<string, string | number | null>[],
     deletions: results[2].results as { id: string; candidate_id: string; created_at: number }[],

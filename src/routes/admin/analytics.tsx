@@ -1,13 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { BusinessCharts } from "@/components/app/BusinessCharts";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AdminHeader } from "@/routes/admin";
 import { adminGetAnalyticsFn } from "@/lib/functions";
-import { adminChartsFn } from "@/lib/admin-tools-functions";
+import { adminChartsFn, businessAnalyticsFn } from "@/lib/admin-tools-functions";
 import { AdminCharts } from "@/components/app/AdminCharts";
 
 export const Route = createFileRoute("/admin/analytics")({
-  loader: async () => {
-    const [data, charts] = await Promise.all([adminGetAnalyticsFn(), adminChartsFn()]);
-    return { data, charts };
+  validateSearch: (s):{weeks:4|12|26} => ({weeks:Number(s.weeks)===4?4:Number(s.weeks)===26?26:12}),
+  loaderDeps: ({search}) => ({weeks:search.weeks}),
+  loader: async ({deps}) => {
+    const [data, charts, business] = await Promise.all([adminGetAnalyticsFn(), adminChartsFn({data:{weeks:deps.weeks}}), businessAnalyticsFn()]);
+    return { data, charts, business };
   },
   component: AnalyticsPage,
 });
@@ -20,7 +23,9 @@ const EXPORT_LINKS = [
 ];
 
 function AnalyticsPage() {
-  const { data, charts } = Route.useLoaderData();
+  const { data, charts, business } = Route.useLoaderData();
+  const {weeks}=Route.useSearch();
+  const navigate=useNavigate();
 
   const resolutionRate =
     data.total_queries > 0
@@ -34,7 +39,8 @@ function AnalyticsPage() {
 
   return (
     <>
-      <AdminHeader title="Analytics" sub="Platform activity overview" />
+      <AdminHeader title="Business analytics" sub="Recruitment, service delivery and operational workload" />
+      <label className="flex flex-wrap items-center gap-3 mb-6 text-sm">Activity window<select aria-label="Activity window" className="border border-rule rounded p-2 bg-paper" value={weeks} onChange={e=>void navigate({to:"/admin/analytics",search:{weeks:Number(e.target.value) as 4|12|26}})}>{[4,12,26].map(w=><option key={w} value={w}>Last {w} weeks</option>)}</select><span className="text-ink-soft">The window applies to weekly activity; status charts show current totals.</span></label>
 
       <div className="flex flex-wrap items-center gap-2 mb-8">
         <span className="font-mono text-[10px] tracking-[0.14em] uppercase text-ink-mute mr-1">Export CSV</span>
@@ -65,6 +71,7 @@ function AnalyticsPage() {
         <AdminCharts data={charts} />
       </div>
 
+      <BusinessCharts data={business} />
       <h2 className="font-display font-light text-xl tracking-[-0.02em] mb-4">HR module</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
         <Tile label="Recorded FAQ plays" value={data.total_faq_views} />

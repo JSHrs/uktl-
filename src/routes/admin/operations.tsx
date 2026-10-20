@@ -78,6 +78,7 @@ function Operations() {
           Refresh
         </button>
       </header>
+      <section className="border border-rule rounded-xl p-5 space-y-4"><h2 className="text-xl font-semibold">Service readiness</h2><p className="text-sm text-ink-soft">Configuration presence only. This does not certify delivery, worker execution, backups or recovery.</p><ul className="grid sm:grid-cols-2 gap-4">{data.readiness.map(r=><li key={r.name} className="border border-rule rounded p-4"><h3 className="font-medium">{r.name} · {r.configured?'Configured':'Setup required'}</h3><p className="text-sm text-ink-soft mt-2">{r.detail}</p></li>)}</ul></section>
       <p role="status">{message}</p>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[

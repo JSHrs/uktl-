@@ -1,5 +1,5 @@
 import { DataError } from "@/components/app/DataError";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { createFileRoute, Link, Outlet, redirect, useRouter } from "@tanstack/react-router";
 import { adminLogoutFn } from "@/lib/functions";
 
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/admin")({
     const { session } = context;
     if (session.staffRole && !session.isStaff) throw redirect({ to: "/auth/security" });
     if (!session.isStaff) throw redirect({ to: "/admin/login" });
-    if (session.staffRole === "consultant" && !location.pathname.startsWith("/admin/candidates")) throw redirect({ to: "/admin/candidates" });
+    if (session.staffRole === "consultant" && !location.pathname.startsWith("/admin/candidates") && location.pathname!=="/admin/messages") throw redirect({ to: "/admin/candidates" });
     return { staffRole: session.staffRole ?? null };
   },
   errorComponent: DataError,
@@ -22,23 +22,27 @@ export const Route = createFileRoute("/admin")({
 });
 
 const NAV = [
-  { to: "/admin", label: "Overview", exact: true },
-  { to: "/admin/faq", label: "FAQ Topics" },
-  { to: "/admin/hr", label: "HR content review" },
-  { to: "/admin/jobs", label: "Mandates" },
-  { to: "/admin/candidates", label: "Candidates" },
-  { to: "/admin/bookings", label: "Consultations" },
-  { to: "/admin/enquiries", label: "Enquiries" },
-  { to: "/admin/campaigns", label: "Email campaigns" },
-  { to: "/admin/calendar", label: "Calendar sync" },
-  { to: "/admin/analytics", label: "Analytics" },
-  { to: "/admin/processing", label: "CV processing" },
-  { to: "/admin/operations", label: "Operations & privacy" },
+  { to: "/admin", label: "Overview", group: "Business", exact: true },
+  { to: "/admin/analytics", label: "Analytics", group: "Business" },
+  { to: "/admin/candidates", label: "Candidates", group: "Recruitment" },
+  { to: "/admin/jobs", label: "Mandates", group: "Recruitment" },
+  { to: "/admin/processing", label: "CV processing", group: "Recruitment" },
+  { to: "/admin/messages", label: "Messages", group: "Communications" },
+  { to: "/admin/bookings", label: "Consultations", group: "Communications" },
+  { to: "/admin/enquiries", label: "Enquiries", group: "Communications" },
+  { to: "/admin/campaigns", label: "Email campaigns", group: "Communications" },
+  { to: "/admin/faq", label: "Topics & videos", group: "Content" },
+  { to: "/admin/hr", label: "HR content review", group: "Content" },
+  { to: "/admin/calendar", label: "Calendar connections", group: "Operations" },
+  { to: "/admin/operations", label: "Operations & privacy", group: "Operations" },
 ] as const;
 
 function AdminLayout() {
   const router = useRouter();
   const { staffRole } = Route.useRouteContext();
+  const [menuOpen,setMenuOpen]=useState(false);
+  const current=router.state.location.pathname;
+  const section=[...NAV].reverse().find(item=>item.to!=="/admin" && current.startsWith(item.to));
   if (router.state.location.pathname.startsWith("/admin/login")) return <Outlet />;
 
   async function logout() {
@@ -50,25 +54,19 @@ function AdminLayout() {
   return (
     <div className="min-h-screen bg-paper flex flex-col md:flex-row">
       {/* Sidebar */}
-      <aside className="w-full md:w-52 flex-shrink-0 border-r border-rule bg-paper-deep/40 flex flex-col">
+      <aside className="w-full md:w-60 md:h-screen md:sticky md:top-0 md:overflow-y-auto flex-shrink-0 border-r border-rule bg-paper-deep/40 flex flex-col">
         <div className="px-5 py-5 border-b border-rule">
           <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-mute">
             UK Talent Link
           </div>
           <div className="font-display font-light text-lg mt-0.5 text-ink">Admin</div>
         </div>
-        <nav className="flex-1 px-3 py-4 flex flex-wrap gap-1 md:block md:space-y-0.5">
-          {NAV.filter(item => staffRole === "admin" || item.to === "/admin/candidates").map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              activeOptions={"exact" in item && item.exact ? { exact: true } : undefined}
-              className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-ink-soft hover:text-ink hover:bg-paper-deep transition-colors"
-              activeProps={{ className: "flex items-center gap-2.5 px-3 py-2 rounded text-sm text-ink bg-paper border border-rule" }}
-            >
-              {item.label}
-            </Link>
-          ))}
+        <button className="md:hidden px-5 py-3 text-left border-b border-rule" aria-expanded={menuOpen} aria-controls="admin-navigation" onClick={()=>setMenuOpen(!menuOpen)}>{menuOpen?"Close admin menu":"Open admin menu"}</button>
+        <nav id="admin-navigation" aria-label="Administration" className={`${menuOpen?"block":"hidden"} md:block flex-1 px-3 py-4 space-y-5`}>
+          {[...new Set(NAV.map(i=>i.group))].map(group=>{
+            const items=NAV.filter(i=>i.group===group && (staffRole==="admin" || (i.to==="/admin/candidates" || i.to==="/admin/messages")));
+            return items.length>0 && <div key={group}><p className="px-3 mb-2 text-xs font-semibold text-ink-mute">{group}</p>{items.map(item=><Link key={item.to} to={item.to} onClick={()=>setMenuOpen(false)} activeOptions={{exact:item.to==="/admin"}} className="block px-3 py-2.5 rounded text-sm text-ink-soft hover:bg-paper-deep" activeProps={{className:"block px-3 py-2.5 rounded text-sm bg-paper border border-rule text-ink",'aria-current':'page'}}>{item.label}</Link>)}</div>;
+          })}
         </nav>
         <div className="px-3 py-4 border-t border-rule">
           <button
@@ -82,7 +80,8 @@ function AdminLayout() {
 
       {/* Content */}
       <main className="flex-1 min-w-0 overflow-auto">
-        <div className="max-w-5xl mx-auto px-4 sm:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
+          <nav aria-label="Breadcrumb" className="flex flex-wrap gap-2 text-sm text-ink-soft mb-6"><Link to={staffRole==="admin"?"/admin":"/admin/candidates"}>Workspace</Link>{section&&<><span aria-hidden="true">/</span><Link to={section.to}>{section.label}</Link>{current!==section.to&&<><span aria-hidden="true">/</span><span>{current.endsWith('/new')?'Create':'Details'}</span></>}</>}</nav>
           <Outlet />
         </div>
       </main>
@@ -116,12 +115,12 @@ export function AdminHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-8 flex items-end justify-between gap-6">
+    <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
       <div>
         <h1 className="font-display font-light text-3xl tracking-[-0.02em] text-ink">{title}</h1>
         {sub && <p className="text-sm text-ink-soft mt-1">{sub}</p>}
       </div>
-      {actions && <div className="flex items-center gap-3">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-3">{actions}</div>}
     </div>
   );
 }

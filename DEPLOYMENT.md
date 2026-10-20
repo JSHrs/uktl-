@@ -1,3 +1,13 @@
+# Current deployment note — 20 October 2026
+
+The active application is deployed from `JSHrs/uktl-` to Vercel project `uktl`, with Supabase PostgreSQL/Auth/private Storage. The older Cloudflare/Lovable instructions below are historical and must not be used to infer current hosting or service readiness. See PRODUCTION_ACCEPTANCE.md for the current release gates.
+
+Scheduled communications use `.github/workflows/communications.yml`; enable only after its production URL, secret, sender and calendar setup are verified. CV processing uses `.github/workflows/cv-processing.yml`. A successful Vercel build does not enable either scheduler. Keep preview/staging data isolated from production.
+
+Conversation rollout: apply the additive `candidate_conversation_threads` migration before deploying the UI. The migration is backend-only and does not grant candidate or staff privileges. On rollback, retain the table and its messages; redeploy the prior application version rather than deleting user data.
+
+---
+
 # UKTL deployment and release
 
 Current runtime target: Cloudflare Workers with Supabase PostgreSQL, Auth and private Storage. Development is performed through GitHub; Lovable credits are not required. No application deployment has yet been verified.

@@ -1,3 +1,5 @@
+import {businessAnalytics} from "../src/lib/server/business-analytics.ts";
+import {readConversation,postConversation} from "../src/lib/server/conversations.ts";
 import postgres from "postgres";
 import assert from "node:assert/strict";
 import { postgresQuery } from "../src/lib/server/postgres.ts";
@@ -88,6 +90,22 @@ try {
     assert.equal(charts.quality["40–59"], 1);
     assert.equal(charts.status.parsed, 2);
     assert.deepEqual(charts.stages, { shortlisted: 1, matched: 1, rejected: 1 });
+
+    const ops=await businessAnalytics(env,now);
+    assert.equal(ops.jobs.find(r=>r.label==='open')?.count,2);
+    assert.equal(ops.averageDaysToFill,null);
+    const owner={userId:verified,isAdmin:false,isStaff:false};
+    const other={userId:unverified,isAdmin:false,isStaff:false};
+    const staffViewer={userId:staff,isAdmin:true,isStaff:true};
+    const messageId=crypto.randomUUID();
+    await postConversation(env,owner,{candidateId:'tool-b',id:messageId,body:'Private candidate question'});
+    await postConversation(env,owner,{id:messageId,body:'Private candidate question'});
+    assert.equal((await readConversation(env,owner)).messages.length,1,'retry is idempotent');
+    assert.equal((await readConversation(env,other,'tool-a')).messages.length,0,'foreign thread cannot be selected');
+    await postConversation(env,staffViewer,{candidateId:'tool-a',id:crypto.randomUUID(),body:'Private staff reply'});
+    assert.deepEqual((await readConversation(env,owner)).messages.map(m=>m.sender_kind).sort(),['candidate','staff']);
+    const grants=await tx`SELECT has_table_privilege('anon','recruitment.conversation_messages','SELECT') AS a,has_table_privilege('authenticated','recruitment.conversation_messages','INSERT') AS b`;
+    assert.equal(grants[0].a,false);assert.equal(grants[0].b,false);
 
     // Outreach: verified account email wins; unverified account falls back to the CV email.
     assert.deepEqual(await outreachRecipient(env, "tool-a"), { name: '=HYPERLINK("http://evil")', email: "account@example.invalid", source: "account" });

@@ -6,9 +6,16 @@ import { getCandidateSession } from "./supabase";
 import { enforceRateLimit } from "./server/ratelimit";
 import { chartData, sendCandidateMessage, listCandidateMessages, outreachRecipient } from "./server/admin-tools";
 
-export const adminChartsFn = createServerFn({ method: "GET" }).handler(async () => {
+export const adminChartsFn = createServerFn({ method: "GET" })
+  .inputValidator((raw: unknown) => z.object({ weeks: z.union([z.literal(4), z.literal(12), z.literal(26)]).default(12) }).default({weeks:12}).parse(raw))
+  .handler(async ({data}) => {
+    await requireAdmin();
+    return chartData(await getEnv(), Date.now(), data.weeks);
+  });
+export const businessAnalyticsFn = createServerFn({ method: "GET" }).handler(async () => {
   await requireAdmin();
-  return chartData(await getEnv());
+  const { businessAnalytics } = await import("./server/business-analytics");
+  return businessAnalytics(await getEnv());
 });
 
 const candidateId = z.string().min(1).max(100);

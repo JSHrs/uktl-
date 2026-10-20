@@ -37,6 +37,6 @@ export default defineConfig({
     { name: "firefox", use: { ...devices["Desktop Firefox"] } },
     { name: "webkit", use: { ...devices["Desktop Safari"] } },
     { name: "edge", use: { ...devices["Desktop Edge"], channel: "msedge" } },
-    { name: "mobile-375", testMatch: /(?:mobile|phase-one-authenticated)\.spec\.ts/, use: { ...devices["iPhone SE"], viewport: {width:375,height:667} } },
+    { name: "mobile-375", testMatch: /(?:mobile|operations-mobile|phase-one-authenticated)\.spec\.ts/, use: { ...devices["iPhone SE"], viewport: {width:375,height:667} } },
   ],
 });

@@ -1,3 +1,4 @@
+import { Conversation } from "@/components/app/Conversation";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader } from "@/components/app/AppLayout";
@@ -37,8 +38,10 @@ function Messages() {
       <PageHeader
         eyebrow="My account"
         title="Messages"
-        lede="Messages from your consultant and job-update campaigns. To reply, use the email from your consultant."
+        lede="Talk with your consultant and review recruitment updates."
       />
+      <Conversation />
+      <h2 className="text-xl font-semibold mb-4">Email and campaign history</h2>
       <label className="flex gap-3 items-start border border-rule rounded p-4 mb-8">
         <input
           type="checkbox"

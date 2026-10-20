@@ -32,6 +32,7 @@ import { Route as AdminCampaignsRouteImport } from './routes/admin/campaigns'
 import { Route as AdminEnquiriesRouteImport } from './routes/admin/enquiries'
 import { Route as AdminHrRouteImport } from './routes/admin/hr'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminMessagesRouteImport } from './routes/admin/messages'
 import { Route as AdminOperationsRouteImport } from './routes/admin/operations'
 import { Route as AdminProcessingRouteImport } from './routes/admin/processing'
 import { Route as ApiCommunicationsRouteImport } from './routes/api/communications'
@@ -185,6 +186,11 @@ const AdminHrRoute = AdminHrRouteImport.update({
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMessagesRoute = AdminMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminOperationsRoute = AdminOperationsRouteImport.update({
@@ -407,6 +413,7 @@ export interface FileRoutesByFullPath {
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/hr': typeof AdminHrRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/messages': typeof AdminMessagesRoute
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/processing': typeof AdminProcessingRoute
   '/api/communications': typeof ApiCommunicationsRoute
@@ -469,6 +476,7 @@ export interface FileRoutesByTo {
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/hr': typeof AdminHrRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/messages': typeof AdminMessagesRoute
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/processing': typeof AdminProcessingRoute
   '/api/communications': typeof ApiCommunicationsRoute
@@ -534,6 +542,7 @@ export interface FileRoutesById {
   '/admin/enquiries': typeof AdminEnquiriesRoute
   '/admin/hr': typeof AdminHrRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/messages': typeof AdminMessagesRoute
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/processing': typeof AdminProcessingRoute
   '/api/communications': typeof ApiCommunicationsRoute
@@ -600,6 +609,7 @@ export interface FileRouteTypes {
     | '/admin/enquiries'
     | '/admin/hr'
     | '/admin/login'
+    | '/admin/messages'
     | '/admin/operations'
     | '/admin/processing'
     | '/api/communications'
@@ -662,6 +672,7 @@ export interface FileRouteTypes {
     | '/admin/enquiries'
     | '/admin/hr'
     | '/admin/login'
+    | '/admin/messages'
     | '/admin/operations'
     | '/admin/processing'
     | '/api/communications'
@@ -726,6 +737,7 @@ export interface FileRouteTypes {
     | '/admin/enquiries'
     | '/admin/hr'
     | '/admin/login'
+    | '/admin/messages'
     | '/admin/operations'
     | '/admin/processing'
     | '/api/communications'
@@ -956,6 +968,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/admin/login'
       preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/messages': {
+      id: '/admin/messages'
+      path: '/messages'
+      fullPath: '/admin/messages'
+      preLoaderRoute: typeof AdminMessagesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/operations': {
@@ -1242,6 +1261,7 @@ interface AdminRouteChildren {
   AdminEnquiriesRoute: typeof AdminEnquiriesRoute
   AdminHrRoute: typeof AdminHrRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminMessagesRoute: typeof AdminMessagesRoute
   AdminOperationsRoute: typeof AdminOperationsRoute
   AdminProcessingRoute: typeof AdminProcessingRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -1262,6 +1282,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEnquiriesRoute: AdminEnquiriesRoute,
   AdminHrRoute: AdminHrRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminMessagesRoute: AdminMessagesRoute,
   AdminOperationsRoute: AdminOperationsRoute,
   AdminProcessingRoute: AdminProcessingRoute,
   AdminIndexRoute: AdminIndexRoute,

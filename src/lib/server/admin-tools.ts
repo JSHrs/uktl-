@@ -104,7 +104,7 @@ export const weekStart = (ms: number) => Math.floor((ms + WEEK_SHIFT) / WEEK) * 
 
 export async function chartData(env: AppEnv, now = Date.now(), weeks = 12) {
   const from = weekStart(now) - (weeks - 1) * WEEK;
-  const bucket = (col: string) => `(${col}+${WEEK_SHIFT})/${WEEK}`;
+  const bucket = (col: string) => `CAST((${col}+${WEEK_SHIFT})/${WEEK} AS BIGINT)`;
   const [cands, questions, bookings, status, quality, stages] = await env.DB.batch([
     env.DB.prepare(`SELECT ${bucket("created_at")} AS w, COUNT(*) AS n FROM candidates WHERE created_at>=? GROUP BY 1`).bind(from),
     env.DB.prepare(`SELECT ${bucket("created_at")} AS w, COUNT(*) AS n FROM hr_queries WHERE created_at>=? GROUP BY 1`).bind(from),
