@@ -1,9 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
-import { toast } from "sonner";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { SiteLayout } from "@/components/site/Layout";
 import { AudienceSwitch, DemoFrame, DesignPage } from "@/components/site/ds";
-import { submitEnquiryFn } from "@/lib/functions";
+import { EmployerEnquiry } from "@/components/site/EmployerEnquiry";
 import heroMark from "@/assets/hero-mark.jpg";
 
 /*
@@ -51,7 +50,7 @@ function Index() {
           <ShortlistExplainer />
           <SearchTimeline />
           <Commitments />
-          <EmployerContact />
+          <EmployerEnquiry />
         </div>
       </DesignPage>
     </SiteLayout>
@@ -75,18 +74,18 @@ function Hero() {
         <div className="hero-main">
           <div>
             <h1 className="disp hero-h1" data-only="candidate">
-              <Line>Your next role,</Line>
+              <Line>Be seen for</Line>
               <Line>
-                found on <em>merit</em>
+                what you <em>can do,</em>
               </Line>
-              <Line>not on keywords.</Line>
+              <Line>not the keywords.</Line>
             </h1>
             <h1 className="disp hero-h1" data-only="employer">
-              <Line>Senior hires,</Line>
+              <Line>The right hire,</Line>
               <Line>
-                searched with <em>care</em>
+                ranked and <em>reasoned,</em>
               </Line>
-              <Line>and the reasons shown.</Line>
+              <Line>before you meet them.</Line>
             </h1>
           </div>
 
@@ -143,19 +142,19 @@ function Hero() {
 
         <div className="hero-foot">
           <p data-only="candidate">
-            Upload your CV for a free, honest score. Talent Compass then matches you to the roles we're recruiting for
-            across the UK and the Gulf, and shows you why you fit.
+            Upload your CV once. Get an honest score out of 100, the fixes that matter most, and a fit score for every role
+            we're recruiting for across the UK and the Gulf. Free, private, and read by real consultants.
           </p>
           <p data-only="employer">
-            Recruitment for organisations hiring across the UK and the Gulf. You get a ranked shortlist, reviewed by a
-            consultant, with the reasoning behind every name.
+            Tell us the role. We search the UK and the Gulf, score every candidate against your must-haves, and a
+            consultant puts forward a shortlist with the evidence and the gaps for each name.
           </p>
           <div className="scroll" aria-hidden="true">
             <i />
             <span className="mono">Scroll</span>
           </div>
           <div className="hero-cta" data-only="candidate">
-            <Link to="/auth/register" className="btn btn-ink btn-lg">
+            <Link to="/auth/register" search={{ for: "candidate" }} className="btn btn-ink btn-lg">
               Score my CV, free
             </Link>
             <a href="#tour" className="btn btn-lg">
@@ -166,9 +165,9 @@ function Hero() {
             <a href="#contact" className="btn btn-ink btn-lg">
               Book a consultation
             </a>
-            <a href="#services" className="btn btn-lg">
-              Our services
-            </a>
+            <Link to="/auth/register" search={{ for: "employer" }} className="btn btn-lg">
+              Create employer account
+            </Link>
           </div>
         </div>
       </div>
@@ -291,7 +290,10 @@ function Tour() {
               One upload. <em>Five things</em> working for you.
             </h2>
           </div>
-          <p>Create a free account and upload your CV once. Everything below updates whenever you upload a new version.</p>
+          <p>
+            Most applications disappear without a word. Your account tells you where you stand, what to fix and where you
+            fit, and it all updates whenever you upload a new version.
+          </p>
         </div>
         <div className="tour">
           <div className="tour-steps">
@@ -513,7 +515,7 @@ function SectorList() {
         </div>
         <div className="slist rv">
           {SECTORS.map((s) => (
-            <Link key={s.name} to="/sectors">
+            <Link key={s.name} to="/sectors" hash={s.name.split(" ")[0].toLowerCase()}>
               <h3 className="disp">{s.name}</h3>
               <span className="mono" style={{ textAlign: "right" }}>
                 {s.roles}
@@ -576,11 +578,14 @@ function CandidateStart() {
         <div className="cta-l rv">
           <div className="eyebrow">Start free</div>
           <h2 className="disp" style={{ marginTop: 20 }}>
-            See where your CV <em>stands.</em>
+            Your next move starts <em>with one upload.</em>
           </h2>
-          <p>Create an account, upload your CV and we'll show you what's working, what isn't and where you fit.</p>
+          <p>
+            Create a free account, upload your CV and see what's working, what's holding you back and which roles you fit,
+            in one place.
+          </p>
           <div style={{ display: "flex", gap: 12, marginTop: 36, flexWrap: "wrap" }}>
-            <Link to="/auth/register" className="btn btn-light btn-lg">
+            <Link to="/auth/register" search={{ for: "candidate" }} className="btn btn-light btn-lg">
               Create free account
             </Link>
             <Link to="/auth/login" className="btn btn-lg">
@@ -619,7 +624,10 @@ function EmployerServices() {
               Two services. <em>One standard.</em>
             </h2>
           </div>
-          <p>Executive search and practical HR consultancy for organisations hiring across the UK and the Gulf.</p>
+          <p>
+            Executive search for the hires that shape your organisation, and practical HR consultancy for the people side
+            that follows, across the UK and the Gulf.
+          </p>
         </div>
         <div className="svc rv">
           <div id="search">
@@ -821,101 +829,6 @@ function Commitments() {
             <p>Candidates use UK Talent Link free, so the people you meet came to us for the right reasons.</p>
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─────────────────── Employer: contact form ─────────────────── */
-
-function EmployerContact() {
-  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
-
-  async function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const field = (k: string) => String(fd.get(k) ?? "").trim();
-    setState("sending");
-    try {
-      await submitEnquiryFn({
-        data: {
-          name: field("name"),
-          email: field("email"),
-          company: field("company") || undefined,
-          enquiry_type: `Employer: ${field("service")}`,
-          message: field("message"),
-        },
-      });
-      setState("sent");
-      toast.success("Request sent. We'll reply within one working day.");
-    } catch {
-      setState("error");
-    }
-  }
-
-  return (
-    <section className="band sec" id="contact">
-      <div className="grid-bg" />
-      <div className="wrap cta" style={{ position: "relative" }}>
-        <div className="cta-l rv">
-          <div className="eyebrow">Book a consultation</div>
-          <h2 className="disp" style={{ marginTop: 20 }}>
-            Tell us about <em>the role.</em>
-          </h2>
-          <p>A call with a consultant about what you need. There's no obligation. Prefer to talk now?</p>
-          <div className="cta-meta">
-            <a href="tel:+442071892857">+44 (0)20 7189 2857</a>
-            <a href="mailto:info@uktalentlink.co.uk">info@uktalentlink.co.uk</a>
-          </div>
-        </div>
-        {state === "sent" ? (
-          <div className="rv" role="status">
-            <div className="eyebrow">Request sent</div>
-            <h3 className="disp" style={{ fontSize: "clamp(26px,3cqi,40px)", marginTop: 16 }}>
-              Thank you, we'll be in touch.
-            </h3>
-            <p style={{ marginTop: 16 }}>A consultant will reply personally, usually within one working day.</p>
-          </div>
-        ) : (
-          <form className="cform rv" onSubmit={submit}>
-            <label className="field">
-              <span>Name</span>
-              <input className="inp" name="name" required maxLength={200} autoComplete="name" placeholder="Your name" />
-            </label>
-            <label className="field">
-              <span>Company</span>
-              <input className="inp" name="company" maxLength={200} autoComplete="organization" placeholder="Organisation" />
-            </label>
-            <label className="field">
-              <span>Work email</span>
-              <input className="inp" name="email" type="email" required maxLength={320} autoComplete="email" placeholder="name@company.com" />
-            </label>
-            <label className="field">
-              <span>Service</span>
-              <select className="inp" name="service" defaultValue="Executive search">
-                <option>Executive search</option>
-                <option>HR consultancy</option>
-                <option>Not sure yet</option>
-              </select>
-            </label>
-            <label className="field full">
-              <span>The role or challenge</span>
-              <textarea className="inp" name="message" rows={4} required maxLength={5000} placeholder="A few lines is plenty" />
-            </label>
-            <div className="full form-foot">
-              {state === "error" ? (
-                <small className="form-msg err" role="alert">
-                  We couldn't send that just now. Please email info@uktalentlink.co.uk.
-                </small>
-              ) : (
-                <small>We reply within one working day.</small>
-              )}
-              <button className="btn btn-light btn-lg" disabled={state === "sending"}>
-                {state === "sending" ? "Sending…" : "Request a call"}
-              </button>
-            </div>
-          </form>
-        )}
       </div>
     </section>
   );

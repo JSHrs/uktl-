@@ -38,3 +38,10 @@ html[data-for="employer"] .ds .aud button[data-set="employer"] { color: var(--pa
 /* Let the hero grid shrink on very narrow phones. */
 .ds .hero-main > * { min-width: 0; }
 .ds .demo-bar span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Numbered principle rows (How it works). */
+.ds .art.principle { grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1.6fr); padding: 40px 0; }
+@container (max-width: 1000px) { .ds .art.principle { grid-template-columns: 1fr; gap: 12px; } }
+/* .legal sets vertical padding only; keep the page gutter. */
+.ds .wrap.legal { padding-left: var(--gut); padding-right: var(--gut); }
+/* Full-width buttons inside narrow cards may wrap. */
+.ds .card .btn { white-space: normal; text-align: center; }

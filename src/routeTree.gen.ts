@@ -16,6 +16,7 @@ import { Route as ApproachRouteImport } from './routes/approach'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as EmployerRouteImport } from './routes/employer'
+import { Route as EmployersRouteImport } from './routes/employers'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReachRouteImport } from './routes/reach'
 import { Route as SectorsRouteImport } from './routes/sectors'
@@ -45,6 +46,7 @@ import { Route as AppMessagesRouteImport } from './routes/app/messages'
 import { Route as AppProfileRouteImport } from './routes/app/profile'
 import { Route as AppUploadRouteImport } from './routes/app/upload'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as AuthEmployerSetupRouteImport } from './routes/auth/employer-setup'
 import { Route as AuthForgotRouteImport } from './routes/auth/forgot'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
@@ -105,6 +107,11 @@ const ContactRoute = ContactRouteImport.update({
 const EmployerRoute = EmployerRouteImport.update({
   id: '/employer',
   path: '/employer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployersRoute = EmployersRouteImport.update({
+  id: '/employers',
+  path: '/employers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -252,6 +259,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/callback',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthEmployerSetupRoute = AuthEmployerSetupRouteImport.update({
+  id: '/employer-setup',
+  path: '/employer-setup',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthForgotRoute = AuthForgotRouteImport.update({
   id: '/forgot',
   path: '/forgot',
@@ -392,6 +404,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
   '/employer': typeof EmployerRoute
+  '/employers': typeof EmployersRoute
   '/privacy': typeof PrivacyRoute
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
@@ -419,6 +432,7 @@ export interface FileRoutesByFullPath {
   '/app/profile': typeof AppProfileRoute
   '/app/upload': typeof AppUploadRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/employer-setup': typeof AuthEmployerSetupRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
@@ -454,6 +468,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
   '/employer': typeof EmployerRoute
+  '/employers': typeof EmployersRoute
   '/privacy': typeof PrivacyRoute
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
@@ -481,6 +496,7 @@ export interface FileRoutesByTo {
   '/app/profile': typeof AppProfileRoute
   '/app/upload': typeof AppUploadRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/employer-setup': typeof AuthEmployerSetupRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
@@ -519,6 +535,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
   '/employer': typeof EmployerRoute
+  '/employers': typeof EmployersRoute
   '/privacy': typeof PrivacyRoute
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
@@ -546,6 +563,7 @@ export interface FileRoutesById {
   '/app/profile': typeof AppProfileRoute
   '/app/upload': typeof AppUploadRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/employer-setup': typeof AuthEmployerSetupRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
@@ -585,6 +603,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/employer'
+    | '/employers'
     | '/privacy'
     | '/reach'
     | '/sectors'
@@ -612,6 +631,7 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/upload'
     | '/auth/callback'
+    | '/auth/employer-setup'
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/register'
@@ -647,6 +667,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/employer'
+    | '/employers'
     | '/privacy'
     | '/reach'
     | '/sectors'
@@ -674,6 +695,7 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/upload'
     | '/auth/callback'
+    | '/auth/employer-setup'
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/register'
@@ -711,6 +733,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/employer'
+    | '/employers'
     | '/privacy'
     | '/reach'
     | '/sectors'
@@ -738,6 +761,7 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/upload'
     | '/auth/callback'
+    | '/auth/employer-setup'
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/register'
@@ -776,6 +800,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   ContactRoute: typeof ContactRoute
   EmployerRoute: typeof EmployerRoute
+  EmployersRoute: typeof EmployersRoute
   PrivacyRoute: typeof PrivacyRoute
   ReachRoute: typeof ReachRoute
   SectorsRoute: typeof SectorsRoute
@@ -844,6 +869,13 @@ declare module '@tanstack/react-router' {
       path: '/employer'
       fullPath: '/employer'
       preLoaderRoute: typeof EmployerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employers': {
+      id: '/employers'
+      path: '/employers'
+      fullPath: '/employers'
+      preLoaderRoute: typeof EmployersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -1047,6 +1079,13 @@ declare module '@tanstack/react-router' {
       path: '/callback'
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/employer-setup': {
+      id: '/auth/employer-setup'
+      path: '/employer-setup'
+      fullPath: '/auth/employer-setup'
+      preLoaderRoute: typeof AuthEmployerSetupRouteImport
       parentRoute: typeof AuthRoute
     }
     '/auth/forgot': {
@@ -1316,6 +1355,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AuthRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthEmployerSetupRoute: typeof AuthEmployerSetupRoute
   AuthForgotRoute: typeof AuthForgotRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
@@ -1325,6 +1365,7 @@ interface AuthRouteChildren {
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
+  AuthEmployerSetupRoute: AuthEmployerSetupRoute,
   AuthForgotRoute: AuthForgotRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
@@ -1342,6 +1383,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   ContactRoute: ContactRoute,
   EmployerRoute: EmployerRoute,
+  EmployersRoute: EmployersRoute,
   PrivacyRoute: PrivacyRoute,
   ReachRoute: ReachRoute,
   SectorsRoute: SectorsRoute,

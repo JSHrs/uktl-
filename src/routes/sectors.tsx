@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { SiteLayout, Wrap, PageHero } from "@/components/site/Layout";
-import { Reveal } from "@/components/site/Reveal";
+import { SiteLayout } from "@/components/site/Layout";
+import { Article, CtaStrip, DesignPage, PageHero, Ticks } from "@/components/site/ds";
 
 export const Route = createFileRoute("/sectors")({
   head: () => ({
@@ -67,143 +67,98 @@ const sectors = [
   },
 ];
 
+const slug = (name: string) => name.split(" ")[0].toLowerCase();
+
 function SectorsPage() {
   return (
     <SiteLayout>
-      <PageHero
-        eyebrow="Sectors"
-        title={
-          <>
-            Roles we{" "}
-            <em className="italic text-accent" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 100' }}>
-              recruit for.
-            </em>
-          </>
-        }
-        lede="Most of our live roles are in construction, engineering and technology, across the UK and the Gulf. We also recruit for leadership and specialist roles in four more sectors. Upload your CV once and you're matched against all of them."
-      />
-
-      {/* Sector deep-dives */}
-      <section className="py-16 md:py-24">
-        <Wrap>
-          <div className="space-y-0">
-            {sectors.map((s, i) => (
-              <Reveal key={s.num}>
-                <article className="grid md:grid-cols-[3fr_5fr] gap-10 lg:gap-20 py-14 md:py-20 border-t border-rule">
-                  <div>
-                    <div className="font-mono text-[10px] tracking-[0.18em] text-ink-mute mb-5 flex items-center gap-3">
-                      {s.num}
-                      {s.focus && (
-                        <span className="tracking-[0.12em] uppercase text-accent border border-accent/30 rounded-full px-2 py-0.5">
-                          Most live roles
-                        </span>
-                      )}
-                    </div>
-                    <h2
-                      className="font-display font-light leading-[1] tracking-[-0.025em] mb-3"
-                      style={{ fontSize: "clamp(24px, 3vw, 42px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
-                    >
-                      {s.name}
-                    </h2>
-                    <div className="font-mono text-[11px] text-ink-mute tracking-[0.06em] leading-[1.7]">
-                      {s.sub}
-                    </div>
-
-                    <div className="mt-8">
-                      <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-ink-mute mb-3">
-                        Typical roles
-                      </div>
-                      <ul className="list-none p-0 m-0 space-y-1.5">
-                        {s.roles.map((r) => (
-                          <li key={r} className="text-[14px] text-ink-soft flex items-center gap-2.5">
-                            <span className="w-2 h-px bg-accent flex-shrink-0" />
-                            {r}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col justify-between gap-8">
-                    <div>
-                      <p className="text-[16px] text-ink-soft leading-[1.65] m-0 mb-6">{s.body}</p>
-                      <p className="text-[13px] text-ink-mute leading-[1.6] m-0 pl-4 border-l-2 border-rule">{s.note}</p>
-                    </div>
-                    <div>
-                      <Link
-                        to="/auth/register"
-                        className="inline-flex items-center gap-2 text-[13px] text-ink-soft hover:text-ink transition-colors border-b border-transparent hover:border-ink pb-0.5"
-                      >
-                        Register to be matched →
-                      </Link>
-                    </div>
-                  </div>
-                </article>
-              </Reveal>
+      <DesignPage>
+        <PageHero
+          eyebrow="Sectors"
+          title={
+            <>
+              Where we <em>know the market.</em>
+            </>
+          }
+          lede={
+            <>
+              <span data-only="candidate">
+                Most of our live roles are in construction, engineering and technology, across the UK and the Gulf. We also
+                recruit for leadership and specialist roles in four more sectors. Upload your CV once and you're matched
+                against all of them.
+              </span>
+              <span data-only="employer">
+                We recruit in six sectors across the UK and the Gulf, led by construction, engineering and technology.
+              </span>
+            </>
+          }
+        />
+        <section className="sec" style={{ paddingTop: 40 }}>
+          <div className="wrap">
+            {sectors.map((s) => (
+              <Article
+                key={s.num}
+                id={slug(s.name)}
+                tag={
+                  <>
+                    {s.num} {s.focus && <span className="pill good">Most live roles</span>}
+                  </>
+                }
+                title={s.name}
+                aside={
+                  <p className="mono" style={{ marginTop: 12, textTransform: "none", letterSpacing: ".04em", fontSize: 11 }}>
+                    {s.sub}
+                  </p>
+                }
+              >
+                <p className="body">{s.body}</p>
+                <Ticks label="Typical roles" items={s.roles} />
+                {s.note && <p className="aside-note">{s.note}</p>}
+                <Link
+                  to="/auth/register"
+                  search={{ for: "candidate" }}
+                  className="lnk"
+                  data-only="candidate"
+                  style={{ display: "inline-block", marginTop: 24, color: "var(--ink)" }}
+                >
+                  Register to be matched →
+                </Link>
+                <Link
+                  to="/employers"
+                  hash="contact"
+                  className="lnk"
+                  data-only="employer"
+                  style={{ display: "inline-block", marginTop: 24, color: "var(--ink)" }}
+                >
+                  Brief us on a {s.name.split(" ")[0].toLowerCase()} role →
+                </Link>
+              </Article>
             ))}
           </div>
-        </Wrap>
-      </section>
-
-      {/* Cross-sector note */}
-      <section className="bg-paper-deep py-16 md:py-20 border-t border-rule">
-        <Wrap>
-          <Reveal>
-            <div className="grid md:grid-cols-[1fr_2fr] gap-16 items-start">
-              <div>
-                <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute mb-4">
-                  — Not listed?
-                </div>
-                <h3
-                  className="font-display font-light leading-[1] tracking-[-0.025em]"
-                  style={{ fontSize: "clamp(24px, 3vw, 40px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
-                >
-                  Don't see your sector?
-                </h3>
-              </div>
-              <div className="space-y-5">
-                <p className="text-[15px] text-ink-soft leading-[1.65]">
-                  Upload your CV anyway. You'll still get your CV score and improvement tips, and you'll be matched automatically whenever a role that fits you comes in.
-                </p>
-                <p className="text-[15px] text-ink-soft leading-[1.65]">
-                  Not sure whether your experience fits? Send us a question and a consultant will point you in the right direction.
-                </p>
-                <Link
-                  to="/contact"
-                  className="text-[13px] text-ink-soft hover:text-ink transition-colors border-b border-transparent hover:border-ink pb-0.5 inline-block"
-                >
-                  Ask us a question →
-                </Link>
-              </div>
-            </div>
-          </Reveal>
-        </Wrap>
-      </section>
-
-      {/* CTA */}
-      <section className="py-16 border-t border-rule">
-        <Wrap>
-          <Reveal>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-              <div>
-                <h3
-                  className="font-display font-light leading-[1.1] tracking-[-0.02em] mb-2"
-                  style={{ fontSize: "clamp(22px, 2.5vw, 32px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
-                >
-                  Work in one of these sectors?
-                </h3>
-                <p className="text-[15px] text-ink-soft m-0">Upload your CV free and see the roles you match today.</p>
-              </div>
-              <Link
-                to="/auth/register"
-                className="text-[13px] px-5 py-2.5 border border-ink bg-ink text-paper rounded-full hover:opacity-80 transition-opacity whitespace-nowrap shrink-0"
-              >
+        </section>
+        <div data-only="candidate">
+          <CtaStrip
+            title="Your sector, your next role."
+            body="Upload your CV free and see the roles you match today."
+            actions={
+              <Link to="/auth/register" search={{ for: "candidate" }} className="btn btn-ink btn-lg">
                 Register free →
               </Link>
-            </div>
-          </Reveal>
-        </Wrap>
-      </section>
+            }
+          />
+        </div>
+        <div data-only="employer">
+          <CtaStrip
+            title="Hiring in one of these sectors?"
+            body="Tell us about the role and a consultant will be in touch."
+            actions={
+              <Link to="/employers" hash="contact" className="btn btn-ink btn-lg">
+                Brief us →
+              </Link>
+            }
+          />
+        </div>
+      </DesignPage>
     </SiteLayout>
   );
 }

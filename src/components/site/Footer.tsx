@@ -36,6 +36,12 @@ export function Footer() {
               <FooterLink to="/app/candidates">Candidates</FooterLink>
               <FooterLink to="/app/jobs">Mandates</FooterLink>
             </FooterCol>
+          ) : session.accountRole === "employer" ? (
+            <FooterCol title="Your account">
+              <FooterLink to="/employer">Employer account</FooterLink>
+              <FooterLink to="/employers">Our services</FooterLink>
+              <FooterLink to="/contact">Contact the team</FooterLink>
+            </FooterCol>
           ) : session.userId ? (
             <FooterCol title="Your account">
               <FooterLink to="/app">Dashboard</FooterLink>
@@ -46,16 +52,27 @@ export function Footer() {
           ) : (
             <FooterCol title="Candidates">
               <FooterLink to="/services">What we offer</FooterLink>
-              <FooterLink to="/auth/register">Score my CV</FooterLink>
+              <li>
+                <Link to="/auth/register" search={{ for: "candidate" }} className="text-[14px] text-ink-soft hover:text-ink transition-colors">
+                  Score my CV
+                </Link>
+              </li>
               <FooterLink to="/app/hr">Workplace guidance</FooterLink>
               <FooterLink to="/approach">How it works</FooterLink>
             </FooterCol>
           )}
 
           <FooterCol title="Employers">
+            <FooterLink to="/employers">Services for employers</FooterLink>
             <FooterLink to="/approach">How we search</FooterLink>
-            <FooterLink to="/contact">Start hiring</FooterLink>
-            {!session.userId && <FooterLink to="/auth/register">Employer account</FooterLink>}
+            <FooterLink to="/employers" hash="contact">Start hiring</FooterLink>
+            {!session.userId && (
+              <li>
+                <Link to="/auth/register" search={{ for: "employer" }} className="text-[14px] text-ink-soft hover:text-ink transition-colors">
+                  Employer account
+                </Link>
+              </li>
+            )}
           </FooterCol>
 
           <FooterCol title="Company">

@@ -1,5 +1,4 @@
 import { PrivacyControls } from "@/components/app/PrivacyControls";
-import { AccountType } from "@/components/app/AccountType";
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -105,7 +104,6 @@ function ProfilePage() {
 
   return (
     <>
-      <AccountType role="candidate" />
       <PageHeader
         eyebrow="My profile"
         title={
