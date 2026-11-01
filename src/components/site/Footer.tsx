@@ -1,60 +1,34 @@
 import { Link, useRouteContext } from "@tanstack/react-router";
+import type { ReactNode } from "react";
+import { Logo } from "./Nav";
 
+/**
+ * Four-column footer from the Claude Design handoff: brand, Candidates,
+ * Employers, Company, then a legal row. The Candidates column becomes the
+ * visitor's own account links once signed in; staff get their tools.
+ */
 export function Footer() {
   const year = new Date().getFullYear();
   const { session } = useRouteContext({ from: "__root__" });
 
   return (
     <footer className="bg-paper border-t border-rule">
-      <div
-        className="w-full max-w-[1440px] mx-auto"
-        style={{ paddingLeft: "clamp(24px, 5vw, 72px)", paddingRight: "clamp(24px, 5vw, 72px)" }}
-      >
-        {/* Main grid */}
-        <div className="grid grid-cols-2 md:grid-cols-[2.5fr_1fr_1fr_1fr_1fr] gap-10 pt-14 pb-12">
-          {/* Brand */}
+      <div className="w-full max-w-[1440px] mx-auto" style={{ paddingLeft: "var(--gut)", paddingRight: "var(--gut)" }}>
+        <div className="grid grid-cols-2 md:grid-cols-[1.6fr_1fr_1fr_1fr] gap-x-8 gap-y-10 pt-16 pb-12">
           <div className="col-span-2 md:col-span-1">
-            <div
-              className="font-display font-light leading-[1] tracking-[-0.03em] max-w-[8ch] mb-5"
-              style={{ fontSize: "clamp(28px, 4vw, 48px)", fontVariationSettings: '"opsz" 144, "SOFT" 60' }}
-            >
-              UK Talent{" "}
-              <em className="italic text-accent" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 100' }}>
-                Link.
-              </em>
-            </div>
-            <p className="text-[13px] text-ink-mute leading-[1.6] max-w-[28ch]">
+            <Logo />
+            <p className="mt-4 text-[13px] text-ink-mute leading-[1.6] max-w-[32ch]">
               A recruitment firm placing people in roles across the UK and the Gulf. London and Dubai.
             </p>
-            <div className="mt-6 flex flex-col gap-1.5">
-              <a
-                href="mailto:info@uktalentlink.co.uk"
-                className="text-[13px] text-ink-mute hover:text-ink transition-colors"
-              >
+            <div className="mt-5 flex flex-col gap-1.5 text-[13px] text-ink-mute">
+              <a href="mailto:info@uktalentlink.co.uk" className="hover:text-ink transition-colors w-fit">
                 info@uktalentlink.co.uk
               </a>
-              <a
-                href="tel:+442071892857"
-                className="text-[13px] text-ink-mute hover:text-ink transition-colors"
-              >
+              <a href="tel:+442071892857" className="hover:text-ink transition-colors w-fit">
                 +44 (0)20 7189 2857
               </a>
             </div>
           </div>
-
-          <FooterCol title="What we offer">
-            <FooterLink to="/services" hash="cv-score">CV score</FooterLink>
-            <FooterLink to="/services" hash="cv-tips">CV tips</FooterLink>
-            <FooterLink to="/services" hash="matching">Job matching</FooterLink>
-            <FooterLink to="/services" hash="workplace-guidance">Workplace guidance</FooterLink>
-          </FooterCol>
-
-          <FooterCol title="Firm">
-            <FooterLink to="/approach">How it works</FooterLink>
-            <FooterLink to="/sectors">Sectors</FooterLink>
-            <FooterLink to="/reach">Reach</FooterLink>
-            <FooterLink to="/contact">Contact</FooterLink>
-          </FooterCol>
 
           {session.isStaff ? (
             <FooterCol title="Staff">
@@ -71,14 +45,23 @@ export function Footer() {
             </FooterCol>
           ) : (
             <FooterCol title="Candidates">
-              <FooterLink to="/auth/register">Register free</FooterLink>
-              <FooterLink to="/auth/login">Sign in</FooterLink>
-              <FooterLink to="/app/jobs">Open roles</FooterLink>
-              <FooterLink to="/app/hr">Workplace questions</FooterLink>
+              <FooterLink to="/services">What we offer</FooterLink>
+              <FooterLink to="/auth/register">Score my CV</FooterLink>
+              <FooterLink to="/app/hr">Workplace guidance</FooterLink>
+              <FooterLink to="/approach">How it works</FooterLink>
             </FooterCol>
           )}
 
-          <FooterCol title="Elsewhere">
+          <FooterCol title="Employers">
+            <FooterLink to="/approach">How we search</FooterLink>
+            <FooterLink to="/contact">Start hiring</FooterLink>
+            {!session.userId && <FooterLink to="/auth/register">Employer account</FooterLink>}
+          </FooterCol>
+
+          <FooterCol title="Company">
+            <FooterLink to="/sectors">Sectors</FooterLink>
+            <FooterLink to="/reach">Reach</FooterLink>
+            <FooterLink to="/contact">Contact</FooterLink>
             <li>
               <a
                 href="https://www.linkedin.com/company/uk-talent-link"
@@ -89,41 +72,25 @@ export function Footer() {
                 LinkedIn
               </a>
             </li>
-            <li>
-              <a
-                href="mailto:info@uktalentlink.co.uk"
-                className="text-[14px] text-ink-soft hover:text-ink transition-colors"
-              >
-                Email
-              </a>
-            </li>
-            <li>
-              <a
-                href="tel:+442071892857"
-                className="text-[14px] text-ink-soft hover:text-ink transition-colors"
-              >
-                Phone
-              </a>
-            </li>
           </FooterCol>
         </div>
 
-        {/* Bottom bar */}
-        <div className="pt-6 pb-8 border-t border-rule flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 font-mono text-[11px] text-ink-mute tracking-[0.07em]">
-          <span>© {year} UK Talent Link Ltd. All rights reserved.</span>
-          <span className="hidden sm:block">Chancery Lane, London · Boulevard Plaza, Dubai</span>
-          <div className="flex items-center gap-4">
+        <div className="pt-6 pb-8 border-t border-rule flex flex-col md:flex-row justify-between items-start md:items-center gap-3 font-mono text-[11px] text-ink-mute tracking-[0.07em]">
+          <span>
+            © {year} UK Talent Link Ltd · Chancery Lane, London · Boulevard Plaza, Dubai
+          </span>
+          <nav aria-label="Legal" className="flex items-center gap-5">
             <Link to="/privacy" className="hover:text-ink transition-colors">Privacy</Link>
-            <span className="text-rule">·</span>
             <Link to="/terms" className="hover:text-ink transition-colors">Terms</Link>
-          </div>
+            <Link to="/unsubscribe" search={{ token: "" }} className="hover:text-ink transition-colors">Email preferences</Link>
+          </nav>
         </div>
       </div>
     </footer>
   );
 }
 
-function FooterCol({ title, children }: { title: string; children: React.ReactNode }) {
+function FooterCol({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div>
       <h5 className="font-mono text-[10px] tracking-[0.14em] uppercase text-ink-mute m-0 mb-4 font-normal">{title}</h5>
@@ -132,7 +99,7 @@ function FooterCol({ title, children }: { title: string; children: React.ReactNo
   );
 }
 
-function FooterLink({ to, hash, children }: { to: string; hash?: string; children: React.ReactNode }) {
+function FooterLink({ to, hash, children }: { to: string; hash?: string; children: ReactNode }) {
   return (
     <li>
       <Link to={to} hash={hash} className="text-[14px] text-ink-soft hover:text-ink transition-colors">

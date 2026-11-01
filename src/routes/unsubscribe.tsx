@@ -46,8 +46,8 @@ function Unsubscribe() {
           </button>
         ) : (
           <p>
-            This link is incomplete. You can also manage campaign preferences in your account’s
-            Messages page.
+            To stop job updates, use the unsubscribe link at the foot of any of those emails, or
+            sign in and change your preferences on your account’s Messages page.
           </p>
         )}
         <p role="status" className="mt-4">

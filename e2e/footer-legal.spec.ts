@@ -3,7 +3,7 @@ import { test, expect } from "./fixtures";
 test("signed-out footer offers one sign-up link and real destinations", async ({ page }) => {
   await page.goto("/");
   const footer = page.locator("footer");
-  await expect(footer.getByRole("link", { name: "Register free" })).toHaveCount(1);
+  await expect(footer.getByRole("link", { name: "Score my CV" })).toHaveCount(1);
   await expect(footer.getByRole("link", { name: /create an account|sign up free/i })).toHaveCount(0);
   for (const href of await footer.locator("a[href^='/']").evaluateAll((as) => as.map((a) => a.getAttribute("href")!))) {
     const res = await page.request.get(href.split("#")[0]);
