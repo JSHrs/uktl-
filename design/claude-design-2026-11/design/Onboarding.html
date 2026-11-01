@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en" class="t-light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Get started — UK Talent Link</title>
+<link rel="stylesheet" href="uktl-system.css">
+<style>
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;container-type:inline-size;min-height:100vh}
+.ob{display:grid;grid-template-columns:340px minmax(0,1fr);min-height:100vh}
+.rail{background:oklch(.095 .003 60);color:oklch(.99 .001 82);padding:32px 28px;display:flex;flex-direction:column;gap:40px;position:sticky;top:0;height:100vh;overflow:hidden}
+.t-dark .rail{background:oklch(.11 .006 262);border-right:1px solid var(--rule)}
+.rail::before{content:"";position:absolute;inset:0;background:url("src/assets/hero-mark.jpg") center/cover;opacity:.1;filter:grayscale(1) invert(1);mix-blend-mode:screen;pointer-events:none}
+.rail>*{position:relative}
+.rail .logo{color:#fff}.rail .logo em{color:oklch(1 0 0/.7)}
+.rail .who{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:oklch(1 0 0/.55)}
+.rail h2{font-family:var(--display);font-weight:300;font-size:30px;line-height:1.08;letter-spacing:-.02em;margin-top:10px;font-variation-settings:"opsz" 144,"SOFT" 40}
+.rail h2 em{color:oklch(.765 .055 263)}
+.steps{list-style:none;padding:0;margin:0;display:grid;gap:2px}
+.steps li{display:flex;align-items:center;gap:14px;padding:10px 0;font-size:14px;color:oklch(1 0 0/.5);cursor:default}
+.steps li i{width:26px;height:26px;border-radius:50%;border:1px solid oklch(1 0 0/.25);display:grid;place-items:center;font-style:normal;font-family:var(--mono);font-size:11px;flex-shrink:0;transition:all .4s var(--ease)}
+.steps li.done{color:oklch(1 0 0/.75);cursor:pointer}.steps li.done i{background:oklch(.765 .055 263);border-color:oklch(.765 .055 263);color:oklch(.095 .003 60)}
+.steps li.on{color:#fff}.steps li.on i{border-color:#fff;background:#fff;color:oklch(.095 .003 60)}
+.rail .help{margin-top:auto;font-size:13px;color:oklch(1 0 0/.6);display:grid;gap:4px}
+.rail .help a{color:#fff;border-bottom:1px solid oklch(1 0 0/.4);justify-self:start}
+.main{display:flex;flex-direction:column;min-width:0}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px clamp(20px,4cqi,56px)}
+.top .mono{font-size:11px}
+.top-r{display:flex;gap:14px;align-items:center}
+.top .logo{display:none}
+.theme-btn{width:32px;height:32px;border:1px solid var(--rule);border-radius:50%;display:grid;place-items:center}
+.theme-btn i{width:12px;height:12px;border-radius:50%;border:1px solid var(--ink);background:linear-gradient(90deg,var(--ink) 50%,transparent 50%)}
+.prog{height:2px;background:var(--rule);margin:0 clamp(20px,4cqi,56px)}
+.prog i{display:block;height:100%;background:var(--accent);transition:width .6s var(--ease)}
+.stage{flex:1;display:flex;justify-content:center;padding:clamp(32px,5cqi,72px) clamp(20px,4cqi,56px) 32px}
+.pane{width:100%;max-width:600px;display:grid;gap:24px;align-content:start;animation:paneIn .6s var(--ease)}
+@keyframes paneIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.pane h1{font-size:clamp(34px,4.2cqi,52px);line-height:1.02}
+.pane h1 em{color:var(--accent)}
+.pane .lede{color:var(--ink-soft);font-size:16px;margin-top:-8px;max-width:52ch}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:16px}.fg .full{grid-column:1/-1}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px clamp(20px,4cqi,56px);border-top:1px solid var(--rule);position:sticky;bottom:0;background:color-mix(in oklab,var(--paper) 92%,transparent);backdrop-filter:blur(12px)}
+.foot .r{display:flex;gap:10px;align-items:center}
+.hint{font-size:12px;color:var(--ink-mute)}
+.or{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:10px;color:var(--ink-mute);letter-spacing:.14em}.or::before,.or::after{content:"";flex:1;height:1px;background:var(--rule)}
+.pw{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:8px}.pw i{height:4px;border-radius:9px;background:var(--rule)}.pw i.on{background:var(--good)}
+.otp{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.otp input{text-align:center;font-family:var(--display);font-size:30px;font-weight:300;padding:14px 0}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink-soft)}.chk input{margin-top:3px;accent-color:var(--ink)}
+.drop{border:1px dashed color-mix(in oklab,var(--ink-mute) 55%,transparent);border-radius:12px;padding:40px 24px;text-align:center;display:grid;justify-items:center;gap:10px;background:var(--paper-deep)}
+.drop .gl{width:52px;height:52px;border-radius:50%;border:1px solid var(--rule);display:grid;place-items:center;font-family:var(--mono);font-size:18px;background:var(--paper)}
+.file{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid var(--rule);border-radius:10px}
+.file .ext{font-family:var(--mono);font-size:10px;padding:6px;border-radius:4px;background:var(--accent);color:var(--paper)}
+.parse{display:grid;gap:10px}
+.parse>div{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--ink-mute);opacity:0;animation:pIn .5s var(--ease) forwards}
+.parse>div i{width:20px;height:20px;border-radius:50%;border:1px solid var(--rule);display:grid;place-items:center;font-style:normal;font-size:10px;flex-shrink:0}
+.parse>div.ok{color:var(--ink)}.parse>div.ok i{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+.parse>div.run i{border-color:var(--accent);border-top-color:transparent;animation:spin 1s linear infinite}
+@keyframes pIn{to{opacity:1}}@keyframes spin{to{transform:rotate(360deg)}}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--rule);border-radius:999px;padding:8px 16px;font-size:13px;cursor:pointer;transition:all .2s;user-select:none}
+.chip:hover{border-color:var(--ink)}
+.chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.segc{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1px solid var(--rule);border-radius:10px;padding:3px;gap:3px}
+.segc label{cursor:pointer}.segc input{display:none}
+.segc b{display:block;text-align:center;font-weight:400;font-size:13px;padding:9px 6px;border-radius:7px;color:var(--ink-mute);transition:all .2s}
+.segc input:checked+b{background:var(--ink);color:var(--paper)}
+.tgl{display:flex;align-items:center;gap:14px;cursor:pointer;padding:14px 16px;border:1px solid var(--rule);border-radius:10px}
+.tgl input{display:none}
+.tgl i{width:36px;height:20px;border-radius:999px;background:var(--rule);position:relative;flex-shrink:0;transition:background .2s}
+.tgl i::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--paper);box-shadow:0 1px 3px oklch(0 0 0/.2);transition:transform .25s var(--ease)}
+.tgl input:checked+i{background:var(--accent)}.tgl input:checked+i::after{transform:translateX(16px)}
+.tgl b{display:block;font-weight:500}.tgl small{font-size:12px;color:var(--ink-mute)}
+.opt{display:grid;gap:10px}
+.opt label{display:flex;gap:16px;align-items:flex-start;padding:18px;border:1px solid var(--rule);border-radius:12px;cursor:pointer;transition:border-color .2s,box-shadow .2s}
+.opt label:hover{border-color:var(--ink)}
+.opt label:has(input:checked){border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.opt input{margin-top:4px;accent-color:var(--ink);width:16px;height:16px}
+.opt b{font-weight:500;display:block;font-size:15px}.opt small{color:var(--ink-mute);font-size:13px}
+.prof{border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+.prof>div{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 18px;border-top:1px solid var(--rule);font-size:14px}
+.prof>div:first-child{border-top:0}
+.prof .k{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-mute)}
+.prof button{font-size:12px;color:var(--ink-mute);border-bottom:1px solid var(--rule)}
+.inv{display:grid;grid-template-columns:minmax(0,1fr) 170px 32px;gap:10px;align-items:center}
+.inv button.x{width:32px;height:32px;border-radius:50%;border:1px solid var(--rule);color:var(--ink-mute)}
+.dpick{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.dpick button{border:1px solid var(--rule);border-radius:10px;padding:12px 4px;display:grid;gap:4px;text-align:center}
+.dpick button.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.dpick b{font-family:var(--display);font-weight:300;font-size:26px;line-height:1}
+.dpick small{font-family:var(--mono);font-size:10px;color:var(--ink-mute);letter-spacing:.08em;text-transform:uppercase}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.slots button{border:1px solid var(--rule);border-radius:8px;padding:10px 0;font-family:var(--mono);font-size:12px}
+.slots button.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.slots button:disabled{opacity:.35;text-decoration:line-through}
+.cons{display:flex;gap:14px;align-items:center;padding:16px;border:1px solid var(--rule);border-radius:12px;background:var(--paper-deep)}
+.av{width:44px;height:44px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-family:var(--display);font-size:16px;flex-shrink:0}
+.done-hero{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center;padding:28px;border:1px solid var(--rule);border-radius:16px;background:var(--paper-deep)}
+.ring{--p:0;width:132px;height:132px;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--p)*1%),var(--rule) 0);display:grid;place-items:center;animation:ringFill 1.6s var(--ease) .3s both}
+@property --p{syntax:"<number>";inherits:false;initial-value:0}
+@keyframes ringFill{from{--p:0}to{--p:var(--to)}}
+.ring span{width:112px;height:112px;border-radius:50%;background:var(--paper-deep);display:grid;place-items:center;font-family:var(--display);font-weight:300;font-size:46px;letter-spacing:-.03em}
+.sumlist{display:grid;gap:2px}
+.sumlist>div{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--rule);font-size:14px}
+.sumlist>div:first-child{border-top:0}
+.sumlist i{width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--paper);display:grid;place-items:center;font-style:normal;font-size:10px;flex-shrink:0}
+.sumlist .n{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--ink-mute)}
+.swaplink{font-size:13px;color:var(--ink-mute)}.swaplink a{color:var(--ink);border-bottom:1px solid var(--ink)}
+@container (max-width:900px){.ob{grid-template-columns:1fr}.rail{display:none}.top .logo{display:inline}.fg{grid-template-columns:1fr}.prof>div{grid-template-columns:1fr auto}.prof .k{grid-column:1/-1}.inv{grid-template-columns:1fr 32px}.inv select{grid-column:1;grid-row:2}.done-hero{grid-template-columns:1fr;justify-items:start}.otp input{font-size:22px}.foot .hint{display:none}}
+</style>
+</head>
+<body>
+<div class="ob">
+<aside class="rail"><a href="UKTL Landing.html" class="logo">UK <em>Talent</em> Link</a><div><div class="who" id="rWho"></div><h2 id="rHead"></h2></div><ol class="steps" id="rSteps"></ol><div class="help"><span>Need a hand?</span><a href="Contact.html">Talk to a person</a><span>+44 (0)20 7189 2857</span></div></aside>
+<div class="main">
+<div class="top"><a href="UKTL Landing.html" class="logo">UK <em>Talent</em> Link</a><span class="mono" id="tStep"></span><div class="top-r"><button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode"><i></i></button><a href="UKTL Landing.html" class="lnk">Save &amp; exit</a></div></div>
+<div class="prog"><i id="prog"></i></div>
+<div class="stage"><div class="pane" id="pane"></div></div>
+<div class="foot"><button class="btn" id="back">← Back</button><div class="r"><span class="hint" id="fHint"></span><button class="btn btn-ink btn-lg" id="next">Continue</button></div></div>
+</div></div>
+<script>
+const q=new URLSearchParams(location.search),root=document.documentElement;
+const get=k=>{try{return localStorage.getItem(k)}catch(e){return null}},put=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const setTheme=t=>{root.className='t-'+t;if(!q.get('theme'))put('uktl-theme',t)};
+setTheme(q.get('theme')||get('uktl-theme')||'light');
+document.getElementById('themeBtn').onclick=()=>setTheme(root.classList.contains('t-dark')?'light':'dark');
+const aud=q.get('for')==='employer'?'employer':'candidate';put('uktl-for',aud);
+const fld=(l,inner,c='')=>`<label class="field ${c}"><span>${l}</span>${inner}</label>`;
+const inp=(l,v='',c='',p='',t='text')=>fld(l,`<input class="inp" type="${t}" value="${v}" placeholder="${p}">`,c);
+const sel=(l,o,c='')=>fld(l,`<select class="inp">${o.map(x=>`<option>${x}</option>`).join('')}</select>`,c);
+const chips=(a,on=[])=>`<div class="chips">${a.map((x,i)=>`<span class="chip ${on.includes(i)?'on':''}">${x}</span>`).join('')}</div>`;
+const seg=(n,a,on=0)=>`<div class="segc">${a.map((x,i)=>`<label><input type="radio" name="${n}" ${i===on?'checked':''}><b>${x}</b></label>`).join('')}</div>`;
+const field=(l,inner)=>`<div class="field"><span>${l}</span>${inner}</div>`;
+const F={
+candidate:{who:'Candidate · Free account',head:'Your CV, <em>scored and matched</em> in minutes.',done:'UKTL Platform.html?s=dashboard',steps:[
+{t:'Account',h:'Create your <em>free account.</em>',l:'It takes a minute. Everything for candidates is free.',b:`<button class="btn btn-lg" style="width:100%">Continue with LinkedIn</button><div class="or">OR</div><div class="fg">${inp('First name','Amara')}${inp('Last name','Okafor')}${inp('Email','amara.okafor@email.com','full','','email')}${fld('Password','<input class="inp" type="password" value="correcthorse42"><div class="pw"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>','full')}</div><label class="chk"><input type="checkbox" checked>I agree to the <a href="Terms.html" style="color:var(--ink);border-bottom:1px solid var(--ink)">terms</a> and have read how my <a href="Privacy.html" style="color:var(--ink);border-bottom:1px solid var(--ink)">information is used</a>.</label><p class="swaplink">Hiring instead? <a href="Onboarding.html?for=employer">Set up a client account</a></p>`},
+{t:'Verify email',h:'Check your <em>inbox.</em>',l:'We sent a 6-digit code to amara.okafor@email.com.',b:`<div class="otp">${['3','9','1','7','',''].map(v=>`<input class="inp" maxlength="1" inputmode="numeric" value="${v}">`).join('')}</div><p class="hint">Didn't get it? Check spam, or <button class="lnk" style="color:var(--ink)">resend in 0:42</button></p>`},
+{t:'Upload CV',h:'Add your <em>CV.</em>',l:'PDF, Word or plain text, up to 10 MB. It stays private until you apply.',b:`<div class="drop"><span class="gl">↑</span><b style="font-weight:500">Drop your CV here</b><span class="hint">or</span><button class="btn btn-sm">Choose file</button></div><div class="file"><span class="ext">PDF</span><div style="flex:1;min-width:0"><b style="font-weight:500">Amara_Okafor_CV_Oct.pdf</b><div class="hint">2 pages · 184 KB</div></div><button class="lnk">Remove</button></div><div class="parse"><div class="ok" style="animation-delay:.1s"><i>✓</i>File received</div><div class="ok" style="animation-delay:.7s"><i>✓</i>Reading experience and skills</div><div class="ok" style="animation-delay:1.3s"><i>✓</i>Building your profile</div><div class="run" style="animation-delay:1.9s"><i></i>Scoring your CV</div></div>`},
+{t:'Check profile',h:'Does this <em>look right?</em>',l:'We built this from your CV. Fix anything we got wrong. It improves your matches.',b:`<div class="prof"><div><span class="k">Name</span><span>Amara Okafor</span><button>Edit</button></div><div><span class="k">Headline</span><span>Senior Financial Analyst</span><button>Edit</button></div><div><span class="k">Location</span><span>Manchester, UK</span><button>Edit</button></div><div><span class="k">Experience</span><span>6 years · Senior</span><button>Edit</button></div><div><span class="k">Latest role</span><span>Halden Group, 2021–present</span><button>Edit</button></div><div><span class="k">Education</span><span>BSc Accounting &amp; Finance, Manchester</span><button>Edit</button></div></div>${field('Skills we found',chips(['Financial modelling','IFRS','Power BI','Forecasting','SAP','Stakeholder management','+ Add skill'],[0,1,2,3,4,5]))}`},
+{t:'Preferences',h:'Where would you <em>like to work?</em>',l:'We only show you roles that fit. You can change these any time.',b:`${field('Markets',chips(['United Kingdom','UAE','Saudi Arabia','Qatar','Oman','Bahrain'],[0,1,2]))}${field('Seniority',seg('sn',['Mid','Senior','Lead','Director'],1))}<div class="fg">${inp('Salary floor','70,000')}${sel('Currency',['GBP / year','AED / month','SAR / month'])}</div>${field('Work pattern',chips(['On-site','Hybrid','Remote'],[0,1]))}<label class="tgl"><input type="checkbox" checked><i></i><span><b>Open to relocating</b><small>Show roles that would mean a move</small></span></label>`},
+{t:'Right to work',h:'Your right <em>to work.</em>',l:'This helps consultants put you forward for roles you can start quickly.',b:`<div class="fg">${sel('United Kingdom',['British citizen','Settled status','Visa holder','Would need sponsorship'])}${sel('UAE',['Residence visa','Would need sponsorship','Not applicable'])}${sel('Notice period',['1 month','Immediately','2 weeks','2 months','3 months'],'full')}</div>${field('Who can see your profile?','')}<div class="opt"><label><input type="radio" name="vis" checked><span><b>UKTL consultants only</b><small>Recommended. Employers see you only after you apply or approve an introduction.</small></span></label><label><input type="radio" name="vis"><span><b>Consultants and matched employers</b><small>Employers with a strong-fit role can view an anonymised summary.</small></span></label></div>`},
+{t:'Your score',h:'You\u2019re <em>all set,</em> Amara.',l:'Your CV is scored and Talent Compass has started matching.',b:`<div class="done-hero"><div class="ring" style="--to:78"><span>78</span></div><div><span class="mono">CV score</span><p style="font-size:15px;margin-top:6px">Better than 71% of Senior Analyst CVs. Your top fix is worth <b>+6 points</b>.</p></div></div><div class="sumlist"><div><i>✓</i>Profile built from your CV<span class="n">6 sections</span></div><div><i>✓</i>Matched to open roles<span class="n">24 roles</span></div><div><i>✓</i>Markets set<span class="n">UK · UAE · KSA</span></div></div>`,next:'Go to dashboard'}]},
+employer:{who:'Employer · Client portal',head:'Ranked shortlists, <em>with the reasons.</em>',done:'UKTL Employer.html',steps:[
+{t:'Account',h:'Set up your <em>client portal.</em>',l:'Use your work email. You can invite your hiring team later.',b:`<div class="fg">${inp('Full name','Laila Haddad')}${inp('Job title','Head of Talent')}${inp('Work email','laila@meridiancapital.ae','full','','email')}${fld('Password','<input class="inp" type="password" value="correcthorse42"><div class="pw"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>','full')}</div><label class="chk"><input type="checkbox" checked>I agree to the <a href="Terms.html" style="color:var(--ink);border-bottom:1px solid var(--ink)">terms</a>. Engagements are governed by your engagement letter.</label><p class="swaplink">Looking for work? <a href="Onboarding.html?for=candidate">Create a candidate account</a></p>`},
+{t:'Company',h:'About your <em>company.</em>',l:'Shown to shortlisted candidates once they\u2019re interested.',b:`<div class="fg">${inp('Company name','Meridian Capital','full')}${inp('Website','meridiancapital.ae')}${sel('Headquarters',['United Arab Emirates','United Kingdom','Saudi Arabia','Qatar'])}</div>${field('Company size',seg('sz',['1–50','51–250','251–1,000','1,000+'],2))}${field('Sector',chips(['Financial services','Construction','Technology','Energy','Healthcare','Professional services'],[0]))}<div class="drop" style="padding:24px;grid-template-columns:auto 1fr;justify-items:start;text-align:left;gap:16px;align-items:center"><span class="gl">↑</span><div><b style="font-weight:500">Company logo</b><div class="hint">PNG or SVG, square works best</div></div></div>`},
+{t:'Your needs',h:'How can we <em>help?</em>',l:'Choose any that apply. We\u2019ll tailor your portal and consultant.',b:`<div class="opt"><label><input type="checkbox" checked><span><b>Executive search</b><small>Retained search for senior and board-level roles</small></span></label><label><input type="checkbox"><span><b>HR consultancy</b><small>Structure, policy, reward and employee relations</small></span></label><label><input type="checkbox" checked><span><b>Post roles in the portal</b><small>Ranked applicants on a per-role basis</small></span></label></div>${field('Roles you expect to hire in the next 12 months',seg('vol',['1–2','3–5','6–15','15+'],1))}${field('Where you\u2019re hiring',chips(['United Kingdom','UAE','Saudi Arabia','Qatar','Oman'],[1,2]))}`},
+{t:'First role',h:'Post your <em>first role.</em>',l:'Just the basics. You can add a full description and weightings later.',b:`<div class="fg">${inp('Job title','Senior Financial Analyst','full')}${sel('Location',['Dubai · DIFC','Abu Dhabi','Riyadh','London'])}${sel('Seniority',['Senior','Mid','Lead','Director'])}${inp('Salary from','32,000')}${inp('Salary to','38,000')}</div>${field('Must-have skills',chips(['IFRS','Financial modelling','Power BI','+ Add'],[0,1,2]))}<label class="tgl"><input type="checkbox" checked><i></i><span><b>Visa sponsored</b><small>Opens the role to candidates outside the UAE</small></span></label><p class="hint">About 140 profiles in Talent Compass already score 70+ on this brief.</p>`,skip:1},
+{t:'Invite team',h:'Bring in your <em>hiring team.</em>',l:'They\u2019ll get an email to join. You can manage access any time.',b:`<div style="display:grid;gap:10px">${[['omar.f@meridiancapital.ae','Hiring manager'],['s.patel@meridiancapital.ae','Viewer'],['','Hiring manager']].map(r=>`<div class="inv"><input class="inp" value="${r[0]}" placeholder="name@company.com"><select class="inp"><option ${r[1]==='Admin'?'selected':''}>Admin</option><option ${r[1]==='Hiring manager'?'selected':''}>Hiring manager</option><option ${r[1]==='Viewer'?'selected':''}>Viewer</option></select><button class="x" aria-label="Remove">✕</button></div>`).join('')}</div><button class="lnk" style="justify-self:start;color:var(--ink)">+ Add another</button><p class="hint">Admins manage roles and billing. Hiring managers review and shortlist. Viewers can only read.</p>`,skip:1},
+{t:'Meet consultant',h:'Meet your <em>consultant.</em>',l:'A 30-minute call to agree the brief and set up your first search.',b:`<div class="cons"><span class="av">JH</span><div style="flex:1"><b style="font-weight:500">James Harlow</b><div class="hint">Finance practice · Dubai · 11 years in GCC search</div></div></div><div class="dpick">${[['Mon','3'],['Tue','4'],['Wed','5'],['Thu','6'],['Fri','7']].map((d,i)=>`<button class="${i===1?'on':''}"><small>${d[0]}</small><b>${d[1]}</b><small>Nov</small></button>`).join('')}</div><div class="slots">${['09:00','10:00','11:00','13:00','14:00','15:00','16:00'].map((t,i)=>`<button class="${i===4?'on':''}" ${i===2?'disabled':''}>${t}</button>`).join('')}</div><p class="hint">Times in Gulf Standard Time. Video call or phone, your choice.</p>`,skip:1},
+{t:'Ready',h:'Your portal <em>is ready.</em>',l:'James has your brief, and Talent Compass is ranking candidates for your first role.',b:`<div class="done-hero"><div class="ring" style="--to:100"><span style="font-size:34px">~140</span></div><div><span class="mono">Senior Financial Analyst</span><p style="font-size:15px;margin-top:6px">Profiles already score 70+ on your brief. Ranked results will appear in your portal within the hour.</p></div></div><div class="sumlist"><div><i>✓</i>Company profile<span class="n">Meridian Capital</span></div><div><i>✓</i>First role posted<span class="n">Dubai · DIFC</span></div><div><i>✓</i>Team invited<span class="n">2 people</span></div><div><i>✓</i>Consultation booked<span class="n">Tue 4 Nov · 14:00</span></div></div>`,next:'Open client portal'}]}};
+const cfg=F[aud],N=cfg.steps.length;let i=Math.min(Math.max((+q.get('step')||1)-1,0),N-1);
+document.getElementById('rWho').textContent=cfg.who;document.getElementById('rHead').innerHTML=cfg.head;
+function render(){const s=cfg.steps[i];
+document.getElementById('rSteps').innerHTML=cfg.steps.map((x,j)=>`<li class="${j<i?'done':j===i?'on':''}" data-j="${j}"><i>${j<i?'✓':j+1}</i>${x.t}</li>`).join('');
+document.getElementById('tStep').textContent=`Step ${i+1} of ${N} · ${s.t}`;
+document.getElementById('prog').style.width=((i+1)/N*100)+'%';
+document.getElementById('pane').innerHTML=`<div><div class="eyebrow">${cfg.who}</div><h1 class="disp" style="margin-top:14px">${s.h}</h1></div><p class="lede">${s.l}</p>${s.b}`;
+const pane=document.getElementById('pane');pane.style.animation='none';void pane.offsetWidth;pane.style.animation='';
+document.getElementById('back').style.visibility=i?'visible':'hidden';
+document.getElementById('next').textContent=s.next||'Continue';
+document.getElementById('fHint').innerHTML=s.skip?'<button class="lnk" id="skip">Skip for now</button>':'';
+const sk=document.getElementById('skip');if(sk)sk.onclick=()=>go(1);
+const u=new URL(location);u.searchParams.set('step',i+1);history.replaceState(null,'',u);
+pane.querySelectorAll('.chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
+pane.querySelectorAll('.dpick button,.slots button:not(:disabled)').forEach(b=>b.onclick=()=>{b.parentNode.querySelectorAll('.on').forEach(x=>x.classList.remove('on'));b.classList.add('on')});
+document.querySelectorAll('#rSteps li.done').forEach(li=>li.onclick=()=>{i=+li.dataset.j;render()});
+scrollTo(0,0)}
+function go(d){if(i+d>=N){location.href=cfg.done;return}i=Math.max(0,i+d);render()}
+document.getElementById('next').onclick=()=>go(1);document.getElementById('back').onclick=()=>go(-1);
+render();
+</script>
+</body>
+</html>

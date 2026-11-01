@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { onPreferencesChange } from "@/lib/preferences";
 import {
   Bar,
   BarChart,
@@ -33,9 +34,7 @@ function usePalette(): Palette | null {
       setPalette(Object.fromEntries(TOKENS.map((t) => [t, css.getPropertyValue(`--${t}`).trim()])) as Palette);
     };
     read();
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    media.addEventListener("change", read);
-    return () => media.removeEventListener("change", read);
+    return onPreferencesChange(read);
   }, []);
   return palette;
 }

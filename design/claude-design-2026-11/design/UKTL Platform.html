@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" class="t-light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UK Talent Link — Platform</title>
+<link rel="stylesheet" href="uktl-system.css">
+<link rel="stylesheet" href="uktl-app.css">
+</head>
+<body>
+<div id="root"></div>
+<script src="uktl-charts.js"></script>
+<script src="uktl-screens.js"></script>
+<script src="uktl-screens-employer.js"></script>
+<script src="uktl-screens-more.js"></script>
+<script src="uktl-screens-admin.js"></script>
+<script src="uktl-screens-empty.js"></script>
+<script>
+const q=new URLSearchParams(location.search),root=document.documentElement;
+const setTheme=t=>{root.className='t-'+t;if(!q.get('theme'))try{localStorage.setItem('uktl-theme',t)}catch(e){}};
+setTheme(q.get('theme')||localStorage.getItem('uktl-theme')||'light');
+const S=window.UKTL_SCREENS,key=S[q.get('s')]?q.get('s'):(document.body.dataset.default||'dashboard'),scr=S[key];
+const keep=q.get('theme')?'&theme='+q.get('theme'):'';
+const NAV={
+cand:[['#','Candidate'],['dashboard','◐','Overview'],['discover','◇','Discover'],['jobs','▤','Jobs'],['upload','↑','CV score'],['activity','☆','Saved & history'],['#','Support'],['messages','✉','Messages',2],['consultations','◷','Consultations'],['hr','§','HR guidance'],['profile','○','Profile']],
+emp:[['#','Employer'],['company','◐','Overview'],['postjob','+','Post a job'],['allcands','≡','Candidates'],['empmsg','✉','Messages']],
+adm:[['#','Recruitment'],['admin','◐','Overview'],['mandates','▤','Mandates'],['talent','≡','Candidates'],['#','Clients & comms'],['bookings','◷','Consultations'],['enquiries','✉','Enquiries',5],['campaigns','↗','Email campaigns'],['calendar','▦','Calendar sync'],['#','Content'],['faq','?','FAQ topics'],['hrreview','§','HR content review'],['#','System'],['analytics','∿','Analytics'],['processing','↻','CV processing'],['operations','◎','Operations & privacy']]};
+const TABS={cand:['dashboard','discover','jobs','messages','profile'],emp:['company','postjob','allcands','empmsg'],adm:['admin','mandates','talent','bookings','enquiries']};
+const role=scr.emp?'emp':scr.admin?'adm':'cand',items=NAV[role];
+const navA=i=>i[0]==='#'?`<div class="grp">${i[1]}</div>`:`<a href="?s=${i[0]}${keep}" class="${scr.nav===i[0]?'on':''}"><span class="gl">${i[1]}</span>${i[2]}${i[3]?`<span class="ct">${i[3]}</span>`:''}</a>`;
+const tabs=TABS[role].map(k=>items.find(i=>i[0]===k));
+const who=role==='emp'?['MC','Meridian Capital','Employer']:role==='adm'?['JH','James Harlow','Consultant']:['AO','Amara Okafor','Candidate'];
+const tb='<button class="theme-btn" aria-label="Toggle dark mode" onclick="setTheme(root.classList.contains(\'t-dark\')?\'light\':\'dark\')"><i></i></button>';
+document.getElementById('root').innerHTML=scr.bare?scr.html():`
+<div class="app"><aside class="side"><a href="UKTL Landing.html" class="logo">UK <em>Talent</em> Link</a>
+<nav>${items.map(navA).join('')}</nav>
+${role==='cand'?`<nav><div class="grp">Hiring?</div><a href="UKTL Employer.html"><span class="gl">→</span>Employer portal</a></nav><a href="?s=profile${keep}" class="side-card"><span class="mono">Profile strength</span><div class="sbar"><div class="sbar-t"><div class="sbar-f" style="width:82%"></div></div><span class="sbar-n">82</span></div><small>Add CIMA status for +4</small></a>`:''}
+<div class="side-foot"><span class="av">${who[0]}</span><div><b>${who[1]}</b><small>${who[2]}</small></div>${tb}</div></aside>
+<main class="main"><div class="top"><a href="UKTL Landing.html" class="logo m-only">UK <em>Talent</em> Link</a><span class="crumb d-only">${scr.crumb||''}</span>
+<div class="top-r"><span class="search">Search roles, people… <kbd>⌘K</kbd></span>${tb.replace('theme-btn','theme-btn m-only')}<span class="bell">◔</span><span class="av sm m-only">${who[0]}</span></div></div>
+${scr.flush?scr.html():`<div class="page">${scr.html()}</div>`}</main></div>
+<nav class="tabbar">${tabs.map(i=>`<a href="?s=${i[0]}${keep}" class="${scr.nav===i[0]?'on':''}"><span class="gl">${i[1]}</span>${i[2].split(' ')[0]}</a>`).join('')}</nav>`;
+document.querySelectorAll('.filters .pill,.choice button').forEach(p=>p.onclick=()=>{p.parentNode.querySelectorAll('.on').forEach(x=>x.classList.remove('on'));p.classList.add('on')});
+document.querySelectorAll('.slots button:not(:disabled),.dpick button:not(:disabled)').forEach(p=>p.onclick=()=>{p.parentNode.querySelectorAll('.on').forEach(x=>x.classList.remove('on'));p.classList.add('on')});
+</script>
+</body>
+</html>

@@ -2,6 +2,7 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 import { useEffect } from "react";
 import { Toaster } from "sonner";
 import { getSessionFn } from "@/lib/functions";
+import { PREFERENCES_SCRIPT } from "@/lib/preferences";
 
 import appCss from "../styles.css?url";
 
@@ -48,6 +49,12 @@ export const Route = createRootRoute({
       { name: "twitter:site", content: "@uktalentlink" },
     ],
     links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..600,0..100;1,9..144,300..600,0..100&family=Geist:wght@300..600&family=Geist+Mono:wght@400;500&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,
@@ -61,8 +68,11 @@ export const Route = createRootRoute({
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    // The preferences script sets the theme class and audience before paint, so
+    // <html> attributes legitimately differ from the server render.
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: PREFERENCES_SCRIPT }} />
         <HeadContent />
       </head>
       <body>
