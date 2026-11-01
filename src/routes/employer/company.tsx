@@ -1,3 +1,4 @@
+import { TwoStepSetting } from "@/components/app/TwoStepSetting";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/AppLayout";
@@ -6,7 +7,7 @@ import { myEmployerProfileFn, saveEmployerProfileFn } from "@/lib/employer-funct
 
 export const Route = createFileRoute("/employer/company")({
   loader: () => myEmployerProfileFn(),
-  head: () => ({ meta: [{ title: "Company details — UK Talent Link" }] }),
+  head: () => ({ meta: [{ title: "Company and settings — UK Talent Link" }] }),
   component: Company,
 });
 
@@ -17,7 +18,7 @@ function Company() {
     <div className="max-w-3xl">
       <PageHeader
         eyebrow="Employer portal"
-        title="Company details"
+        title="Company and settings"
         lede="Your consultant uses these to brief candidates once they're interested. They aren't published."
       />
       <CompanyForm
@@ -34,6 +35,7 @@ function Company() {
           await router.navigate({ to: "/employer" });
         }}
       />
+      <TwoStepSetting />
     </div>
   );
 }

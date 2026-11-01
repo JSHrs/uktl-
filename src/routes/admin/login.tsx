@@ -94,7 +94,6 @@ function LoginPage() {
         </form>
 
         <Button asChild variant="outline" className="w-full mt-5"><Link to="/auth/register" search={{ staff: true }}>Create a staff account</Link></Button>
-        <Link to="/simulation" search={{ role: "admin" }} className="block mt-6 text-center text-sm underline">Open prebuilt admin preview →</Link>
         <p className="mt-6 text-xs text-ink-mute text-center">
           Staff accounts are invitation-only. Ask your administrator for access.
         </p>

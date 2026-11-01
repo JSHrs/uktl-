@@ -1,3 +1,4 @@
+import { AuthTabs } from "@/components/app/AuthTabs";
 import { SocialSignIn } from "@/components/app/SocialSignIn";
 import { useState } from "react";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
@@ -13,7 +14,7 @@ export const Route = createFileRoute("/auth/login")({
   beforeLoad: ({ context, search }) => {
     if (context.session.userId) throw redirect({ href: accountDestination(context.session, safeRedirect(search.redirect)) });
   },
-  head: () => ({ meta: [{ title: "Sign in — Talent Compass" }, { name: "description", content: "Sign in to your UK Talent Link career workspace." }, { property: "og:title", content: "Sign in — Talent Compass" }, { property: "og:description", content: "Access your career profile and recruitment workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
+  head: () => ({ meta: [{ title: "Sign in — UK Talent Link" }, { name: "description", content: "Sign in to your UK Talent Link account." }, { property: "og:title", content: "Sign in — UK Talent Link" }, { property: "og:description", content: "Access your career profile and recruitment workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: LoginPage,
 });
 
@@ -44,19 +45,15 @@ function LoginPage() {
 
   return (
     <div className="w-full max-w-[400px]">
+      <AuthTabs active="login" redirect={search.redirect} />
       <div className="mb-8 text-center">
-        <div className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-mute mb-3">
-          — Talent Compass
-        </div>
         <h1
           className="font-display font-light tracking-[-0.025em]"
           style={{ fontSize: "clamp(28px, 4vw, 36px)", fontVariationSettings: '"opsz" 144, "SOFT" 50' }}
         >
-          Sign in
+          Welcome back
         </h1>
       </div>
-
-      <SocialSignIn mode="login" redirect={safeRedirect(search.redirect)} />
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -106,16 +103,12 @@ function LoginPage() {
       </form>
       {linkSent && <p role="status" className="mt-3 text-sm">If this email has an account, check your inbox for a sign-in link.</p>}
 
-      <Link to="/simulation" search={{ role: "candidate" }} className="block text-center mt-5 text-sm underline">Try candidate preview →</Link>
+      <SocialSignIn mode="login" redirect={safeRedirect(search.redirect)} />
       <div className="mt-6 text-center space-y-3 text-sm text-ink-mute">
         <div>
           <Link to="/auth/forgot" className="hover:text-ink underline">Forgot password?</Link>
           {" · "}
           <button type="button" disabled={loading || !email} onClick={magicLink} className="hover:text-ink underline disabled:opacity-50 disabled:no-underline">Email me a sign-in link</button>
-        </div>
-        <div>
-          No account?{" "}
-          <Link to="/auth/register" className="text-ink underline">Register</Link>
         </div>
         <div className="pt-3 border-t border-rule">
           <Link to="/admin/login" className="hover:text-ink underline">Staff / admin sign in</Link>

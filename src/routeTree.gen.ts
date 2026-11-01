@@ -22,7 +22,6 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReachRouteImport } from './routes/reach'
 import { Route as SectorsRouteImport } from './routes/sectors'
 import { Route as ServicesRouteImport } from './routes/services'
-import { Route as SimulationRouteImport } from './routes/simulation'
 import { Route as StaffRouteImport } from './routes/staff'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
@@ -53,6 +52,7 @@ import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthResetRouteImport } from './routes/auth/reset'
 import { Route as AuthSecurityRouteImport } from './routes/auth/security'
+import { Route as AuthTwoStepRouteImport } from './routes/auth/two-step'
 import { Route as EmployerIndexRouteImport } from './routes/employer/index'
 import { Route as EmployerCompanyRouteImport } from './routes/employer/company'
 import { Route as AdminCandidatesIndexRouteImport } from './routes/admin/candidates/index'
@@ -144,11 +144,6 @@ const SectorsRoute = SectorsRouteImport.update({
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
   path: '/services',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SimulationRoute = SimulationRouteImport.update({
-  id: '/simulation',
-  path: '/simulation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StaffRoute = StaffRouteImport.update({
@@ -299,6 +294,11 @@ const AuthResetRoute = AuthResetRouteImport.update({
 const AuthSecurityRoute = AuthSecurityRouteImport.update({
   id: '/security',
   path: '/security',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthTwoStepRoute = AuthTwoStepRouteImport.update({
+  id: '/two-step',
+  path: '/two-step',
   getParentRoute: () => AuthRoute,
 } as any)
 const EmployerIndexRoute = EmployerIndexRouteImport.update({
@@ -452,7 +452,6 @@ export interface FileRoutesByFullPath {
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
-  '/simulation': typeof SimulationRoute
   '/staff': typeof StaffRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -481,6 +480,7 @@ export interface FileRoutesByFullPath {
   '/auth/register': typeof AuthRegisterRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/security': typeof AuthSecurityRoute
+  '/auth/two-step': typeof AuthTwoStepRoute
   '/employer/company': typeof EmployerCompanyRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
@@ -522,7 +522,6 @@ export interface FileRoutesByTo {
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
-  '/simulation': typeof SimulationRoute
   '/staff': typeof StaffRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -551,6 +550,7 @@ export interface FileRoutesByTo {
   '/auth/register': typeof AuthRegisterRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/security': typeof AuthSecurityRoute
+  '/auth/two-step': typeof AuthTwoStepRoute
   '/employer/company': typeof EmployerCompanyRoute
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
@@ -596,7 +596,6 @@ export interface FileRoutesById {
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
-  '/simulation': typeof SimulationRoute
   '/staff': typeof StaffRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -625,6 +624,7 @@ export interface FileRoutesById {
   '/auth/register': typeof AuthRegisterRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/security': typeof AuthSecurityRoute
+  '/auth/two-step': typeof AuthTwoStepRoute
   '/employer/company': typeof EmployerCompanyRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
@@ -671,7 +671,6 @@ export interface FileRouteTypes {
     | '/reach'
     | '/sectors'
     | '/services'
-    | '/simulation'
     | '/staff'
     | '/terms'
     | '/unsubscribe'
@@ -700,6 +699,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/auth/reset'
     | '/auth/security'
+    | '/auth/two-step'
     | '/employer/company'
     | '/admin/'
     | '/app/'
@@ -741,7 +741,6 @@ export interface FileRouteTypes {
     | '/reach'
     | '/sectors'
     | '/services'
-    | '/simulation'
     | '/staff'
     | '/terms'
     | '/unsubscribe'
@@ -770,6 +769,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/auth/reset'
     | '/auth/security'
+    | '/auth/two-step'
     | '/employer/company'
     | '/admin'
     | '/app'
@@ -814,7 +814,6 @@ export interface FileRouteTypes {
     | '/reach'
     | '/sectors'
     | '/services'
-    | '/simulation'
     | '/staff'
     | '/terms'
     | '/unsubscribe'
@@ -843,6 +842,7 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/auth/reset'
     | '/auth/security'
+    | '/auth/two-step'
     | '/employer/company'
     | '/admin/'
     | '/app/'
@@ -888,7 +888,6 @@ export interface RootRouteChildren {
   ReachRoute: typeof ReachRoute
   SectorsRoute: typeof SectorsRoute
   ServicesRoute: typeof ServicesRoute
-  SimulationRoute: typeof SimulationRoute
   StaffRoute: typeof StaffRoute
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
@@ -994,13 +993,6 @@ declare module '@tanstack/react-router' {
       path: '/services'
       fullPath: '/services'
       preLoaderRoute: typeof ServicesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/simulation': {
-      id: '/simulation'
-      path: '/simulation'
-      fullPath: '/simulation'
-      preLoaderRoute: typeof SimulationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/staff': {
@@ -1211,6 +1203,13 @@ declare module '@tanstack/react-router' {
       path: '/security'
       fullPath: '/auth/security'
       preLoaderRoute: typeof AuthSecurityRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/auth/two-step': {
+      id: '/auth/two-step'
+      path: '/two-step'
+      fullPath: '/auth/two-step'
+      preLoaderRoute: typeof AuthTwoStepRouteImport
       parentRoute: typeof AuthRoute
     }
     '/employer/': {
@@ -1497,6 +1496,7 @@ interface AuthRouteChildren {
   AuthRegisterRoute: typeof AuthRegisterRoute
   AuthResetRoute: typeof AuthResetRoute
   AuthSecurityRoute: typeof AuthSecurityRoute
+  AuthTwoStepRoute: typeof AuthTwoStepRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
@@ -1507,6 +1507,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthRegisterRoute: AuthRegisterRoute,
   AuthResetRoute: AuthResetRoute,
   AuthSecurityRoute: AuthSecurityRoute,
+  AuthTwoStepRoute: AuthTwoStepRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
@@ -1543,7 +1544,6 @@ const rootRouteChildren: RootRouteChildren = {
   ReachRoute: ReachRoute,
   SectorsRoute: SectorsRoute,
   ServicesRoute: ServicesRoute,
-  SimulationRoute: SimulationRoute,
   StaffRoute: StaffRoute,
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,

@@ -19,7 +19,7 @@ The original text of A1.1–A1.9 is not present in this repository. The mapping 
 
 ## Testing simulation
 
-The upload page has an explicit browser-only simulation. It validates basic PDF/DOCX size/signature, displays an editable fictional example and five scores, and clears on refresh. It does not upload or scan the document, call Claude, write candidate data or send messages. It is not evidence that the real upload/parser works. Live uploads retain fail-closed scanning. Do not remove that protection to make a test appear successful.
+The browser-only simulation and "candidate preview" were removed on 1 November 2026 at the owner's request; there is no simulated path. Live uploads retain fail-closed scanning. Do not remove that protection to make a test appear successful.
 
 ## Manual deployed journey (record tester, date, browser and result)
 

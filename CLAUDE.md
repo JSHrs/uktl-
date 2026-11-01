@@ -79,6 +79,7 @@ The root route loads the session once per navigation (`getSessionFn` → `contex
 - Admins manage content and operations. Consultants read recruitment records and update match stages; candidate deletion and content management remain admin-only.
 - `/admin/login` authenticates email/password; `/auth/security` enrolls/verifies TOTP. No shared-password cookie fallback exists. Legacy `auth.ts` and its regression tests are historical and are not used by current staff authorization.
 - Candidates can also use Google or Apple (`server/oauth.ts`, `oauth-functions.ts`). The flow is server-side PKCE: the verifier sits in a 10-minute httpOnly cookie and `/auth/callback` exchanges `?code=` for the normal session cookies. Both buttons always render (owner's decision); one not enabled in Supabase (`/auth/v1/settings`) shows a "use email for now" notice. Provider setup is in DEPLOYMENT.md. Staff never use social sign-in.
+- **Optional two-step for candidates and employers** (owner, 1 Nov 2026): never asked for at sign-up; switched on in Profile / Company & settings (`TwoStepSetting`, `two-step-functions.ts`). Enforcement is central: `getCandidateSession()` treats a non-staff account with a verified TOTP factor but an aal1 token as signed out with `mfaPending`, and the root route sends it to `/auth/two-step` — so password, email-link and Google/Apple sign-ins are all covered. Staff MFA stays mandatory via `/auth/security`.
 - Candidates use server-verified Supabase sessions in httpOnly cookies. Profile edits use their own RLS client. Callback tokens are verified by Auth; recovery links lead to `/auth/reset`, update the password and revoke sessions.
 - Configure the exact HTTPS `SITE_URL` + `/auth/callback` in Supabase Auth. Resend SMTP handles Auth email. Provider credentials stay in server secrets.
 - Stage 1 and subsequent release requirements are in `DEVELOPMENT_GATES.md`; skipped authenticated tests never pass a stage.
@@ -107,7 +108,7 @@ The root route loads the session once per navigation (`getSessionFn` → `contex
 
 ## Known gaps (not bugs — unbuilt)
 
-See PHASE_1_ACCEPTANCE.md for current evidence and blockers. Reed scheduling, campaigns, candidate messages, appointment reminders and Google/Outlook synchronization have code; live provider activation and acceptance are not complete. Ranking remains rules-based with separate Claude evidence review. D1 calendar/communications support is not implemented. The labelled browser-only CV simulation never writes recruitment data or disables live scanning.
+See PHASE_1_ACCEPTANCE.md for current evidence and blockers. Reed scheduling, campaigns, candidate messages, appointment reminders and Google/Outlook synchronization have code; live provider activation and acceptance are not complete. Ranking remains rules-based with separate Claude evidence review. D1 calendar/communications support is not implemented. The old browser-only "candidate preview" simulation was removed on 1 Nov 2026 at the owner's request.
 
 
 ## Launch hardening verification

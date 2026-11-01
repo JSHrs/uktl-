@@ -29,10 +29,23 @@ const ACCESS_COOKIE  = "sb-access-token";
 const REFRESH_COOKIE = "sb-refresh-token";
 
 // ── Auth helpers (call inside server functions only) ──────────────────────────
-const candidateSessionCache = createRequestCache<{ userId: string | null; email: string | null }>();
+type CandidateSession = { userId: string | null; email: string | null; mfaPending?: boolean };
+const candidateSessionCache = createRequestCache<CandidateSession>();
+
+/** The assurance level in a Supabase access token ("aal1" or "aal2"); null if unreadable. */
+export function tokenAssuranceLevel(accessToken: string): string | null {
+  try {
+    const payload = accessToken.split(".")[1];
+    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(payload.length / 4) * 4, "="));
+    const aal = (JSON.parse(json) as { aal?: unknown }).aal;
+    return typeof aal === "string" ? aal : null;
+  } catch {
+    return null;
+  }
+}
 const authenticatedCache = createRequestCache<Awaited<ReturnType<typeof resolveAuthenticatedSupabase>>>();
 export function getCandidateSession() {
-  return candidateSessionCache.get(getRequest(), async () => {
+  return candidateSessionCache.get(getRequest(), async (): Promise<CandidateSession> => {
     if (!getCookie(ACCESS_COOKIE) && !getCookie(REFRESH_COOKIE)) return { userId: null, email: null };
     let authenticated: Awaited<ReturnType<typeof getAuthenticatedSupabase>>;
     try { authenticated = await getAuthenticatedSupabase(); }
@@ -41,6 +54,16 @@ export function getCandidateSession() {
       throw error;
     }
     const { user } = authenticated;
+    // Optional two-step verification (candidates and employers): an account with a
+    // verified authenticator is not signed in until this session has been verified
+    // with a code (aal2). This covers password, email-link and Google/Apple sign-in.
+    // Staff keep their own mandatory MFA flow (/auth/security), checked separately.
+    const hasAuthenticator = (user.factors ?? []).some((f) => f.factor_type === "totp" && f.status === "verified");
+    if (hasAuthenticator && tokenAssuranceLevel(authenticated.session.access_token) !== "aal2") {
+      const { readStaffAccess } = await import("./server/staff-access");
+      const access = await readStaffAccess(authenticated.client).catch(() => ({ role: null }));
+      if (!access.role) return { userId: null, email: user.email ?? null, mfaPending: true };
+    }
     const env = await getEnv();
     if (env.DATA_BACKEND === "supabase") {
       const blocked = await env.DB.prepare("SELECT 1 FROM account_erasures WHERE target_user_id=?::uuid").bind(user.id).first();

@@ -1,12 +1,10 @@
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { SocialSignIn } from "@/components/app/SocialSignIn";
 import { CompanyForm, RoleForm } from "@/components/app/EmployerForms";
 import { Logo } from "@/components/site/Nav";
-import { candidateRegisterFn, uploadAndParseCvFn } from "@/lib/functions";
+import { uploadAndParseCvFn } from "@/lib/functions";
 import { myEmployerProfileFn, saveEmployerProfileFn, submitEmployerRoleFn } from "@/lib/employer-functions";
-import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { setTheme, useTheme } from "@/lib/preferences";
 import heroMark from "@/assets/hero-mark.jpg";
 
@@ -58,7 +56,8 @@ export const Route = createFileRoute("/onboarding")({
     const { session } = context;
     if (session.isStaff) throw redirect({ href: "/admin" });
     // Later steps need an account; a signed-in visitor skips the account step.
-    if (!session.userId && search.step > 1) throw redirect({ to: "/onboarding", search: { for: search.for, step: 1 } });
+    // Accounts are created on the shared Sign in | Create account page, then continue here.
+    if (!session.userId) throw redirect({ to: "/auth/register", search: { for: search.for } });
     if (session.userId && search.step === 1) throw redirect({ to: "/onboarding", search: { for: search.for, step: 2 } });
     // Each account type only walks its own flow.
     // A signed-in candidate choosing to hire goes through the safe conversion check.
@@ -208,91 +207,6 @@ function Heading({ title, lede }: { title: ReactNode; lede?: ReactNode }) {
   );
 }
 
-const field =
-  "w-full border border-rule rounded-md px-4 py-3 text-sm bg-paper text-ink placeholder:text-ink-mute focus:outline-none focus:border-ink transition-colors";
-const lbl = "block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5";
-
-/* ───────────── Account (both flows) ───────────── */
-
-function AccountStep({ type, go }: { type: For; go: (n: number) => void }) {
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const employer = type === "employer";
-
-  async function submit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const f = (k: string) => String(fd.get(k) ?? "");
-    if (f("password") !== f("confirm")) return setError("Passwords do not match.");
-    if (f("password").length < MIN_PASSWORD_LENGTH) return setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
-    if (!fd.get("agree")) return setError("Please confirm you've read how your information is used and the terms.");
-    setBusy(true);
-    setError(null);
-    try {
-      await candidateRegisterFn({ data: { name: f("name").trim(), email: f("email").trim(), password: f("password"), accountType: type } });
-      await router.invalidate();
-      go(2);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <>
-      <Heading
-        title={employer ? "Set up your client portal." : "Create your free account."}
-        lede={employer ? "Use your work email. It takes a minute." : "It takes a minute. Everything for candidates is free."}
-      />
-      <SocialSignIn
-        mode="register"
-        redirect={employer ? "/auth/employer-setup?onboarding=1" : "/onboarding?for=candidate&step=2"}
-      />
-      <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <label htmlFor="ob-name" className={lbl}>Full name</label>
-          <input id="ob-name" name="name" required autoComplete="name" maxLength={200} className={field} />
-        </div>
-        <div className="sm:col-span-2">
-          <label htmlFor="ob-email" className={lbl}>{employer ? "Work email" : "Email"}</label>
-          <input id="ob-email" name="email" type="email" required autoComplete="email" className={field} />
-        </div>
-        <div>
-          <label htmlFor="ob-password" className={lbl}>Password</label>
-          <input id="ob-password" name="password" type="password" required minLength={MIN_PASSWORD_LENGTH} autoComplete="new-password" className={field} />
-        </div>
-        <div>
-          <label htmlFor="ob-confirm" className={lbl}>Confirm password</label>
-          <input id="ob-confirm" name="confirm" type="password" required autoComplete="new-password" className={field} />
-        </div>
-        <label className="sm:col-span-2 flex items-start gap-3 text-[13px] text-ink-soft">
-          <input type="checkbox" name="agree" className="mt-0.5" />
-          <span>
-            I've read <Link to="/privacy" className="underline">how my information is used</Link> and the{" "}
-            <Link to="/terms" className="underline">terms of use</Link>.
-          </span>
-        </label>
-        {error && (
-          <p role="alert" className="sm:col-span-2 text-sm text-bad">{error}</p>
-        )}
-        <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-2">
-          <Link to="/onboarding" search={{ for: employer ? "candidate" : "employer", step: 1 }} className="text-[13px] text-ink-mute underline">
-            {employer ? "Looking for work? Create a candidate account" : "Hiring? Set up a client portal"}
-          </Link>
-          <button disabled={busy} className="min-h-11 rounded-full bg-ink text-paper px-6 text-[14px] disabled:opacity-60">
-            {busy ? "Creating account…" : "Continue"}
-          </button>
-        </div>
-        <p className="sm:col-span-2 text-[13px] text-ink-mute">
-          Already have an account? <Link to="/auth/login" className="underline">Sign in</Link>
-        </p>
-      </form>
-    </>
-  );
-}
-
 /* ───────────── Candidate ───────────── */
 
 type UploadResult = { id: string; score: number | null };
@@ -308,7 +222,6 @@ function CandidateStep({
   result: UploadResult | null;
   onUploaded: (r: UploadResult) => void;
 }) {
-  if (step === 1) return <AccountStep type="candidate" go={go} />;
   if (step === 2) return <UploadStep onDone={onUploaded} />;
   return <ScoreStep result={result} />;
 }
@@ -461,7 +374,6 @@ function EmployerStep({ step, go, profile }: { step: number; go: (n: number) => 
       ← Back
     </button>
   );
-  if (step === 1) return <AccountStep type="employer" go={go} />;
   if (step === 2)
     return (
       <>

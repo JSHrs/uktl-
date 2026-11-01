@@ -9,11 +9,11 @@ html:not([data-for="employer"]) .ds .aud button[data-set="candidate"],
 html[data-for="employer"] .ds .aud button[data-set="employer"] { color: var(--paper); }
 
 /* Fixed header is the audience bar plus the nav. */
-.ds .hero { padding-top: 170px; }
-.ds .phero { padding-top: 190px; }
+.ds .hero { padding-top: 136px; }
+.ds .phero { padding-top: 160px; }
 @container (max-width: 720px) {
-  .ds .hero { padding-top: 132px; }
-  .ds .phero { padding-top: 150px; }
+  .ds .hero { padding-top: 104px; }
+  .ds .phero { padding-top: 120px; }
 }
 
 /* The global mobile h1 clamp is for older pages; design pages set their own scale. */
@@ -34,7 +34,7 @@ html[data-for="employer"] .ds .aud button[data-set="employer"] { color: var(--pa
 /* .hero is a flex column; without this the centred wrapper shrinks to its content. */
 .ds .hero-in { width: 100%; }
 /* Mobile tour frame sits below the fixed header. */
-@container (max-width: 1000px) { .ds .tour-frame { top: 96px; } }
+@container (max-width: 1000px) { .ds .tour-frame { top: 72px; } }
 /* Let the hero grid shrink on very narrow phones. */
 .ds .hero-main > * { min-width: 0; }
 .ds .demo-bar span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

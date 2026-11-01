@@ -23,7 +23,7 @@ const CANDIDATE_SECTIONS: Section[] = [
 const EMPLOYER_SECTIONS: Section[] = [
   { to: "/employer", label: "Your roles", exact: true },
   { to: "/employer/roles/new", label: "Post a role" },
-  { to: "/employer/company", label: "Company details" },
+  { to: "/employer/company", label: "Company & settings" },
 ];
 
 const STAFF_SECTIONS: Section[] = [
@@ -49,8 +49,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Link to="/" className="flex items-center gap-2 text-xs text-ink-soft mb-7"><ArrowLeft size={14} />UK Talent Link</Link>
       <p className="font-display text-2xl mb-6">Talent Compass</p>
       <nav aria-label="Account" className="flex-1 space-y-1">{sections.map(item => <Link key={item.to} to={item.to} onClick={() => setOpen(false)} className={`flex px-3 py-3 text-sm rounded-md ${item.exact ? current === item.to ? "bg-paper border border-rule" : "text-ink-soft" : current.startsWith(item.to) ? "bg-paper border border-rule" : "text-ink-soft"}`}>{item.label}</Link>)}
-      <Link to="/app/profile" onClick={() => setOpen(false)} className="flex items-center gap-2 px-3 py-3 text-sm"><Settings size={16} />Settings</Link>
-      <Link to="/simulation" search={{role: session.isStaff ? "admin" : "candidate"}} className="flex px-3 py-3 text-xs text-ink-soft">Open sample workspace →</Link></nav>
+      <Link to={session.accountRole === "employer" && !session.isStaff ? "/employer/company" : "/app/profile"} onClick={() => setOpen(false)} className="flex items-center gap-2 px-3 py-3 text-sm"><Settings size={16} />Settings</Link></nav>
       <div className="mt-8 pt-4 border-t border-rule"><p className="text-xs break-all text-ink-mute">{session.email}</p><Button variant="ghost" className="w-full justify-start mt-3" onClick={signOut}><LogOut />Sign out</Button></div>
     </aside>
     <div className="flex-1 min-w-0"><main className="max-w-[1440px] mx-auto p-5 md:p-10">{children}</main><footer className="border-t border-rule px-5 py-5 text-xs text-ink-soft flex flex-wrap justify-center gap-6" aria-label="Account support"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link><Link to="/contact">Support</Link></footer></div>

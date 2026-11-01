@@ -154,7 +154,7 @@ function Hero() {
             <span className="mono">Scroll</span>
           </div>
           <div className="hero-cta" data-only="candidate">
-            <Link to="/onboarding" search={{ for: "candidate", step: 1 }} className="btn btn-ink btn-lg">
+            <Link to="/auth/register" search={{ for: "candidate" }} className="btn btn-ink btn-lg">
               Score my CV, free
             </Link>
             <a href="#tour" className="btn btn-lg">
@@ -165,7 +165,7 @@ function Hero() {
             <a href="#contact" className="btn btn-ink btn-lg">
               Book a consultation
             </a>
-            <Link to="/onboarding" search={{ for: "employer", step: 1 }} className="btn btn-lg">
+            <Link to="/auth/register" search={{ for: "employer" }} className="btn btn-lg">
               Create employer account
             </Link>
           </div>
