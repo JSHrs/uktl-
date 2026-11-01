@@ -633,10 +633,13 @@ export const candidateRegisterFn = createServerFn({ method: "POST" })
       password: z.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH),
       name: z.string().min(1),
       staffIntent: z.boolean().optional(),
+      accountType: z.enum(["candidate", "employer"]).optional(),
     }).parse(raw),
   )
   .handler(async ({ data }) => {
     const { setSessionCookies } = await import("./supabase");
+    // Staff onboarding never creates an employer account.
+    const accountType = data.staffIntent ? "candidate" : (data.accountType ?? "candidate");
     const { createClient } = await import("@supabase/supabase-js");
     const env = await getEnv().catch((e: unknown) => authUnavailable(e instanceof Error ? e.message : "server environment"));
     await enforceRateLimit(env, "authAccount", getRequestHeader("cf-connecting-ip") ?? "unknown");
@@ -649,7 +652,7 @@ export const candidateRegisterFn = createServerFn({ method: "POST" })
       email: data.email,
       password: data.password,
       email_confirm: true,
-      user_metadata: { name: data.name, account_intent: data.staffIntent ? "staff" : "candidate" },
+      user_metadata: { name: data.name, account_intent: data.staffIntent ? "staff" : accountType },
     });
     if (createError) {
       const msg = /already|registered|exists/i.test(createError.message)
@@ -660,14 +663,21 @@ export const candidateRegisterFn = createServerFn({ method: "POST" })
     const client = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
     const { data: authData, error } = await client.auth.signInWithPassword({ email: data.email, password: data.password });
     if (error || !authData.session) throw new Error(error?.message ?? "Account created. Please sign in.");
+    if (accountType === "employer") {
+      // A brand-new account, so there is no candidate data to protect; the row is owner-scoped.
+      const { error: roleError } = await admin.from("account_roles").upsert({ user_id: authData.user.id, role: "employer" });
+      if (roleError) throw new Error("Your account was created, but the employer setting could not be saved. Sign in and choose it in your account.");
+    }
     await setSessionCookies(authData.session.access_token, authData.session.refresh_token, authData.session.expires_in);
     const { sendNotificationEmail } = await import("./server/notify");
     await sendNotificationEmail(env, {
       to: [data.email],
       subject: "Welcome to UK Talent Link",
-      text: `Hi ${data.name},\n\nWelcome to UK Talent Link. Your account is ready — sign in any time to upload your CV, see your matches and explore HR guidance.\n\nThe UK Talent Link team`,
+      text: accountType === "employer"
+        ? `Hi ${data.name},\n\nWelcome to UK Talent Link. Your employer account is ready. Sign in any time to brief us on a role; a consultant will reply, usually within one working day.\n\nThe UK Talent Link team`
+        : `Hi ${data.name},\n\nWelcome to UK Talent Link. Your account is ready — sign in any time to upload your CV, see your matches and explore HR guidance.\n\nThe UK Talent Link team`,
     }, `uktl-welcome-${authData.user.id}`).catch(() => undefined);
-    return { userId: authData.user.id, needsConfirmation: false };
+    return { userId: authData.user.id, needsConfirmation: false, accountType };
   });
 
 export const candidateLoginFn = createServerFn({ method: "POST" })

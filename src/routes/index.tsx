@@ -74,18 +74,18 @@ function Hero() {
         <div className="hero-main">
           <div>
             <h1 className="disp hero-h1" data-only="candidate">
-              <Line>Your next role,</Line>
+              <Line>Be seen for</Line>
               <Line>
-                found on <em>merit</em>
+                what you <em>can do,</em>
               </Line>
-              <Line>not on keywords.</Line>
+              <Line>not the keywords.</Line>
             </h1>
             <h1 className="disp hero-h1" data-only="employer">
-              <Line>Senior hires,</Line>
+              <Line>The right hire,</Line>
               <Line>
-                searched with <em>care</em>
+                ranked and <em>reasoned,</em>
               </Line>
-              <Line>and the reasons shown.</Line>
+              <Line>before you meet them.</Line>
             </h1>
           </div>
 
@@ -142,19 +142,19 @@ function Hero() {
 
         <div className="hero-foot">
           <p data-only="candidate">
-            Upload your CV for a free, honest score. Talent Compass then matches you to the roles we're recruiting for
-            across the UK and the Gulf, and shows you why you fit.
+            Upload your CV once. Get an honest score out of 100, the fixes that matter most, and a fit score for every role
+            we're recruiting for across the UK and the Gulf. Free, private, and read by real consultants.
           </p>
           <p data-only="employer">
-            Recruitment for organisations hiring across the UK and the Gulf. You get a ranked shortlist, reviewed by a
-            consultant, with the reasoning behind every name.
+            Tell us the role. We search the UK and the Gulf, score every candidate against your must-haves, and a
+            consultant puts forward a shortlist with the evidence and the gaps for each name.
           </p>
           <div className="scroll" aria-hidden="true">
             <i />
             <span className="mono">Scroll</span>
           </div>
           <div className="hero-cta" data-only="candidate">
-            <Link to="/auth/register" className="btn btn-ink btn-lg">
+            <Link to="/auth/register" search={{ for: "candidate" }} className="btn btn-ink btn-lg">
               Score my CV, free
             </Link>
             <a href="#tour" className="btn btn-lg">
@@ -165,9 +165,9 @@ function Hero() {
             <a href="#contact" className="btn btn-ink btn-lg">
               Book a consultation
             </a>
-            <a href="#services" className="btn btn-lg">
-              Our services
-            </a>
+            <Link to="/auth/register" search={{ for: "employer" }} className="btn btn-lg">
+              Create employer account
+            </Link>
           </div>
         </div>
       </div>
@@ -290,7 +290,10 @@ function Tour() {
               One upload. <em>Five things</em> working for you.
             </h2>
           </div>
-          <p>Create a free account and upload your CV once. Everything below updates whenever you upload a new version.</p>
+          <p>
+            Most applications disappear without a word. Your account tells you where you stand, what to fix and where you
+            fit, and it all updates whenever you upload a new version.
+          </p>
         </div>
         <div className="tour">
           <div className="tour-steps">
@@ -575,11 +578,14 @@ function CandidateStart() {
         <div className="cta-l rv">
           <div className="eyebrow">Start free</div>
           <h2 className="disp" style={{ marginTop: 20 }}>
-            See where your CV <em>stands.</em>
+            Your next move starts <em>with one upload.</em>
           </h2>
-          <p>Create an account, upload your CV and we'll show you what's working, what isn't and where you fit.</p>
+          <p>
+            Create a free account, upload your CV and see what's working, what's holding you back and which roles you fit,
+            in one place.
+          </p>
           <div style={{ display: "flex", gap: 12, marginTop: 36, flexWrap: "wrap" }}>
-            <Link to="/auth/register" className="btn btn-light btn-lg">
+            <Link to="/auth/register" search={{ for: "candidate" }} className="btn btn-light btn-lg">
               Create free account
             </Link>
             <Link to="/auth/login" className="btn btn-lg">
@@ -618,7 +624,10 @@ function EmployerServices() {
               Two services. <em>One standard.</em>
             </h2>
           </div>
-          <p>Executive search and practical HR consultancy for organisations hiring across the UK and the Gulf.</p>
+          <p>
+            Executive search for the hires that shape your organisation, and practical HR consultancy for the people side
+            that follows, across the UK and the Gulf.
+          </p>
         </div>
         <div className="svc rv">
           <div id="search">

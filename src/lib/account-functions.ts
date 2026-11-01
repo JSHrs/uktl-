@@ -22,3 +22,23 @@ export const cvHistoryFn = createServerFn({method:"GET"}).handler(async()=>{
     .all<{id:string;source_filename:string|null;created_at:number;status:string}>();
   return (result.results??[]).map(r=>({...r,created_at:Number(r.created_at)}));
 });
+
+/**
+ * Completes an employer sign-up that went through Google or Apple. Only an account
+ * that has never chosen a type and has no CV records becomes an employer, so signing
+ * in from the employer page can never convert an existing candidate account.
+ */
+export const claimEmployerAccountFn = createServerFn({method:"POST"}).handler(async()=>{
+  const viewer=await requireViewer();
+  const {client}=await getAuthenticatedSupabase();
+  if ((await readStaffAccess(client)).role) return {role:"candidate" as const, changed:false, reason:"staff" as const};
+  const {data:existing,error:readError}=await client.from("account_roles").select("role").eq("user_id",viewer.userId).maybeSingle();
+  if(readError)throw new Error("Account type could not be checked");
+  if(existing) return {role:existing.role==="employer"?"employer" as const:"candidate" as const, changed:false, reason:"existing" as const};
+  const env=await getRequestEnv();
+  const cv=await env.DB.prepare(`SELECT COUNT(*) AS n FROM candidates WHERE auth_user_id=?`).bind(viewer.userId).first<{n:number}>();
+  if(Number(cv?.n??0)>0) return {role:"candidate" as const, changed:false, reason:"has_cv" as const};
+  const {error}=await client.from("account_roles").insert({user_id:viewer.userId,role:"employer"});
+  if(error)throw new Error("Account type could not be saved");
+  return {role:"employer" as const, changed:true, reason:null};
+});

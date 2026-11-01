@@ -82,7 +82,7 @@ function ContactPage() {
                   <li>01 · We read every message and reply personally, usually within one working day.</li>
                   <li data-only="candidate">
                     02 · Looking for a role? The quickest way to be considered is to{" "}
-                    <Link to="/auth/register" style={{ color: "var(--ink)", borderBottom: "1px solid var(--ink)" }}>
+                    <Link to="/auth/register" search={{ for: "candidate" }} style={{ color: "var(--ink)", borderBottom: "1px solid var(--ink)" }}>
                       upload your CV
                     </Link>
                     .

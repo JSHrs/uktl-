@@ -102,7 +102,7 @@ function Approach() {
             }
             lede="Our job is to put good people in good roles. That means understanding what you want, being honest about where you fit, and staying with you until you're in the right job."
             actions={
-              <Link to="/auth/register" className="btn btn-ink btn-lg">
+              <Link to="/auth/register" search={{ for: "candidate" }} className="btn btn-ink btn-lg">
                 Register free →
               </Link>
             }
@@ -141,7 +141,7 @@ function Approach() {
             title="Ready to see where you stand?"
             body="Upload your CV free and get your score today."
             actions={
-              <Link to="/auth/register" className="btn btn-ink btn-lg">
+              <Link to="/auth/register" search={{ for: "candidate" }} className="btn btn-ink btn-lg">
                 Register free →
               </Link>
             }

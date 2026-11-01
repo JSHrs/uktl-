@@ -34,10 +34,10 @@ for (const audience of ["candidate", "employer"] as const) {
 
 test("audience switch swaps the landing page and is remembered", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1, name: /Your next role/ })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /Be seen for/ })).toBeVisible();
   await page.getByRole("button", { name: "I'm hiring" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: /Senior hires/ })).toBeVisible();
-  await expect(page.getByRole("heading", { level: 1, name: /Your next role/ })).toBeHidden();
+  await expect(page.getByRole("heading", { level: 1, name: /The right hire/ })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /Be seen for/ })).toBeHidden();
   await page.reload();
-  await expect(page.getByRole("heading", { level: 1, name: /Senior hires/ })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /The right hire/ })).toBeVisible();
 });

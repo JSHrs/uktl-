@@ -116,6 +116,7 @@ function SectorsPage() {
                 {s.note && <p className="aside-note">{s.note}</p>}
                 <Link
                   to="/auth/register"
+                  search={{ for: "candidate" }}
                   className="lnk"
                   data-only="candidate"
                   style={{ display: "inline-block", marginTop: 24, color: "var(--ink)" }}
@@ -140,7 +141,7 @@ function SectorsPage() {
             title="Your sector, your next role."
             body="Upload your CV free and see the roles you match today."
             actions={
-              <Link to="/auth/register" className="btn btn-ink btn-lg">
+              <Link to="/auth/register" search={{ for: "candidate" }} className="btn btn-ink btn-lg">
                 Register free →
               </Link>
             }

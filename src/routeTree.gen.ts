@@ -46,6 +46,7 @@ import { Route as AppMessagesRouteImport } from './routes/app/messages'
 import { Route as AppProfileRouteImport } from './routes/app/profile'
 import { Route as AppUploadRouteImport } from './routes/app/upload'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as AuthEmployerSetupRouteImport } from './routes/auth/employer-setup'
 import { Route as AuthForgotRouteImport } from './routes/auth/forgot'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
@@ -258,6 +259,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/callback',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthEmployerSetupRoute = AuthEmployerSetupRouteImport.update({
+  id: '/employer-setup',
+  path: '/employer-setup',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthForgotRoute = AuthForgotRouteImport.update({
   id: '/forgot',
   path: '/forgot',
@@ -426,6 +432,7 @@ export interface FileRoutesByFullPath {
   '/app/profile': typeof AppProfileRoute
   '/app/upload': typeof AppUploadRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/employer-setup': typeof AuthEmployerSetupRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
@@ -489,6 +496,7 @@ export interface FileRoutesByTo {
   '/app/profile': typeof AppProfileRoute
   '/app/upload': typeof AppUploadRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/employer-setup': typeof AuthEmployerSetupRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
@@ -555,6 +563,7 @@ export interface FileRoutesById {
   '/app/profile': typeof AppProfileRoute
   '/app/upload': typeof AppUploadRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/employer-setup': typeof AuthEmployerSetupRoute
   '/auth/forgot': typeof AuthForgotRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
@@ -622,6 +631,7 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/upload'
     | '/auth/callback'
+    | '/auth/employer-setup'
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/register'
@@ -685,6 +695,7 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/upload'
     | '/auth/callback'
+    | '/auth/employer-setup'
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/register'
@@ -750,6 +761,7 @@ export interface FileRouteTypes {
     | '/app/profile'
     | '/app/upload'
     | '/auth/callback'
+    | '/auth/employer-setup'
     | '/auth/forgot'
     | '/auth/login'
     | '/auth/register'
@@ -1069,6 +1081,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/auth/employer-setup': {
+      id: '/auth/employer-setup'
+      path: '/employer-setup'
+      fullPath: '/auth/employer-setup'
+      preLoaderRoute: typeof AuthEmployerSetupRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/auth/forgot': {
       id: '/auth/forgot'
       path: '/forgot'
@@ -1336,6 +1355,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AuthRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthEmployerSetupRoute: typeof AuthEmployerSetupRoute
   AuthForgotRoute: typeof AuthForgotRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
@@ -1345,6 +1365,7 @@ interface AuthRouteChildren {
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
+  AuthEmployerSetupRoute: AuthEmployerSetupRoute,
   AuthForgotRoute: AuthForgotRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,

@@ -4,9 +4,13 @@ import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-rout
 import { registrationDestination } from "@/lib/account-role";
 import { candidateRegisterFn } from "@/lib/functions";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
+import { useAudience, type Audience } from "@/lib/preferences";
 
 export const Route = createFileRoute("/auth/register")({
-  validateSearch: (search): { staff?: boolean } => ({ staff: search.staff === true || search.staff === "true" ? true : undefined }),
+  validateSearch: (search): { staff?: boolean; for?: "candidate" | "employer" } => ({
+    staff: search.staff === true || search.staff === "true" ? true : undefined,
+    for: search.for === "employer" || search.for === "candidate" ? search.for : undefined,
+  }),
   beforeLoad: ({ context, search }) => {
     if (context.session.userId) throw redirect({ href: registrationDestination(context.session, search.staff) });
   },
@@ -15,8 +19,14 @@ export const Route = createFileRoute("/auth/register")({
 });
 
 function RegisterPage() {
-  const { staff } = Route.useSearch();
+  const { staff, for: requestedType } = Route.useSearch();
   const router = useRouter();
+  const audience = useAudience();
+  // An explicit ?for= wins; otherwise follow the site's "I'm viewing as" choice.
+  const [accountType, setAccountType] = useState<Audience>(requestedType ?? audience);
+  const [touched, setTouched] = useState(false);
+  const type: Audience = staff ? "candidate" : touched || requestedType ? accountType : audience;
+  const employer = type === "employer";
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -40,11 +50,12 @@ function RegisterPage() {
     }
     setLoading(true);
     try {
-      const result = await candidateRegisterFn({ data: { email: form.email, password: form.password, name: form.name, staffIntent: !!staff } });
+      const result = await candidateRegisterFn({ data: { email: form.email, password: form.password, name: form.name, staffIntent: !!staff, accountType: type } });
       if (result.needsConfirmation) {
         setSuccess(true);
       } else {
-        await router.navigate({ href: staff ? "/staff" : "/app" });
+        await router.invalidate();
+        await router.navigate({ href: staff ? "/staff" : result.accountType === "employer" ? "/employer" : "/app" });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
@@ -78,22 +89,45 @@ function RegisterPage() {
     <div className="w-full max-w-[400px]">
       <div className="mb-8 text-center">
         <div className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-mute mb-3">
-          {staff ? "— UK Talent Link staff" : "— Candidates"}
+          {staff ? "— UK Talent Link staff" : employer ? "— Employers" : "— Candidates"}
         </div>
         <h1
           className="font-display font-light tracking-[-0.025em]"
           style={{ fontSize: "clamp(28px, 4vw, 36px)", fontVariationSettings: '"opsz" 144, "SOFT" 50' }}
         >
-          {staff ? "Create a staff account" : "Create your account"}
+          {staff ? "Create a staff account" : employer ? "Create your employer account" : "Create your account"}
         </h1>
         <p className="text-sm text-ink-soft mt-2">
-          {staff ? "Create your account first. Your administrator must approve staff access before you can use the admin workspace; security verification is required." : "Then upload your CV — we'll score it and match you to the roles we're recruiting for."}
+          {staff
+            ? "Create your account first. Your administrator must approve staff access before you can use the admin workspace; security verification is required."
+            : employer
+              ? "Then brief us on the role you need to fill. A consultant replies, usually within one working day."
+              : "Then upload your CV — we'll score it and match you to the roles we're recruiting for."}
         </p>
       </div>
 
+      {!staff && (
+        <div role="group" aria-label="Account type" className="grid grid-cols-2 gap-1 p-1 mb-6 border border-rule rounded-full">
+          {(["candidate", "employer"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              aria-pressed={type === t}
+              onClick={() => {
+                setTouched(true);
+                setAccountType(t);
+              }}
+              className={`rounded-full py-2 text-[13px] transition-colors ${type === t ? "bg-ink text-paper" : "text-ink-mute hover:text-ink"}`}
+            >
+              {t === "candidate" ? "I'm looking for work" : "I'm hiring"}
+            </button>
+          ))}
+        </div>
+      )}
+
       <p className="text-xs text-ink-soft my-4">Before creating an account, read <Link to="/privacy" className="underline">how your information is used</Link> and <Link to="/terms" className="underline">using Talent Compass</Link>.</p>
 
-      {!staff && <SocialSignIn mode="register" />}
+      {!staff && <SocialSignIn mode="register" redirect={employer ? "/auth/employer-setup" : undefined} />}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
