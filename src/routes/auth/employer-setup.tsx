@@ -8,10 +8,12 @@ import { claimEmployerAccountFn } from "@/lib/account-functions";
  * account, so an existing candidate is never converted by accident.
  */
 export const Route = createFileRoute("/auth/employer-setup")({
-  beforeLoad: ({ context }) => {
+  // ?onboarding=1 continues the guided set-up instead of opening the portal.
+  validateSearch: (s): { onboarding?: boolean } => ({ onboarding: s.onboarding === 1 || s.onboarding === "1" || s.onboarding === true ? true : undefined }),
+  beforeLoad: ({ context, search }) => {
     if (!context.session.userId) throw redirect({ to: "/auth/register", search: { for: "employer" } });
     if (context.session.isStaff) throw redirect({ href: "/admin" });
-    if (context.session.accountRole === "employer") throw redirect({ href: "/employer" });
+    if (context.session.accountRole === "employer") throw redirect({ href: search.onboarding ? "/onboarding?for=employer&step=2" : "/employer" });
   },
   head: () => ({ meta: [{ title: "Setting up your account — UK Talent Link" }] }),
   component: EmployerSetup,
@@ -19,6 +21,7 @@ export const Route = createFileRoute("/auth/employer-setup")({
 
 function EmployerSetup() {
   const router = useRouter();
+  const { onboarding } = Route.useSearch();
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -28,7 +31,7 @@ function EmployerSetup() {
         if (cancelled) return;
         if (result.role === "employer") {
           await router.invalidate();
-          await router.navigate({ href: "/employer" });
+          await router.navigate({ href: onboarding ? "/onboarding?for=employer&step=2" : "/employer" });
           return;
         }
         setMessage(
@@ -41,7 +44,7 @@ function EmployerSetup() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [router, onboarding]);
 
   return (
     <div className="w-full max-w-[420px] text-center" role="status">

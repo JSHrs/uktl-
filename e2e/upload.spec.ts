@@ -12,6 +12,7 @@ test.describe("CV upload", () => {
   test("the landing page sends new candidates to create an account", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("navigation").first().getByRole("link", { name: /register free/i }).click();
-    await expect(page).toHaveURL(/\/auth\/register/);
+    await expect(page).toHaveURL(/\/onboarding\?for=candidate/);
+    await expect(page.getByRole("heading", { level: 1, name: "Create your free account." })).toBeVisible();
   });
 });
