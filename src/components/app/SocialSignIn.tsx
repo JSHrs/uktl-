@@ -42,7 +42,7 @@ export function SocialSignIn({ providers, redirect, mode }: { providers?: Provid
       setBusy(null);
       setError(null);
       setNotice(
-        `${provider === "apple" ? "Apple" : "Google"} sign-in is being switched on. Please use your email below for now.`,
+        `${provider === "apple" ? "Apple" : "Google"} sign-in is being switched on. Please use your email for now.`,
       );
       return;
     }
@@ -59,35 +59,39 @@ export function SocialSignIn({ providers, redirect, mode }: { providers?: Provid
   }
 
   const order: Provider[] = ["google", "apple"];
+  // Shown at the bottom of the sign-in and sign-up forms as two logo buttons.
   return (
-    <div className="space-y-3">
-      {order.map((p) => (
-        <button
-          key={p}
-          type="button"
-          disabled={busy !== null}
-          onClick={() => start(p)}
-          className="w-full flex items-center justify-center gap-3 rounded-md border border-rule bg-paper text-ink px-4 py-2.5 text-sm font-medium hover:bg-paper-deep transition-colors disabled:opacity-50"
-        >
-          {p === "apple" ? <AppleMark /> : <GoogleMark />}
-          {busy === p ? "Redirecting…" : LABEL[p]}
-        </button>
-      ))}
+    <div className="mt-6">
+      <div className="flex items-center gap-3" aria-hidden="true">
+        <span className="h-px flex-1 bg-rule" />
+        <span className="text-xs text-ink-mute">or continue with</span>
+        <span className="h-px flex-1 bg-rule" />
+      </div>
+      <div className="mt-4 flex justify-center gap-4">
+        {order.map((p) => (
+          <button
+            key={p}
+            type="button"
+            disabled={busy !== null}
+            onClick={() => start(p)}
+            aria-label={LABEL[p]}
+            title={LABEL[p]}
+            className="w-12 h-12 rounded-full border border-rule bg-paper text-ink grid place-items-center hover:border-ink transition-colors disabled:opacity-50"
+          >
+            {busy === p ? <span className="w-4 h-4 rounded-full border-2 border-ink border-t-transparent animate-spin" aria-hidden="true" /> : p === "apple" ? <AppleMark /> : <GoogleMark />}
+          </button>
+        ))}
+      </div>
       {notice && (
-        <p role="status" className="text-sm text-ink-soft">
+        <p role="status" className="mt-3 text-center text-sm text-ink-soft">
           {notice}
         </p>
       )}
       {error && (
-        <p role="alert" className="text-sm text-red-700 dark:text-red-300">
+        <p role="alert" className="mt-3 text-center text-sm text-bad">
           {error}
         </p>
       )}
-      <div className="flex items-center gap-3 pt-2" aria-hidden="true">
-        <span className="h-px flex-1 bg-rule" />
-        <span className="text-xs text-ink-mute">or</span>
-        <span className="h-px flex-1 bg-rule" />
-      </div>
     </div>
   );
 }

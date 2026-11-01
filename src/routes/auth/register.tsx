@@ -1,3 +1,4 @@
+import { AuthTabs } from "@/components/app/AuthTabs";
 import { SocialSignIn } from "@/components/app/SocialSignIn";
 import { useState } from "react";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/auth/register")({
   beforeLoad: ({ context, search }) => {
     if (context.session.userId) throw redirect({ href: registrationDestination(context.session, search.staff) });
   },
-  head: () => ({ meta: [{ title: "Create your account — Talent Compass" }, { name: "description", content: "Join Talent Compass and start your guided career profile." }, { property: "og:title", content: "Create your account — Talent Compass" }, { property: "og:description", content: "Join UK Talent Link and build your career profile." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
+  head: () => ({ meta: [{ title: "Create your account — UK Talent Link" }, { name: "description", content: "Create a free UK Talent Link account." }, { property: "og:title", content: "Create your account — UK Talent Link" }, { property: "og:description", content: "Join UK Talent Link and build your career profile." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: RegisterPage,
 });
 
@@ -55,7 +56,9 @@ function RegisterPage() {
         setSuccess(true);
       } else {
         await router.invalidate();
-        await router.navigate({ href: staff ? "/staff" : result.accountType === "employer" ? "/employer" : "/app" });
+        await router.navigate({
+          href: staff ? "/staff" : `/onboarding?for=${result.accountType === "employer" ? "employer" : "candidate"}&step=2`,
+        });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
@@ -87,10 +90,11 @@ function RegisterPage() {
 
   return (
     <div className="w-full max-w-[400px]">
+      {!staff && <AuthTabs active="register" forType={type} />}
       <div className="mb-8 text-center">
-        <div className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-mute mb-3">
-          {staff ? "— UK Talent Link staff" : employer ? "— Employers" : "— Candidates"}
-        </div>
+        {staff && (
+          <div className="font-mono text-[11px] tracking-[0.18em] uppercase text-ink-mute mb-3">— UK Talent Link staff</div>
+        )}
         <h1
           className="font-display font-light tracking-[-0.025em]"
           style={{ fontSize: "clamp(28px, 4vw, 36px)", fontVariationSettings: '"opsz" 144, "SOFT" 50' }}
@@ -125,9 +129,7 @@ function RegisterPage() {
         </div>
       )}
 
-      <p className="text-xs text-ink-soft my-4">Before creating an account, read <Link to="/privacy" className="underline">how your information is used</Link> and <Link to="/terms" className="underline">using Talent Compass</Link>.</p>
-
-      {!staff && <SocialSignIn mode="register" redirect={employer ? "/auth/employer-setup" : undefined} />}
+      <p className="text-xs text-ink-soft my-4">Before creating an account, read <Link to="/privacy" className="underline">how your information is used</Link> and <Link to="/terms" className="underline">the terms of use</Link>.</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -211,13 +213,15 @@ function RegisterPage() {
         </p>
       </form>
 
-      <Link to="/simulation" search={{ role: staff ? "admin" : "candidate" }} className="block mt-6 text-center text-sm underline">{staff ? "Preview the admin workspace →" : "Try the prebuilt candidate experience →"}</Link>
-      <div className="mt-6 text-center text-sm text-ink-mute">
-        Already have an account?{" "}
-        <Link to={staff ? "/admin/login" : "/auth/login"} className="text-ink underline">
-          Sign in
-        </Link>
-      </div>
+      {!staff && <SocialSignIn mode="register" redirect={employer ? "/auth/employer-setup?onboarding=1" : "/onboarding?for=candidate&step=2"} />}
+      {staff && (
+        <div className="mt-6 text-center text-sm text-ink-mute">
+          Already have an account?{" "}
+          <Link to="/admin/login" className="text-ink underline">
+            Sign in
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

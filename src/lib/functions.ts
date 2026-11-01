@@ -107,6 +107,7 @@ export const getSessionFn = createServerFn({ method: "GET" }).handler(async () =
   return {
     userId: user.userId,
     email: user.email,
+    mfaPending: user.mfaPending === true,
     isStaff: hasStaffAccess(access),
     isAdmin: hasStaffAccess(access, true),
     staffRole: access.role,
@@ -249,8 +250,8 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
       throw new Error("CV processing is unavailable — runtime bindings are not configured");
     }
     await enforceRateLimit(env, "cvUpload", viewer.userId ?? "admin");
-    if (!env.ANTHROPIC_API_KEY) throw new Error("Live CV assessment is not configured yet. You can try the labelled simulation below.");
-    if (env.DATA_BACKEND === "supabase" && (!env.CV_SCAN_URL || !env.CV_SCAN_TOKEN)) throw new Error("Live CV upload is awaiting the private malware scanner. You can try the labelled simulation below.");
+    if (!env.ANTHROPIC_API_KEY) throw new Error("Live CV assessment is not configured yet.");
+    if (env.DATA_BACKEND === "supabase" && (!env.CV_SCAN_URL || !env.CV_SCAN_TOKEN)) throw new Error("Live CV upload is awaiting the private malware scanner.");
     const bytes = await file.arrayBuffer();
     const validated = validateCvUpload(file.name, bytes);
     // Reject malformed/oversized DOCX content before writing a private object.

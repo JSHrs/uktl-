@@ -126,6 +126,10 @@ jobs:
           TEST_SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" TEST_SUPABASE_ANON_KEY="$ANON_KEY" node scripts/test-https-bridge.ts
       - name: Mandate duration, ranking, fill and reopen
         run: node scripts/test-jobs-postgres.ts
+      - name: Employer portal lock-down
+        run: psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -v ON_ERROR_STOP=1 -f supabase/tests/employer_portal.sql
+      - name: Actual employer portal PostgreSQL integration
+        run: node scripts/test-employer-portal-postgres.ts
       - name: Inbox, campaign consent, reminders and calendar synchronization
         run: node scripts/test-communications-postgres.ts
       - name: Outreach log, CSV export and chart queries

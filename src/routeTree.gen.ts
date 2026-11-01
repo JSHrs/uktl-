@@ -17,11 +17,11 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as EmployerRouteImport } from './routes/employer'
 import { Route as EmployersRouteImport } from './routes/employers'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReachRouteImport } from './routes/reach'
 import { Route as SectorsRouteImport } from './routes/sectors'
 import { Route as ServicesRouteImport } from './routes/services'
-import { Route as SimulationRouteImport } from './routes/simulation'
 import { Route as StaffRouteImport } from './routes/staff'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
@@ -35,6 +35,7 @@ import { Route as AdminHrRouteImport } from './routes/admin/hr'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminOperationsRouteImport } from './routes/admin/operations'
 import { Route as AdminProcessingRouteImport } from './routes/admin/processing'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as ApiCommunicationsRouteImport } from './routes/api/communications'
 import { Route as ApiMaintenanceRouteImport } from './routes/api/maintenance'
 import { Route as ApiReedSyncRouteImport } from './routes/api/reed-sync'
@@ -52,7 +53,12 @@ import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthResetRouteImport } from './routes/auth/reset'
 import { Route as AuthSecurityRouteImport } from './routes/auth/security'
+import { Route as AuthTwoStepRouteImport } from './routes/auth/two-step'
+import { Route as EmployerIndexRouteImport } from './routes/employer/index'
+import { Route as EmployerCompanyRouteImport } from './routes/employer/company'
 import { Route as AdminCandidatesIndexRouteImport } from './routes/admin/candidates/index'
+import { Route as AdminEmployerRolesIndexRouteImport } from './routes/admin/employer-roles/index'
+import { Route as AdminEmployerRolesIdRouteImport } from './routes/admin/employer-roles/$id'
 import { Route as AdminFaqIndexRouteImport } from './routes/admin/faq/index'
 import { Route as AdminFaqIdRouteImport } from './routes/admin/faq/$id'
 import { Route as AdminFaqNewRouteImport } from './routes/admin/faq/new'
@@ -71,6 +77,8 @@ import { Route as AppHrHistoryRouteImport } from './routes/app/hr/history'
 import { Route as AppHrLibraryRouteImport } from './routes/app/hr/library'
 import { Route as AppJobsIndexRouteImport } from './routes/app/jobs/index'
 import { Route as AppJobsIdRouteImport } from './routes/app/jobs/$id'
+import { Route as EmployerRolesIdRouteImport } from './routes/employer/roles/$id'
+import { Route as EmployerRolesNewRouteImport } from './routes/employer/roles/new'
 import { Route as ApiAdminExportKindRouteImport } from './routes/api/admin/export/$kind'
 import { Route as ApiCalendarCallbackProviderRouteImport } from './routes/api/calendar/callback/$provider'
 
@@ -114,6 +122,11 @@ const EmployersRoute = EmployersRouteImport.update({
   path: '/employers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
@@ -132,11 +145,6 @@ const SectorsRoute = SectorsRouteImport.update({
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
   path: '/services',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SimulationRoute = SimulationRouteImport.update({
-  id: '/simulation',
-  path: '/simulation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StaffRoute = StaffRouteImport.update({
@@ -202,6 +210,11 @@ const AdminOperationsRoute = AdminOperationsRouteImport.update({
 const AdminProcessingRoute = AdminProcessingRouteImport.update({
   id: '/processing',
   path: '/processing',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AdminRoute,
 } as any)
 const ApiCommunicationsRoute = ApiCommunicationsRouteImport.update({
@@ -289,9 +302,34 @@ const AuthSecurityRoute = AuthSecurityRouteImport.update({
   path: '/security',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthTwoStepRoute = AuthTwoStepRouteImport.update({
+  id: '/two-step',
+  path: '/two-step',
+  getParentRoute: () => AuthRoute,
+} as any)
+const EmployerIndexRoute = EmployerIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EmployerRoute,
+} as any)
+const EmployerCompanyRoute = EmployerCompanyRouteImport.update({
+  id: '/company',
+  path: '/company',
+  getParentRoute: () => EmployerRoute,
+} as any)
 const AdminCandidatesIndexRoute = AdminCandidatesIndexRouteImport.update({
   id: '/candidates/',
   path: '/candidates/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEmployerRolesIndexRoute = AdminEmployerRolesIndexRouteImport.update({
+  id: '/employer-roles/',
+  path: '/employer-roles/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEmployerRolesIdRoute = AdminEmployerRolesIdRouteImport.update({
+  id: '/employer-roles/$id',
+  path: '/employer-roles/$id',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminFaqIndexRoute = AdminFaqIndexRouteImport.update({
@@ -384,6 +422,16 @@ const AppJobsIdRoute = AppJobsIdRouteImport.update({
   path: '/jobs/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const EmployerRolesIdRoute = EmployerRolesIdRouteImport.update({
+  id: '/roles/$id',
+  path: '/roles/$id',
+  getParentRoute: () => EmployerRoute,
+} as any)
+const EmployerRolesNewRoute = EmployerRolesNewRouteImport.update({
+  id: '/roles/new',
+  path: '/roles/new',
+  getParentRoute: () => EmployerRoute,
+} as any)
 const ApiAdminExportKindRoute = ApiAdminExportKindRouteImport.update({
   id: '/api/admin/export/$kind',
   path: '/api/admin/export/$kind',
@@ -403,13 +451,13 @@ export interface FileRoutesByFullPath {
   '/approach': typeof ApproachRoute
   '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
-  '/employer': typeof EmployerRoute
+  '/employer': typeof EmployerRouteWithChildren
   '/employers': typeof EmployersRoute
+  '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
-  '/simulation': typeof SimulationRoute
   '/staff': typeof StaffRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -422,6 +470,7 @@ export interface FileRoutesByFullPath {
   '/admin/login': typeof AdminLoginRoute
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/processing': typeof AdminProcessingRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/api/communications': typeof ApiCommunicationsRoute
   '/api/maintenance': typeof ApiMaintenanceRoute
   '/api/reed-sync': typeof ApiReedSyncRoute
@@ -438,8 +487,12 @@ export interface FileRoutesByFullPath {
   '/auth/register': typeof AuthRegisterRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/security': typeof AuthSecurityRoute
+  '/auth/two-step': typeof AuthTwoStepRoute
+  '/employer/company': typeof EmployerCompanyRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
+  '/employer/': typeof EmployerIndexRoute
+  '/admin/employer-roles/$id': typeof AdminEmployerRolesIdRoute
   '/admin/faq/$id': typeof AdminFaqIdRoute
   '/admin/faq/new': typeof AdminFaqNewRoute
   '/admin/jobs/$id': typeof AdminJobsIdRoute
@@ -453,7 +506,10 @@ export interface FileRoutesByFullPath {
   '/app/hr/history': typeof AppHrHistoryRoute
   '/app/hr/library': typeof AppHrLibraryRoute
   '/app/jobs/$id': typeof AppJobsIdRoute
+  '/employer/roles/$id': typeof EmployerRolesIdRoute
+  '/employer/roles/new': typeof EmployerRolesNewRoute
   '/admin/candidates/': typeof AdminCandidatesIndexRoute
+  '/admin/employer-roles/': typeof AdminEmployerRolesIndexRoute
   '/admin/faq/': typeof AdminFaqIndexRoute
   '/admin/jobs/': typeof AdminJobsIndexRoute
   '/app/candidates/': typeof AppCandidatesIndexRoute
@@ -467,13 +523,12 @@ export interface FileRoutesByTo {
   '/approach': typeof ApproachRoute
   '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
-  '/employer': typeof EmployerRoute
   '/employers': typeof EmployersRoute
+  '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
-  '/simulation': typeof SimulationRoute
   '/staff': typeof StaffRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -486,6 +541,7 @@ export interface FileRoutesByTo {
   '/admin/login': typeof AdminLoginRoute
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/processing': typeof AdminProcessingRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/api/communications': typeof ApiCommunicationsRoute
   '/api/maintenance': typeof ApiMaintenanceRoute
   '/api/reed-sync': typeof ApiReedSyncRoute
@@ -502,8 +558,12 @@ export interface FileRoutesByTo {
   '/auth/register': typeof AuthRegisterRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/security': typeof AuthSecurityRoute
+  '/auth/two-step': typeof AuthTwoStepRoute
+  '/employer/company': typeof EmployerCompanyRoute
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
+  '/employer': typeof EmployerIndexRoute
+  '/admin/employer-roles/$id': typeof AdminEmployerRolesIdRoute
   '/admin/faq/$id': typeof AdminFaqIdRoute
   '/admin/faq/new': typeof AdminFaqNewRoute
   '/admin/jobs/$id': typeof AdminJobsIdRoute
@@ -517,7 +577,10 @@ export interface FileRoutesByTo {
   '/app/hr/history': typeof AppHrHistoryRoute
   '/app/hr/library': typeof AppHrLibraryRoute
   '/app/jobs/$id': typeof AppJobsIdRoute
+  '/employer/roles/$id': typeof EmployerRolesIdRoute
+  '/employer/roles/new': typeof EmployerRolesNewRoute
   '/admin/candidates': typeof AdminCandidatesIndexRoute
+  '/admin/employer-roles': typeof AdminEmployerRolesIndexRoute
   '/admin/faq': typeof AdminFaqIndexRoute
   '/admin/jobs': typeof AdminJobsIndexRoute
   '/app/candidates': typeof AppCandidatesIndexRoute
@@ -534,13 +597,13 @@ export interface FileRoutesById {
   '/approach': typeof ApproachRoute
   '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
-  '/employer': typeof EmployerRoute
+  '/employer': typeof EmployerRouteWithChildren
   '/employers': typeof EmployersRoute
+  '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
   '/services': typeof ServicesRoute
-  '/simulation': typeof SimulationRoute
   '/staff': typeof StaffRoute
   '/terms': typeof TermsRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -553,6 +616,7 @@ export interface FileRoutesById {
   '/admin/login': typeof AdminLoginRoute
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/processing': typeof AdminProcessingRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/api/communications': typeof ApiCommunicationsRoute
   '/api/maintenance': typeof ApiMaintenanceRoute
   '/api/reed-sync': typeof ApiReedSyncRoute
@@ -569,8 +633,12 @@ export interface FileRoutesById {
   '/auth/register': typeof AuthRegisterRoute
   '/auth/reset': typeof AuthResetRoute
   '/auth/security': typeof AuthSecurityRoute
+  '/auth/two-step': typeof AuthTwoStepRoute
+  '/employer/company': typeof EmployerCompanyRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
+  '/employer/': typeof EmployerIndexRoute
+  '/admin/employer-roles/$id': typeof AdminEmployerRolesIdRoute
   '/admin/faq/$id': typeof AdminFaqIdRoute
   '/admin/faq/new': typeof AdminFaqNewRoute
   '/admin/jobs/$id': typeof AdminJobsIdRoute
@@ -584,7 +652,10 @@ export interface FileRoutesById {
   '/app/hr/history': typeof AppHrHistoryRoute
   '/app/hr/library': typeof AppHrLibraryRoute
   '/app/jobs/$id': typeof AppJobsIdRoute
+  '/employer/roles/$id': typeof EmployerRolesIdRoute
+  '/employer/roles/new': typeof EmployerRolesNewRoute
   '/admin/candidates/': typeof AdminCandidatesIndexRoute
+  '/admin/employer-roles/': typeof AdminEmployerRolesIndexRoute
   '/admin/faq/': typeof AdminFaqIndexRoute
   '/admin/jobs/': typeof AdminJobsIndexRoute
   '/app/candidates/': typeof AppCandidatesIndexRoute
@@ -604,11 +675,11 @@ export interface FileRouteTypes {
     | '/contact'
     | '/employer'
     | '/employers'
+    | '/onboarding'
     | '/privacy'
     | '/reach'
     | '/sectors'
     | '/services'
-    | '/simulation'
     | '/staff'
     | '/terms'
     | '/unsubscribe'
@@ -621,6 +692,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/operations'
     | '/admin/processing'
+    | '/admin/settings'
     | '/api/communications'
     | '/api/maintenance'
     | '/api/reed-sync'
@@ -637,8 +709,12 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/auth/reset'
     | '/auth/security'
+    | '/auth/two-step'
+    | '/employer/company'
     | '/admin/'
     | '/app/'
+    | '/employer/'
+    | '/admin/employer-roles/$id'
     | '/admin/faq/$id'
     | '/admin/faq/new'
     | '/admin/jobs/$id'
@@ -652,7 +728,10 @@ export interface FileRouteTypes {
     | '/app/hr/history'
     | '/app/hr/library'
     | '/app/jobs/$id'
+    | '/employer/roles/$id'
+    | '/employer/roles/new'
     | '/admin/candidates/'
+    | '/admin/employer-roles/'
     | '/admin/faq/'
     | '/admin/jobs/'
     | '/app/candidates/'
@@ -666,13 +745,12 @@ export interface FileRouteTypes {
     | '/approach'
     | '/auth'
     | '/contact'
-    | '/employer'
     | '/employers'
+    | '/onboarding'
     | '/privacy'
     | '/reach'
     | '/sectors'
     | '/services'
-    | '/simulation'
     | '/staff'
     | '/terms'
     | '/unsubscribe'
@@ -685,6 +763,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/operations'
     | '/admin/processing'
+    | '/admin/settings'
     | '/api/communications'
     | '/api/maintenance'
     | '/api/reed-sync'
@@ -701,8 +780,12 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/auth/reset'
     | '/auth/security'
+    | '/auth/two-step'
+    | '/employer/company'
     | '/admin'
     | '/app'
+    | '/employer'
+    | '/admin/employer-roles/$id'
     | '/admin/faq/$id'
     | '/admin/faq/new'
     | '/admin/jobs/$id'
@@ -716,7 +799,10 @@ export interface FileRouteTypes {
     | '/app/hr/history'
     | '/app/hr/library'
     | '/app/jobs/$id'
+    | '/employer/roles/$id'
+    | '/employer/roles/new'
     | '/admin/candidates'
+    | '/admin/employer-roles'
     | '/admin/faq'
     | '/admin/jobs'
     | '/app/candidates'
@@ -734,11 +820,11 @@ export interface FileRouteTypes {
     | '/contact'
     | '/employer'
     | '/employers'
+    | '/onboarding'
     | '/privacy'
     | '/reach'
     | '/sectors'
     | '/services'
-    | '/simulation'
     | '/staff'
     | '/terms'
     | '/unsubscribe'
@@ -751,6 +837,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/operations'
     | '/admin/processing'
+    | '/admin/settings'
     | '/api/communications'
     | '/api/maintenance'
     | '/api/reed-sync'
@@ -767,8 +854,12 @@ export interface FileRouteTypes {
     | '/auth/register'
     | '/auth/reset'
     | '/auth/security'
+    | '/auth/two-step'
+    | '/employer/company'
     | '/admin/'
     | '/app/'
+    | '/employer/'
+    | '/admin/employer-roles/$id'
     | '/admin/faq/$id'
     | '/admin/faq/new'
     | '/admin/jobs/$id'
@@ -782,7 +873,10 @@ export interface FileRouteTypes {
     | '/app/hr/history'
     | '/app/hr/library'
     | '/app/jobs/$id'
+    | '/employer/roles/$id'
+    | '/employer/roles/new'
     | '/admin/candidates/'
+    | '/admin/employer-roles/'
     | '/admin/faq/'
     | '/admin/jobs/'
     | '/app/candidates/'
@@ -799,13 +893,13 @@ export interface RootRouteChildren {
   ApproachRoute: typeof ApproachRoute
   AuthRoute: typeof AuthRouteWithChildren
   ContactRoute: typeof ContactRoute
-  EmployerRoute: typeof EmployerRoute
+  EmployerRoute: typeof EmployerRouteWithChildren
   EmployersRoute: typeof EmployersRoute
+  OnboardingRoute: typeof OnboardingRoute
   PrivacyRoute: typeof PrivacyRoute
   ReachRoute: typeof ReachRoute
   SectorsRoute: typeof SectorsRoute
   ServicesRoute: typeof ServicesRoute
-  SimulationRoute: typeof SimulationRoute
   StaffRoute: typeof StaffRoute
   TermsRoute: typeof TermsRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
@@ -878,6 +972,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmployersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/privacy': {
       id: '/privacy'
       path: '/privacy'
@@ -904,13 +1005,6 @@ declare module '@tanstack/react-router' {
       path: '/services'
       fullPath: '/services'
       preLoaderRoute: typeof ServicesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/simulation': {
-      id: '/simulation'
-      path: '/simulation'
-      fullPath: '/simulation'
-      preLoaderRoute: typeof SimulationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/staff': {
@@ -1002,6 +1096,13 @@ declare module '@tanstack/react-router' {
       path: '/processing'
       fullPath: '/admin/processing'
       preLoaderRoute: typeof AdminProcessingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/api/communications': {
@@ -1123,11 +1224,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSecurityRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/auth/two-step': {
+      id: '/auth/two-step'
+      path: '/two-step'
+      fullPath: '/auth/two-step'
+      preLoaderRoute: typeof AuthTwoStepRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/employer/': {
+      id: '/employer/'
+      path: '/'
+      fullPath: '/employer/'
+      preLoaderRoute: typeof EmployerIndexRouteImport
+      parentRoute: typeof EmployerRoute
+    }
+    '/employer/company': {
+      id: '/employer/company'
+      path: '/company'
+      fullPath: '/employer/company'
+      preLoaderRoute: typeof EmployerCompanyRouteImport
+      parentRoute: typeof EmployerRoute
+    }
     '/admin/candidates/': {
       id: '/admin/candidates/'
       path: '/candidates'
       fullPath: '/admin/candidates/'
       preLoaderRoute: typeof AdminCandidatesIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/employer-roles/': {
+      id: '/admin/employer-roles/'
+      path: '/employer-roles'
+      fullPath: '/admin/employer-roles/'
+      preLoaderRoute: typeof AdminEmployerRolesIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/employer-roles/$id': {
+      id: '/admin/employer-roles/$id'
+      path: '/employer-roles/$id'
+      fullPath: '/admin/employer-roles/$id'
+      preLoaderRoute: typeof AdminEmployerRolesIdRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/faq/': {
@@ -1256,6 +1392,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppJobsIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/employer/roles/$id': {
+      id: '/employer/roles/$id'
+      path: '/roles/$id'
+      fullPath: '/employer/roles/$id'
+      preLoaderRoute: typeof EmployerRolesIdRouteImport
+      parentRoute: typeof EmployerRoute
+    }
+    '/employer/roles/new': {
+      id: '/employer/roles/new'
+      path: '/roles/new'
+      fullPath: '/employer/roles/new'
+      preLoaderRoute: typeof EmployerRolesNewRouteImport
+      parentRoute: typeof EmployerRoute
+    }
     '/api/admin/export/$kind': {
       id: '/api/admin/export/$kind'
       path: '/api/admin/export/$kind'
@@ -1283,12 +1433,15 @@ interface AdminRouteChildren {
   AdminLoginRoute: typeof AdminLoginRoute
   AdminOperationsRoute: typeof AdminOperationsRoute
   AdminProcessingRoute: typeof AdminProcessingRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminEmployerRolesIdRoute: typeof AdminEmployerRolesIdRoute
   AdminFaqIdRoute: typeof AdminFaqIdRoute
   AdminFaqNewRoute: typeof AdminFaqNewRoute
   AdminJobsIdRoute: typeof AdminJobsIdRoute
   AdminJobsNewRoute: typeof AdminJobsNewRoute
   AdminCandidatesIndexRoute: typeof AdminCandidatesIndexRoute
+  AdminEmployerRolesIndexRoute: typeof AdminEmployerRolesIndexRoute
   AdminFaqIndexRoute: typeof AdminFaqIndexRoute
   AdminJobsIndexRoute: typeof AdminJobsIndexRoute
 }
@@ -1303,12 +1456,15 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminLoginRoute: AdminLoginRoute,
   AdminOperationsRoute: AdminOperationsRoute,
   AdminProcessingRoute: AdminProcessingRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminEmployerRolesIdRoute: AdminEmployerRolesIdRoute,
   AdminFaqIdRoute: AdminFaqIdRoute,
   AdminFaqNewRoute: AdminFaqNewRoute,
   AdminJobsIdRoute: AdminJobsIdRoute,
   AdminJobsNewRoute: AdminJobsNewRoute,
   AdminCandidatesIndexRoute: AdminCandidatesIndexRoute,
+  AdminEmployerRolesIndexRoute: AdminEmployerRolesIndexRoute,
   AdminFaqIndexRoute: AdminFaqIndexRoute,
   AdminJobsIndexRoute: AdminJobsIndexRoute,
 }
@@ -1361,6 +1517,7 @@ interface AuthRouteChildren {
   AuthRegisterRoute: typeof AuthRegisterRoute
   AuthResetRoute: typeof AuthResetRoute
   AuthSecurityRoute: typeof AuthSecurityRoute
+  AuthTwoStepRoute: typeof AuthTwoStepRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
@@ -1371,9 +1528,28 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthRegisterRoute: AuthRegisterRoute,
   AuthResetRoute: AuthResetRoute,
   AuthSecurityRoute: AuthSecurityRoute,
+  AuthTwoStepRoute: AuthTwoStepRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
+interface EmployerRouteChildren {
+  EmployerCompanyRoute: typeof EmployerCompanyRoute
+  EmployerIndexRoute: typeof EmployerIndexRoute
+  EmployerRolesIdRoute: typeof EmployerRolesIdRoute
+  EmployerRolesNewRoute: typeof EmployerRolesNewRoute
+}
+
+const EmployerRouteChildren: EmployerRouteChildren = {
+  EmployerCompanyRoute: EmployerCompanyRoute,
+  EmployerIndexRoute: EmployerIndexRoute,
+  EmployerRolesIdRoute: EmployerRolesIdRoute,
+  EmployerRolesNewRoute: EmployerRolesNewRoute,
+}
+
+const EmployerRouteWithChildren = EmployerRoute._addFileChildren(
+  EmployerRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -1382,13 +1558,13 @@ const rootRouteChildren: RootRouteChildren = {
   ApproachRoute: ApproachRoute,
   AuthRoute: AuthRouteWithChildren,
   ContactRoute: ContactRoute,
-  EmployerRoute: EmployerRoute,
+  EmployerRoute: EmployerRouteWithChildren,
   EmployersRoute: EmployersRoute,
+  OnboardingRoute: OnboardingRoute,
   PrivacyRoute: PrivacyRoute,
   ReachRoute: ReachRoute,
   SectorsRoute: SectorsRoute,
   ServicesRoute: ServicesRoute,
-  SimulationRoute: SimulationRoute,
   StaffRoute: StaffRoute,
   TermsRoute: TermsRoute,
   UnsubscribeRoute: UnsubscribeRoute,

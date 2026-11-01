@@ -78,11 +78,6 @@ function StaffWorkspace() {
             <Button disabled={busy} onClick={refresh}>
               {busy ? "Checking access…" : "Check staff access"}
             </Button>
-            <Button variant="outline" asChild>
-              <Link to="/simulation" search={{ role: "admin" }}>
-                Explore staff sample
-              </Link>
-            </Button>
             <Button
               variant="ghost"
               onClick={async () => {

@@ -20,7 +20,7 @@ test.describe("Public site and header", () => {
     await page.goto("/auth/login");
     const nav = page.getByRole("navigation").first();
     await expect(nav.getByRole("link", { name: "How it works" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
   });
 });
 

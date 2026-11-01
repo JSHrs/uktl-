@@ -1,3 +1,4 @@
+import { TwoStepSetting } from "@/components/app/TwoStepSetting";
 import { PrivacyControls } from "@/components/app/PrivacyControls";
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
@@ -232,6 +233,7 @@ function ProfilePage() {
       )}
 
       <PrivacyControls />
+      <TwoStepSetting />
       {/* Quick links */}
       <Section title="Next steps">
         <div className="grid md:grid-cols-3 gap-4">

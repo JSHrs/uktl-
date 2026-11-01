@@ -63,11 +63,20 @@ BEGIN
   RESET ROLE;
   UPDATE auth.users SET banned_until=NULL WHERE id=admin_id;
 
+  -- Two-step is optional (owner, 1 Nov 2026): with the authenticator switched off,
+  -- an AAL1 session of active, confirmed staff qualifies...
   UPDATE auth.mfa_factors SET status='unverified' WHERE id=factor_id;
+  PERFORM set_config('request.jwt.claims',jsonb_build_object('sub',admin_id,'session_id',session_id,'aal','aal1')::text,true);
   SET LOCAL ROLE authenticated;
-  IF (public.get_my_staff_access()->>'mfa_verified')::boolean THEN RAISE EXCEPTION 'Removed factor accepted'; END IF;
+  IF NOT (public.get_my_staff_access()->>'mfa_verified')::boolean THEN RAISE EXCEPTION 'Staff without authenticator rejected'; END IF;
+  IF NOT EXISTS(SELECT 1 FROM recruitment.candidates WHERE id=fixture_id) THEN RAISE EXCEPTION 'Staff without authenticator cannot read'; END IF;
   RESET ROLE;
+  -- ...but once it is switched on again, AAL1 is refused (as tested above).
   UPDATE auth.mfa_factors SET status='verified' WHERE id=factor_id;
+  SET LOCAL ROLE authenticated;
+  IF (public.get_my_staff_access()->>'mfa_verified')::boolean THEN RAISE EXCEPTION 'AAL1 accepted with authenticator on'; END IF;
+  RESET ROLE;
+  PERFORM set_config('request.jwt.claims',jsonb_build_object('sub',admin_id,'session_id',session_id,'aal','aal2')::text,true);
   UPDATE auth.sessions SET not_after=now()-interval '1 minute' WHERE id=session_id;
   SET LOCAL ROLE authenticated;
   IF public.get_my_staff_access()->>'role' IS NOT NULL THEN RAISE EXCEPTION 'Expired session accepted'; END IF;
@@ -102,4 +111,4 @@ BEGIN
   RESET ROLE;
 END $$;
 ROLLBACK;
-SELECT 'PASS: staff roles, MFA, revocation, candidate ownership and protected writes; all fixtures rolled back' AS result;
+SELECT 'PASS: staff roles, optional two-step, revocation, candidate ownership and protected writes; all fixtures rolled back' AS result;

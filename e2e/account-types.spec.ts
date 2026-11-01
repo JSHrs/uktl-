@@ -21,3 +21,12 @@ test("employer setup and the employer account require sign-in", async ({ page })
   await page.goto("/employer");
   await expect(page).toHaveURL(/\/auth\/login/);
 });
+
+test("employer portal and staff employer-role pages require sign-in", async ({ page }) => {
+  for (const path of ["/employer/roles/new", "/employer/company", "/employer/roles/er_0123456789abcdef"]) {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/auth\/login/);
+  }
+  await page.goto("/admin/employer-roles");
+  await expect(page).toHaveURL(/\/admin\/login/);
+});

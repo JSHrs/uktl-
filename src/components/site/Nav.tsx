@@ -28,8 +28,8 @@ const AUDIENCES: Audience[] = ["candidate", "employer"];
 const AUDIENCE_LABEL: Record<Audience, string> = { candidate: "Candidate", employer: "Employer" };
 
 /**
- * The one header for the public site, the candidate area and the sign-in pages:
- * an ink audience bar ("I'm viewing as Candidate | Employer") above the nav.
+ * The one header for the public site, the candidate area and the sign-in pages.
+ * Links follow the Candidate/Employer choice made in the landing hero or the menu.
  * `overlay` floats over page heroes and turns solid after 30px of scroll;
  * `solid` is a sticky bar for the sign-in pages. Signed-in visitors get their
  * account (or the staff dashboard) instead of the sign-up call to action.
@@ -76,36 +76,6 @@ export function Nav({ variant = "overlay" }: { variant?: "overlay" | "solid" }) 
 
   return (
     <header className={`${variant === "solid" ? "sticky" : "fixed"} top-0 left-0 right-0 z-[100]`}>
-      {/* Audience bar */}
-      <div
-        className="flex items-center justify-between gap-4 bg-ink text-paper text-[12px] py-1.5"
-        style={{ paddingLeft: "var(--gut)", paddingRight: "var(--gut)" }}
-      >
-        <div className="flex items-center gap-1" role="group" aria-label="Show the site for">
-          <span className="hidden sm:inline font-mono text-[10px] tracking-[0.14em] uppercase opacity-60 mr-2">
-            I'm viewing as
-          </span>
-          {AUDIENCES.map((a) => (
-            <button
-              key={a}
-              type="button"
-              data-set={a}
-              aria-pressed={audience === a}
-              onClick={() => setAudience(a)}
-              className="ubar-btn"
-            >
-              {AUDIENCE_LABEL[a]}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-[18px] font-mono text-[10px] tracking-[0.12em] uppercase opacity-70">
-          <a href="tel:+442071892857" className="hidden sm:inline hover:opacity-100 hover:text-paper">
-            +44 (0)20 7189 2857
-          </a>
-          <span>London · Dubai</span>
-        </div>
-      </div>
-
       <nav
         aria-label="Main"
         className={`flex items-center justify-between gap-6 border-b transition-[padding,background-color,border-color] duration-[400ms] [transition-timing-function:var(--ease)] ${
@@ -167,7 +137,7 @@ export function Nav({ variant = "overlay" }: { variant?: "overlay" | "solid" }) 
                 <Link to="/auth/register" search={{ for: "candidate" }} data-only="candidate" className="btn-ink-sm">
                   Register free
                 </Link>
-                <Link to="/employers" hash="contact" data-only="employer" className="btn-ink-sm">
+                <Link to="/auth/register" search={{ for: "employer" }} data-only="employer" className="btn-ink-sm">
                   Start hiring
                 </Link>
               </span>
@@ -190,7 +160,7 @@ export function Nav({ variant = "overlay" }: { variant?: "overlay" | "solid" }) 
             id="site-menu"
             className="min-[901px]:hidden fixed inset-0 -z-10 bg-paper overflow-y-auto"
           >
-            <div className="min-h-full flex flex-col pt-[112px] pb-10" style={{ paddingLeft: "var(--gut)", paddingRight: "var(--gut)" }}>
+            <div className="min-h-full flex flex-col pt-[84px] pb-10" style={{ paddingLeft: "var(--gut)", paddingRight: "var(--gut)" }}>
               <ul className="menu-in list-none p-0 m-0">
                 {AUDIENCES.flatMap((a) => LINKS[a].map((l) => ({ ...l, a }))).map((l) => (
                   <li key={`${l.a}${l.to}`} data-only={l.a} className="border-b border-rule">
@@ -230,7 +200,7 @@ export function Nav({ variant = "overlay" }: { variant?: "overlay" | "solid" }) 
                     <Link to="/auth/register" search={{ for: "candidate" }} data-only="candidate" onClick={() => setOpen(false)} className="btn-ink-lg">
                       Register free
                     </Link>
-                    <Link to="/employers" hash="contact" data-only="employer" onClick={() => setOpen(false)} className="btn-ink-lg">
+                    <Link to="/auth/register" search={{ for: "employer" }} data-only="employer" onClick={() => setOpen(false)} className="btn-ink-lg">
                       Start hiring
                     </Link>
                     <Link to="/auth/login" onClick={() => setOpen(false)} className="btn-line-lg">

@@ -1,4 +1,4 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { Outlet, Link, createRootRoute, HeadContent, Scripts, redirect } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Toaster } from "sonner";
 import { getSessionFn } from "@/lib/functions";
@@ -28,17 +28,18 @@ function NotFoundComponent() {
   );
 }
 
-export type Session = { userId: string | null; email: string | null; isStaff: boolean; isAdmin: boolean; staffRequested?: boolean; displayName?: string | null; staffRole?: "admin" | "consultant" | null; accountRole?: "candidate" | "employer" };
+export type Session = { userId: string | null; email: string | null; mfaPending?: boolean; isStaff: boolean; isAdmin: boolean; staffRequested?: boolean; displayName?: string | null; staffRole?: "admin" | "consultant" | null; accountRole?: "candidate" | "employer" };
 
-const SIGNED_OUT: Session = { userId: null, email: null, isStaff: false, isAdmin: false };
 
 export const Route = createRootRoute({
   // Re-evaluated on every navigation, so sign-in/out is reflected everywhere at once.
   beforeLoad: async ({ location }): Promise<{ session: Session }> => {
-    // Public sample UI has no account reads; real routes retain their normal session check.
-    if (location.pathname === "/simulation") return { session: SIGNED_OUT };
     // A role-service failure must show a retryable error, not impersonate sign-out.
-    return { session: await getSessionFn() };
+    const session = await getSessionFn();
+    // Signed in with password/link/Google but two-step verification is still owed.
+    if (session.mfaPending && !location.pathname.startsWith("/auth/") && !location.pathname.startsWith("/api/"))
+      throw redirect({ to: "/auth/two-step" });
+    return { session };
   },
   head: () => ({
     meta: [
