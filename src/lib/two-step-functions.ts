@@ -6,10 +6,10 @@ import { enforceRateLimit } from "./server/ratelimit";
 import { getEnv } from "./server/env";
 
 /*
- * Optional two-step verification for candidate and employer accounts, switched on in
- * account settings. Enforcement lives in getCandidateSession(): once an authenticator
- * is verified, every new sign-in must be completed with a code at /auth/two-step.
- * Staff MFA is mandatory and handled by the staff functions; staff cannot switch it off here.
+ * Optional two-step verification for every account (candidates, employers and staff),
+ * switched on in settings. Enforcement lives in getCandidateSession(): once an
+ * authenticator is verified, every new sign-in must be completed with a code at
+ * /auth/two-step. The database's staff check applies the same rule to staff rights.
  */
 
 const factorId = z.string().uuid();
@@ -72,13 +72,11 @@ export const twoStepVerifyFn = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Turns two-step off. Needs a verified (aal2) session; staff MFA cannot be removed here. */
+/** Turns two-step off. Needs a session verified with a code (aal2). */
 export const twoStepDisableFn = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => z.object({ factorId }).parse(raw))
   .handler(async ({ data }) => {
     const { client, session } = await getAuthenticatedSupabase();
-    if ((await readStaffAccess(client).catch(() => ({ role: null }))).role)
-      throw new Error("Staff accounts must keep two-step verification on.");
     if (tokenAssuranceLevel(session.access_token) !== "aal2")
       throw new Error("Enter a code from your authenticator first, then turn it off.");
     const { error } = await client.auth.mfa.unenroll({ factorId: data.factorId });

@@ -32,7 +32,8 @@ function LoginPage() {
         setBusy(false);
         return;
       }
-      await navigate({ to: result.pendingApproval ? "/staff" : "/auth/security" });
+      await router.invalidate();
+      await navigate({ to: result.pendingApproval ? "/staff" : "/admin" });
     } catch {
       setError("Login failed. Please try again.");
       setBusy(false);

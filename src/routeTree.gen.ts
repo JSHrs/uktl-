@@ -35,6 +35,7 @@ import { Route as AdminHrRouteImport } from './routes/admin/hr'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminOperationsRouteImport } from './routes/admin/operations'
 import { Route as AdminProcessingRouteImport } from './routes/admin/processing'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as ApiCommunicationsRouteImport } from './routes/api/communications'
 import { Route as ApiMaintenanceRouteImport } from './routes/api/maintenance'
 import { Route as ApiReedSyncRouteImport } from './routes/api/reed-sync'
@@ -209,6 +210,11 @@ const AdminOperationsRoute = AdminOperationsRouteImport.update({
 const AdminProcessingRoute = AdminProcessingRouteImport.update({
   id: '/processing',
   path: '/processing',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AdminRoute,
 } as any)
 const ApiCommunicationsRoute = ApiCommunicationsRouteImport.update({
@@ -464,6 +470,7 @@ export interface FileRoutesByFullPath {
   '/admin/login': typeof AdminLoginRoute
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/processing': typeof AdminProcessingRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/api/communications': typeof ApiCommunicationsRoute
   '/api/maintenance': typeof ApiMaintenanceRoute
   '/api/reed-sync': typeof ApiReedSyncRoute
@@ -534,6 +541,7 @@ export interface FileRoutesByTo {
   '/admin/login': typeof AdminLoginRoute
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/processing': typeof AdminProcessingRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/api/communications': typeof ApiCommunicationsRoute
   '/api/maintenance': typeof ApiMaintenanceRoute
   '/api/reed-sync': typeof ApiReedSyncRoute
@@ -608,6 +616,7 @@ export interface FileRoutesById {
   '/admin/login': typeof AdminLoginRoute
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/processing': typeof AdminProcessingRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/api/communications': typeof ApiCommunicationsRoute
   '/api/maintenance': typeof ApiMaintenanceRoute
   '/api/reed-sync': typeof ApiReedSyncRoute
@@ -683,6 +692,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/operations'
     | '/admin/processing'
+    | '/admin/settings'
     | '/api/communications'
     | '/api/maintenance'
     | '/api/reed-sync'
@@ -753,6 +763,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/operations'
     | '/admin/processing'
+    | '/admin/settings'
     | '/api/communications'
     | '/api/maintenance'
     | '/api/reed-sync'
@@ -826,6 +837,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/operations'
     | '/admin/processing'
+    | '/admin/settings'
     | '/api/communications'
     | '/api/maintenance'
     | '/api/reed-sync'
@@ -1084,6 +1096,13 @@ declare module '@tanstack/react-router' {
       path: '/processing'
       fullPath: '/admin/processing'
       preLoaderRoute: typeof AdminProcessingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/api/communications': {
@@ -1414,6 +1433,7 @@ interface AdminRouteChildren {
   AdminLoginRoute: typeof AdminLoginRoute
   AdminOperationsRoute: typeof AdminOperationsRoute
   AdminProcessingRoute: typeof AdminProcessingRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminEmployerRolesIdRoute: typeof AdminEmployerRolesIdRoute
   AdminFaqIdRoute: typeof AdminFaqIdRoute
@@ -1436,6 +1456,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminLoginRoute: AdminLoginRoute,
   AdminOperationsRoute: AdminOperationsRoute,
   AdminProcessingRoute: AdminProcessingRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminEmployerRolesIdRoute: AdminEmployerRolesIdRoute,
   AdminFaqIdRoute: AdminFaqIdRoute,

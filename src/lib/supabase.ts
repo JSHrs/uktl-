@@ -54,15 +54,13 @@ export function getCandidateSession() {
       throw error;
     }
     const { user } = authenticated;
-    // Optional two-step verification (candidates and employers): an account with a
-    // verified authenticator is not signed in until this session has been verified
-    // with a code (aal2). This covers password, email-link and Google/Apple sign-in.
-    // Staff keep their own mandatory MFA flow (/auth/security), checked separately.
+    // Optional two-step verification (every account type, owner decision 1 Nov 2026):
+    // an account with a verified authenticator is not signed in until this session
+    // has been verified with a code (aal2). Covers password, email-link and
+    // Google/Apple sign-in; the database applies the same rule to staff privileges.
     const hasAuthenticator = (user.factors ?? []).some((f) => f.factor_type === "totp" && f.status === "verified");
     if (hasAuthenticator && tokenAssuranceLevel(authenticated.session.access_token) !== "aal2") {
-      const { readStaffAccess } = await import("./server/staff-access");
-      const access = await readStaffAccess(authenticated.client).catch(() => ({ role: null }));
-      if (!access.role) return { userId: null, email: user.email ?? null, mfaPending: true };
+      return { userId: null, email: user.email ?? null, mfaPending: true };
     }
     const env = await getEnv();
     if (env.DATA_BACKEND === "supabase") {

@@ -117,7 +117,7 @@ export function TwoStepSetting() {
         </form>
       )}
 
-      {status && on && !status.staff && (
+      {status && on && (
         <button
           type="button"
           disabled={busy}
@@ -134,7 +134,6 @@ export function TwoStepSetting() {
           Turn off
         </button>
       )}
-      {status?.staff && on && <p className="mt-4 text-sm text-ink-mute">Staff accounts keep two-step verification on.</p>}
       {error && <p role="alert" className="mt-4 text-sm text-bad">{error}</p>}
     </section>
   );

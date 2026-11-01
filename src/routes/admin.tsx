@@ -14,7 +14,7 @@ export const Route = createFileRoute("/admin")({
     const { session } = context;
     if (session.staffRole && !session.isStaff) throw redirect({ to: "/auth/security" });
     if (!session.isStaff) throw redirect({ to: "/admin/login" });
-    if (session.staffRole === "consultant" && !location.pathname.startsWith("/admin/candidates") && !location.pathname.startsWith("/admin/employer-roles")) throw redirect({ to: "/admin/candidates" });
+    if (session.staffRole === "consultant" && !location.pathname.startsWith("/admin/candidates") && !location.pathname.startsWith("/admin/employer-roles") && !location.pathname.startsWith("/admin/settings")) throw redirect({ to: "/admin/candidates" });
     return { staffRole: session.staffRole ?? null };
   },
   errorComponent: DataError,
@@ -35,6 +35,7 @@ const NAV = [
   { to: "/admin/analytics", label: "Analytics" },
   { to: "/admin/processing", label: "CV processing" },
   { to: "/admin/operations", label: "Operations & privacy" },
+  { to: "/admin/settings", label: "Settings" },
 ] as const;
 
 function AdminLayout() {
@@ -59,7 +60,7 @@ function AdminLayout() {
           <div className="font-display font-light text-lg mt-0.5 text-ink">Admin</div>
         </div>
         <nav className="flex-1 px-3 py-4 flex flex-wrap gap-1 md:block md:space-y-0.5">
-          {NAV.filter(item => staffRole === "admin" || item.to === "/admin/candidates" || item.to === "/admin/employer-roles").map((item) => (
+          {NAV.filter(item => staffRole === "admin" || item.to === "/admin/candidates" || item.to === "/admin/employer-roles" || item.to === "/admin/settings").map((item) => (
             <Link
               key={item.to}
               to={item.to}
