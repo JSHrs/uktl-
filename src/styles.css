@@ -39,6 +39,10 @@
   --color-good: var(--good);
   --color-warn: var(--warn);
   --color-bad: var(--bad);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-bd: var(--warn-bd);
+  --color-bad-bg: var(--bad-bg);
+  --color-bad-bd: var(--bad-bd);
 
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);

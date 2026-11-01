@@ -20,6 +20,12 @@ const CANDIDATE_SECTIONS: Section[] = [
 ];
 
 // Staff reach the candidate area only to open a record or a mandate pipeline.
+const EMPLOYER_SECTIONS: Section[] = [
+  { to: "/employer", label: "Your roles", exact: true },
+  { to: "/employer/roles/new", label: "Post a role" },
+  { to: "/employer/company", label: "Company details" },
+];
+
 const STAFF_SECTIONS: Section[] = [
   { to: "/app/candidates", label: "Candidates" },
   { to: "/app/jobs", label: "Mandates" },
@@ -31,7 +37,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const current = useRouterState().location.pathname;
   const [open, setOpen] = useState(false);
-  const sections = session.isStaff ? STAFF_SECTIONS : session.accountRole === "employer" ? [{ to: "/employer", label: "Employer account", exact: true }] : CANDIDATE_SECTIONS;
+  const sections = session.isStaff ? STAFF_SECTIONS : session.accountRole === "employer" ? EMPLOYER_SECTIONS : CANDIDATE_SECTIONS;
   async function signOut() {
     await signOutFn();
     await router.navigate({ to: "/auth/login", replace: true });

@@ -1,161 +1,143 @@
 import { Link, useRouteContext } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
-import { toast } from "sonner";
-import { PageHeader, Section } from "@/components/app/AppLayout";
+import { PageHeader, Section, StatCard } from "@/components/app/AppLayout";
 import { AccountType } from "@/components/app/AccountType";
-import { submitEnquiryFn } from "@/lib/functions";
+import { RoleStatusPill } from "@/components/app/EmployerForms";
+
+type Profile = { company_name: string; sectors: string[]; hiring_markets: string[]; services: string[] } | null;
+type RoleRow = {
+  id: string;
+  title: string;
+  location: string | null;
+  status: string;
+  created_at: number;
+  shared: number;
+  awaiting: number;
+};
+
+const day = (ms: number) => new Date(ms).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
 /**
- * The employer's own account page. Employers brief UK Talent Link on roles here;
- * they never see candidate records, CVs or staff tools (shortlists are shared by a
- * consultant). The brief is sent as a real enquiry to the team.
+ * The employer's portal home: their roles, candidates awaiting a response, and the
+ * company profile. Employers never see candidate records; consultants share
+ * anonymised candidates on each role.
  */
-export function EmployerHome() {
+export function EmployerHome({ profile, roles }: { profile: Profile; roles: RoleRow[] }) {
   const { session } = useRouteContext({ from: "__root__" });
   const first = session.displayName?.trim().split(/\s+/)[0];
-  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
-
-  async function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const f = (k: string) => String(fd.get(k) ?? "").trim();
-    const facts = [
-      `Role: ${f("role")}`,
-      f("location") ? `Location: ${f("location")}` : "",
-      f("service") ? `Service: ${f("service")}` : "",
-      f("timing") ? `Timing: ${f("timing")}` : "",
-    ].filter(Boolean);
-    const message = `${facts.join("\n")}\n\n${f("details")}`;
-    setState("sending");
-    try {
-      await submitEnquiryFn({
-        data: {
-          name: session.displayName?.trim() || session.email || "Employer account",
-          email: session.email ?? "",
-          company: f("company") || undefined,
-          enquiry_type: "Employer account: hiring brief",
-          message,
-        },
-      });
-      setState("sent");
-      toast.success("Brief sent. A consultant will reply, usually within one working day.");
-    } catch {
-      setState("error");
-    }
-  }
-
-  const input =
-    "w-full border border-rule rounded-md px-4 py-3 text-sm bg-paper text-ink placeholder:text-ink-mute focus:outline-none focus:border-ink transition-colors";
-  const label = "block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5";
+  const live = roles.filter((r) => r.status === "live").length;
+  const review = roles.filter((r) => r.status === "submitted").length;
+  const awaiting = roles.reduce((n, r) => n + r.awaiting, 0);
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-5xl">
       <PageHeader
-        eyebrow="Employer account"
-        title={first ? `Welcome, ${first}` : "Your employer account"}
-        lede="Brief us on a role and a consultant takes it from there: market search across the UK and the Gulf, assessment against your must-haves, and a shortlist with the reasons behind every name."
+        eyebrow={profile?.company_name ?? "Employer portal"}
+        title={first ? `Welcome, ${first}` : "Your employer portal"}
+        lede="Post a role and a consultant takes it from there: a search across the UK and the Gulf, assessment against your must-haves, and candidates shared here with the reasons for each."
+        actions={
+          <Link to="/employer/roles/new" className="min-h-11 inline-flex items-center rounded-full bg-ink text-paper px-5 text-[14px]">
+            Post a role
+          </Link>
+        }
       />
 
-      <div className="grid gap-6 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <section className="rounded-lg border border-rule p-6 bg-paper" aria-labelledby="brief-title">
-          <h2 id="brief-title" className="font-display text-2xl tracking-[-0.02em]">
-            Brief us on a role
-          </h2>
-          {state === "sent" ? (
-            <div role="status" className="mt-4 space-y-3">
-              <p className="text-ink-soft text-[15px]">
-                Thank you. Your brief is with the team and a consultant will reply to {session.email}, usually within one
-                working day.
-              </p>
-              <button type="button" onClick={() => setState("idle")} className="text-[13px] underline">
-                Brief us on another role
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={submit} className="mt-5 grid gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label htmlFor="brief-role" className={label}>Role title</label>
-                <input id="brief-role" name="role" required maxLength={200} className={input} placeholder="e.g. Commercial Manager" />
-              </div>
-              <div>
-                <label htmlFor="brief-company" className={label}>Organisation</label>
-                <input id="brief-company" name="company" maxLength={200} autoComplete="organization" className={input} />
-              </div>
-              <div>
-                <label htmlFor="brief-location" className={label}>Location</label>
-                <input id="brief-location" name="location" maxLength={200} className={input} placeholder="e.g. Riyadh, on-site" />
-              </div>
-              <div>
-                <label htmlFor="brief-service" className={label}>Service</label>
-                <select id="brief-service" name="service" className={input} defaultValue="Executive search">
-                  <option>Executive search</option>
-                  <option>HR consultancy</option>
-                  <option>Not sure yet</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="brief-timing" className={label}>Ideal start</label>
-                <input id="brief-timing" name="timing" maxLength={100} className={input} placeholder="e.g. Within three months" />
-              </div>
-              <div className="sm:col-span-2">
-                <label htmlFor="brief-details" className={label}>What does success look like?</label>
-                <textarea
-                  id="brief-details"
-                  name="details"
-                  required
-                  rows={5}
-                  maxLength={4000}
-                  className={input}
-                  placeholder="The must-haves, the team, and anything we should know."
-                />
-              </div>
-              <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3">
-                {state === "error" ? (
-                  <p role="alert" className="text-sm text-bad">
-                    We couldn't send your brief just now. Please email info@uktalentlink.co.uk.
-                  </p>
-                ) : (
-                  <p className="text-[12px] text-ink-mute">Sent from {session.email}. We reply within one working day.</p>
-                )}
-                <button
-                  disabled={state === "sending"}
-                  className="min-h-11 rounded-full bg-ink text-paper px-6 text-[14px] disabled:opacity-60"
-                >
-                  {state === "sending" ? "Sending…" : "Send brief"}
-                </button>
-              </div>
-            </form>
-          )}
-        </section>
+      {!profile && (
+        <div className="mb-8 rounded-lg border border-accent/25 bg-accent-soft p-5 flex flex-wrap items-center justify-between gap-4">
+          <p className="text-[14px] text-ink">
+            <b className="font-medium">Tell us about your company.</b> Your consultant uses it to brief candidates once
+            they're interested.
+          </p>
+          <Link to="/employer/company" className="text-[13px] underline">
+            Add company details
+          </Link>
+        </div>
+      )}
 
-        <aside className="space-y-6">
-          <section className="rounded-lg border border-rule p-6 bg-paper-deep">
-            <h2 className="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-mute">What happens next</h2>
-            <ol className="mt-4 space-y-4 text-[14px] text-ink-soft">
-              <li><b className="text-ink font-medium">1 · A call about the role.</b> A consultant confirms the must-haves, the team and the timing.</li>
-              <li><b className="text-ink font-medium">2 · The search.</b> We map the market across the UK and the Gulf and approach people confidentially.</li>
-              <li><b className="text-ink font-medium">3 · Your shortlist.</b> Ranked, with the evidence and the gaps for every name, shared by your consultant.</li>
-            </ol>
-          </section>
-          <section className="rounded-lg border border-rule p-6">
-            <h2 className="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-mute">Talk to us now</h2>
-            <p className="mt-3 text-[14px]">
-              <a href="tel:+442071892857" className="hover:underline">+44 (0)20 7189 2857</a>
-              <br />
-              <a href="mailto:info@uktalentlink.co.uk" className="hover:underline">info@uktalentlink.co.uk</a>
-            </p>
-            <p className="mt-4 text-[13px] text-ink-soft">
-              <Link to="/employers" className="underline">Our services</Link> ·{" "}
-              <Link to="/approach" className="underline">How we search</Link>
-            </p>
-          </section>
-        </aside>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <StatCard label="Live searches" value={live} />
+        <StatCard label="With UKTL for review" value={review} />
+        <StatCard label="Candidates awaiting you" value={awaiting} accent={awaiting > 0} />
       </div>
 
-      <Section title="Your privacy and candidates'">
+      <Section
+        title="Your roles"
+        actions={
+          roles.length > 0 && (
+            <Link to="/employer/roles/new" className="text-[13px] underline">
+              Post another role
+            </Link>
+          )
+        }
+      >
+        {roles.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-rule p-8 text-center">
+            <h3 className="font-display text-xl">No roles yet</h3>
+            <p className="mt-2 text-[14px] text-ink-soft max-w-[52ch] mx-auto">
+              Post your first role with the must-haves and a few lines about the team. A consultant reviews it, usually
+              within one working day, and starts the search.
+            </p>
+            <Link to="/employer/roles/new" className="mt-5 inline-flex min-h-11 items-center rounded-full bg-ink text-paper px-5 text-[14px]">
+              Post a role
+            </Link>
+          </div>
+        ) : (
+          <ul className="divide-y divide-rule border border-rule rounded-lg">
+            {roles.map((r) => (
+              <li key={r.id}>
+                <Link to="/employer/roles/$id" params={{ id: r.id }} className="flex flex-wrap items-center gap-x-6 gap-y-2 p-4 hover:bg-paper-deep/50">
+                  <div className="flex-1 min-w-[200px]">
+                    <div className="font-medium text-ink">{r.title}</div>
+                    <div className="text-[12px] text-ink-mute">
+                      {[r.location, `Posted ${day(r.created_at)}`].filter(Boolean).join(" · ")}
+                    </div>
+                  </div>
+                  <span className="text-[13px] text-ink-soft tabular-nums">
+                    {r.shared} shared{r.awaiting > 0 && <b className="text-accent font-medium"> · {r.awaiting} awaiting you</b>}
+                  </span>
+                  <RoleStatusPill status={r.status} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
+
+      <div className="grid gap-6 md:grid-cols-2 mt-10">
+        <section className="rounded-lg border border-rule p-6 bg-paper-deep">
+          <h2 className="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-mute">How it works</h2>
+          <ol className="mt-4 space-y-3 text-[14px] text-ink-soft">
+            <li><b className="text-ink font-medium">1 · Post a role.</b> The must-haves, the team and the timing.</li>
+            <li><b className="text-ink font-medium">2 · We review and search.</b> A consultant confirms the brief and searches the UK and the Gulf.</li>
+            <li><b className="text-ink font-medium">3 · Candidates appear here.</b> Ranked, with strengths and gaps. Tell us who you'd like to meet.</li>
+          </ol>
+        </section>
+        <section className="rounded-lg border border-rule p-6">
+          <h2 className="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-mute">Company and contact</h2>
+          <p className="mt-3 text-[14px] text-ink-soft">
+            {profile ? (
+              <>
+                <b className="text-ink font-medium">{profile.company_name}</b>
+                {profile.hiring_markets.length > 0 && <> · hiring in {profile.hiring_markets.join(", ")}</>}
+              </>
+            ) : (
+              "No company details yet."
+            )}
+          </p>
+          <p className="mt-2 text-[13px]">
+            <Link to="/employer/company" className="underline">Edit company details</Link>
+          </p>
+          <p className="mt-4 text-[14px]">
+            <a href="tel:+442071892857" className="hover:underline">+44 (0)20 7189 2857</a> ·{" "}
+            <a href="mailto:info@uktalentlink.co.uk" className="hover:underline">info@uktalentlink.co.uk</a>
+          </p>
+        </section>
+      </div>
+
+      <Section title="Candidate privacy">
         <p className="text-[14px] text-ink-soft max-w-[68ch]">
-          Employer accounts don't give access to candidate records or CVs. Your consultant shares shortlists directly, with
-          the candidate's agreement.
+          Candidates are shared anonymously, with a consultant's summary, a match score and the strengths and gaps against
+          your must-haves. Names, contact details and CVs are introduced by your consultant, with the candidate's agreement,
+          when you'd like to meet someone.
         </p>
       </Section>
 
