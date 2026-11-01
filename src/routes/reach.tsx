@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { SiteLayout, Wrap, PageHero } from "@/components/site/Layout";
-import { Reveal } from "@/components/site/Reveal";
+import { SiteLayout } from "@/components/site/Layout";
+import { CtaStrip, DesignPage, PageHero, SectionHead } from "@/components/site/ds";
 
 export const Route = createFileRoute("/reach")({
   head: () => ({
@@ -34,80 +34,112 @@ const markets = [
 function ReachPage() {
   return (
     <SiteLayout>
-      <PageHero
-        eyebrow="Reach"
-        title={
-          <>
-            UK roles.{" "}
-            <em className="italic text-accent" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 100' }}>
-              Gulf roles.
-            </em>{" "}
-            One account.
-          </>
-        }
-        lede="We recruit for employers in the UK and across the Gulf, so one free account opens up opportunities in both. Thinking about a move between them? Our consultants know what it really involves — from relocation to contracts under local law."
-      />
-
-      <section className="py-16 md:py-24">
-        <Wrap>
-          <Reveal>
-            <p className="text-[17px] text-ink-soft leading-[1.65] max-w-[62ch] pb-16 border-b border-rule mb-16 m-0">
-              London is our home. The Gulf is where many of the biggest construction, engineering and technology programmes are being delivered — and where UK-trained professionals are in demand. Whichever side you're on, you deal with one team.
-            </p>
-          </Reveal>
-
-          <Reveal>
-            <h3
-              className="font-display font-light leading-[1.05] tracking-[-0.02em] max-w-[20ch] mb-12"
-              style={{ fontSize: "clamp(26px, 3.4vw, 40px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
-            >
-              Where our{" "}
-              <em className="italic text-accent" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 100' }}>
-                roles are.
-              </em>
-            </h3>
-          </Reveal>
-
-          <Reveal stagger>
-            <ul className="list-none p-0 m-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-rule border border-rule">
+      <DesignPage>
+        <PageHero
+          eyebrow="Reach"
+          title={
+            <>
+              UK roles. <em>Gulf roles.</em> One team.
+            </>
+          }
+          lede={
+            <>
+              <span data-only="candidate">
+                We recruit for employers in the UK and across the Gulf, so one free account opens up opportunities in both.
+                Thinking about a move between them? Our consultants know what it really involves, from relocation to
+                contracts under local law.
+              </span>
+              <span data-only="employer">
+                Search across both markets with one firm. We recruit UK-trained professionals for Gulf roles and bring
+                people home to the UK, and we flag what a move involves before the offer.
+              </span>
+            </>
+          }
+        />
+        <section className="sec">
+          <div className="wrap">
+            <SectionHead
+              eyebrow="Where we work"
+              title={
+                <>
+                  Six cities, <em>one team.</em>
+                </>
+              }
+              body="London is our home. The Gulf is where many of the biggest construction, engineering and technology programmes are being delivered, and where UK-trained professionals are in demand."
+            />
+            <div className="mk rv">
               {markets.map((m) => (
-                <li key={m.city} className="bg-paper p-8 hover:bg-paper-deep transition-colors">
-                  <div className="font-mono text-[11px] text-ink-mute tracking-[0.1em] uppercase">
-                    {m.coords}
-                  </div>
-                  <h4
-                    className="font-display font-light text-[34px] tracking-[-0.02em] leading-[1] m-0 mt-3"
-                    style={{ fontVariationSettings: '"opsz" 144, "SOFT" 50' }}
-                  >
-                    {m.city}
-                  </h4>
-                  <p className="text-ink-soft text-sm mt-3 m-0">{m.note}</p>
-                </li>
+                <div key={m.city}>
+                  <span className="mono">{m.coords}</span>
+                  <h3 className="disp">{m.city}</h3>
+                  <p>{m.note}</p>
+                </div>
               ))}
-            </ul>
-          </Reveal>
-
-          <Reveal>
-            <div className="mt-16 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            </div>
+          </div>
+        </section>
+        <section className="sec deep bt">
+          <div className="wrap">
+            <div className="sh rv">
               <div>
-                <h3
-                  className="font-display font-light leading-[1.1] tracking-[-0.02em] mb-2"
-                  style={{ fontSize: "clamp(22px, 2.5vw, 32px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
-                >
-                  Open to a move?
-                </h3>
-                <p className="text-[15px] text-ink-soft m-0">Upload your CV free and see UK and Gulf roles you match.</p>
+                <div className="eyebrow">Moving between markets</div>
+                <h2 className="disp">
+                  What a move <em>really involves.</em>
+                </h2>
               </div>
-              <Link
-                to="/auth/register"
-                className="text-[13px] px-5 py-2.5 border border-ink bg-ink text-paper rounded-full hover:opacity-80 transition-opacity whitespace-nowrap shrink-0"
-              >
+              <p>
+                <span data-only="candidate">We talk you through it before you commit.</span>
+                <span data-only="employer">We plan it with you and the candidate, before the offer.</span>
+              </p>
+            </div>
+            <div className="cards3 rv">
+              <div>
+                <span className="mono">Visas</span>
+                <h4>Right to work</h4>
+                <p>
+                  Gulf employment visas and UK sponsorship each have their own steps and timelines, including document
+                  checks. We raise them early so they don't delay a start date.
+                </p>
+              </div>
+              <div>
+                <span className="mono">Pay &amp; tax</span>
+                <h4>Total reward</h4>
+                <p>
+                  Housing, schooling and flight allowances, end-of-service gratuity and UK residence rules all change what
+                  a package is worth.
+                </p>
+              </div>
+              <div>
+                <span className="mono">Contracts</span>
+                <h4>Local law</h4>
+                <p>Notice, probation and restrictive covenants work differently under UAE, Saudi and UK law. We flag the differences early.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+        <div data-only="candidate">
+          <CtaStrip
+            title="Open to a move?"
+            body="Upload your CV free and see UK and Gulf roles you match."
+            actions={
+              <Link to="/auth/register" className="btn btn-ink btn-lg">
                 Register free →
               </Link>
-            </div>
-          </Reveal>
-        </Wrap>
-      </section>
+            }
+          />
+        </div>
+        <div data-only="employer">
+          <CtaStrip
+            title="Hiring across borders?"
+            body="Talk to a consultant about a UK ↔ Gulf search."
+            actions={
+              <Link to="/employers" hash="contact" className="btn btn-ink btn-lg">
+                Start hiring →
+              </Link>
+            }
+          />
+        </div>
+      </DesignPage>
     </SiteLayout>
   );
 }

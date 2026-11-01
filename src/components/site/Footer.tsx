@@ -53,8 +53,9 @@ export function Footer() {
           )}
 
           <FooterCol title="Employers">
+            <FooterLink to="/employers">Services for employers</FooterLink>
             <FooterLink to="/approach">How we search</FooterLink>
-            <FooterLink to="/contact">Start hiring</FooterLink>
+            <FooterLink to="/employers" hash="contact">Start hiring</FooterLink>
             {!session.userId && <FooterLink to="/auth/register">Employer account</FooterLink>}
           </FooterCol>
 

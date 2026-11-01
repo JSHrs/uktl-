@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { SiteLayout, Wrap, PageHero } from "@/components/site/Layout";
-import { Reveal } from "@/components/site/Reveal";
+import type { CSSProperties } from "react";
+import { SiteLayout } from "@/components/site/Layout";
+import { Article, AudienceBanner, CtaStrip, DesignPage, PageHero, Ticks } from "@/components/site/ds";
 
 export const Route = createFileRoute("/services")({
   head: () => ({
@@ -18,162 +19,194 @@ export const Route = createFileRoute("/services")({
       },
     ],
   }),
-  component: ServicesPage,
+  component: Services,
 });
 
-const offers = [
-  {
-    num: "/ 01",
-    eyebrow: "Know where you stand",
-    title: "A CV score out of 100.",
-    body: "Your CV is read and scored across the four things recruiters look at first: your contact details, your experience, your skills and your education. You see the overall score and the score for each section, so you know exactly what's working and what isn't.",
-    points: [
-      "Overall score out of 100",
-      "Separate scores for contact details, experience, skills, education, and clarity and structure",
-      "A structured profile built from your CV that you can check and correct",
-      "Upload a new version any time — your score updates with it",
-    ],
-    anchor: "cv-score",
-  },
-  {
-    num: "/ 02",
-    eyebrow: "Make it stronger",
-    title: "Specific ways to improve your CV.",
-    body: "Generic advice like \"quantify your achievements\" doesn't help much. For each section of your CV you get specific, practical suggestions, plus an overall summary of the change that would make the biggest difference.",
-    points: [
-      "Section-by-section suggestions written for your CV",
-      "The top priority to fix first",
-      "Re-upload as often as you like",
-      "Your tips stay private to your account",
-    ],
-    anchor: "cv-tips",
-  },
-  {
-    num: "/ 03",
-    eyebrow: "Find where you fit",
-    title: "Matched to the roles we're recruiting for.",
-    body: "Your CV is matched against every open role we're recruiting for, across the UK and the Gulf. Each match comes with a fit score and the reasons behind it — the skills you have, the ones you're missing, and how your experience lines up. Tell us which roles interest you with a single swipe.",
-    points: [
-      "A fit score for every open role",
-      "The reasons behind each match",
-      "Register interest in the roles you want",
-      "Matches refresh as new roles come in",
-    ],
-    anchor: "matching",
-  },
-  {
-    num: "/ 04",
-    eyebrow: "Know your rights",
-    title: "Guidance on your rights at work.",
-    body: "Questions about your contract, pay, holiday, a disciplinary or dismissal? Search our library of topics or ask a question and get a clear answer grounded in ACAS guidance and UK employment law. If you need more, you can book a consultation.",
-    points: [
-      "A library of common workplace topics",
-      "Answers grounded in ACAS guidance and UK law",
-      "Your questions stay private to your account",
-      "Book a consultation when you need more",
-    ],
-    note: "This is general information, not legal advice or representation.",
-    anchor: "workplace-guidance",
-  },
-  {
-    num: "/ 05",
-    eyebrow: "Talk to a person",
-    title: "A consultant when you're a strong fit.",
-    body: "Software does the matching; people make the decisions. Our consultants review the strongest matches for each role, and when you're a strong fit they'll get in touch to talk it through — the role, the employer and what the move would involve, including relocating to or from the Gulf.",
-    points: [
-      "Consultants review the strongest matches",
-      "A real conversation, not an automated email",
-      "Support with UK ↔ Gulf moves",
-      "Straight answers if a role isn't right for you",
-    ],
-    anchor: "consultants",
-  },
-];
-
-function ServicesPage() {
+function Services() {
   return (
     <SiteLayout>
-      <PageHero
-        eyebrow="What we offer"
-        title={
-          <>
-            Everything we offer you is{" "}
-            <em className="italic text-accent" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 100' }}>
-              free.
-            </em>
-          </>
-        }
-        lede="Create an account, upload your CV once, and you get all of this — your score, ways to improve it, the roles you match, guidance on your rights at work, and a consultant when you're a strong fit."
-      />
-
-      <section className="py-16 md:py-24">
-        <Wrap>
-          {offers.map((o) => (
-            <Reveal key={o.anchor}>
-              <article
-                id={o.anchor}
-                className="grid md:grid-cols-[5fr_7fr] gap-10 lg:gap-20 py-16 md:py-20 border-t border-rule"
-              >
-                <div className="md:sticky md:top-28 md:self-start">
-                  <div className="font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute">
-                    {o.num} · {o.eyebrow}
-                  </div>
-                  <h2
-                    className="font-display font-light leading-[1] tracking-[-0.025em] mt-5"
-                    style={{ fontSize: "clamp(28px, 3.5vw, 50px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
-                  >
-                    {o.title}
-                  </h2>
-                </div>
-
-                <div>
-                  <p className="text-[16px] text-ink-soft leading-[1.65] m-0 mb-8">{o.body}</p>
-                  <div className="font-mono text-[10px] tracking-[0.14em] uppercase text-ink-mute mb-4">
-                    What you get
-                  </div>
-                  <ul className="list-none p-0 m-0 grid sm:grid-cols-2 gap-x-8 gap-y-2.5">
-                    {o.points.map((p) => (
-                      <li
-                        key={p}
-                        className="text-[14px] text-ink-soft pl-5 relative before:absolute before:left-0 before:top-[10px] before:w-2.5 before:h-px before:bg-accent"
-                      >
-                        {p}
-                      </li>
-                    ))}
-                  </ul>
-                  {o.note && (
-                    <p className="text-[13px] text-ink-mute leading-[1.6] m-0 mt-6 pl-4 border-l-2 border-rule">{o.note}</p>
-                  )}
-                </div>
-              </article>
-            </Reveal>
-          ))}
-        </Wrap>
-      </section>
-
-      <section className="bg-paper-deep py-16 border-t border-rule">
-        <Wrap>
-          <Reveal>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-              <div>
-                <h3
-                  className="font-display font-light leading-[1.1] tracking-[-0.02em] mb-2"
-                  style={{ fontSize: "clamp(22px, 2.5vw, 32px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
-                >
-                  See where you stand today.
-                </h3>
-                <p className="text-[15px] text-ink-soft m-0">Create a free account and upload your CV — it takes a couple of minutes.</p>
-              </div>
-              <Link
-                to="/auth/register"
-                className="text-[13px] px-5 py-2.5 border border-ink bg-ink text-paper rounded-full hover:opacity-80 transition-opacity whitespace-nowrap shrink-0"
-              >
+      <DesignPage>
+        <PageHero
+          eyebrow="What we offer"
+          title={
+            <>
+              Everything we offer you is <em>free.</em>
+            </>
+          }
+          lede="Create an account, upload your CV once, and you get all of this: your score, ways to improve it, the roles you match, guidance on your rights at work, and a consultant when you're a strong fit."
+          actions={
+            <>
+              <Link to="/auth/register" className="btn btn-ink btn-lg">
                 Register free →
               </Link>
-            </div>
-          </Reveal>
-        </Wrap>
-      </section>
+              <Link to="/approach" className="btn btn-lg">
+                How it works
+              </Link>
+            </>
+          }
+          note={
+            <AudienceBanner
+              show="employer"
+              action={
+                <Link to="/employers" className="lnk" style={{ color: "var(--ink)" }}>
+                  See employer services →
+                </Link>
+              }
+            >
+              You're viewing as an employer. This page is for candidates.
+            </AudienceBanner>
+          }
+        />
+
+        <section className="sec" style={{ paddingTop: 40 }}>
+          <div className="wrap">
+            <Article id="cv-score" tag="/ 01 · Know where you stand" title="A CV score out of 100.">
+              <p className="body">
+                Your CV is read and scored across the things recruiters look at first. You see the overall score and a
+                score for each section, so you know exactly what's working and what isn't.
+              </p>
+              <Ticks
+                label="What you get"
+                items={[
+                  "Overall score out of 100",
+                  "Scores for contact details, experience, skills, education, and clarity",
+                  "A structured profile you can check and correct",
+                  "Re-upload any time; your score updates",
+                ]}
+              />
+              <div className="mini" aria-label="Example score">
+                <span className="lbl">Example score</span>
+                <div className="disp" style={{ fontSize: 56, lineHeight: 1 }}>
+                  78<small style={{ fontSize: 16, color: "var(--ink-mute)" }}> / 100</small>
+                </div>
+                <TBar label="Experience" v={64} warn />
+                <TBar label="Skills" v={81} />
+                <TBar label="Clarity" v={79} />
+              </div>
+            </Article>
+
+            <Article id="cv-tips" tag="/ 02 · Make it stronger" title="Specific ways to improve your CV.">
+              <p className="body">
+                Generic advice like “quantify your achievements” doesn't help much. For each section you get practical
+                suggestions written for your CV, plus the single change that would make the biggest difference.
+              </p>
+              <Ticks
+                label="What you get"
+                items={[
+                  "Section-by-section suggestions",
+                  "The top priority to fix first",
+                  "Re-upload as often as you like",
+                  "Your tips stay private to your account",
+                ]}
+              />
+              <div className="mini" aria-label="Example tip">
+                <span className="lbl">Example · top priority</span>
+                <div className="tfix">
+                  <span className="pill warn">Experience</span>
+                  <div>
+                    <b>Quantify your impact in your current role</b>
+                    <p>For example, “Cut month-end close from nine days to six”.</p>
+                  </div>
+                </div>
+              </div>
+            </Article>
+
+            <Article id="matching" tag="/ 03 · Find where you fit" title="Matched to the roles we're recruiting for.">
+              <p className="body">
+                Your CV is matched against every open role we're recruiting for, across the UK and the Gulf. Each match
+                comes with a fit score and the reasons behind it: the skills you have, the ones you're missing and how
+                your experience lines up.
+              </p>
+              <Ticks
+                label="What you get"
+                items={[
+                  "A fit score for every open role",
+                  "The reasons behind each match",
+                  "Register interest with a single swipe",
+                  "Matches refresh as new roles come in",
+                ]}
+              />
+              <div className="mini" aria-label="Example matches">
+                <span className="lbl">Example matches</span>
+                <TRow initials="FA" title="Senior Financial Analyst" where="Finance · Dubai" p={94} />
+                <TRow initials="PM" title="Project Manager" where="Construction · London" p={89} />
+              </div>
+            </Article>
+
+            <Article id="workplace-guidance" tag="/ 04 · Know your rights" title="Guidance on your rights at work.">
+              <p className="body">
+                Questions about your contract, pay, holiday, a disciplinary or dismissal? Search our library of topics or
+                ask a question and get a clear answer grounded in ACAS guidance and UK employment law. If you need more,
+                you can book a consultation.
+              </p>
+              <Ticks
+                label="What you get"
+                items={[
+                  "A library of common workplace topics",
+                  "Answers grounded in ACAS guidance and UK law",
+                  "Your questions stay private to your account",
+                  "Book a consultation when you need more",
+                ]}
+              />
+              <p className="aside-note">This is general information, not legal advice or representation.</p>
+            </Article>
+
+            <Article id="consultants" tag="/ 05 · Talk to a person" title="A consultant when you're a strong fit.">
+              <p className="body">
+                Software does the matching; people make the decisions. Our consultants review the strongest matches for
+                each role, and when you're a strong fit they'll get in touch to talk it through: the role, the employer
+                and what the move would involve, including relocating to or from the Gulf.
+              </p>
+              <Ticks
+                label="What you get"
+                items={[
+                  "Consultants review the strongest matches",
+                  "A real conversation, not an automated email",
+                  "Support with UK ↔ Gulf moves",
+                  "Straight answers if a role isn't right for you",
+                ]}
+              />
+            </Article>
+          </div>
+        </section>
+
+        <CtaStrip
+          title="See where you stand today."
+          body="Create a free account and upload your CV. It takes a couple of minutes."
+          actions={
+            <Link to="/auth/register" className="btn btn-ink btn-lg">
+              Register free →
+            </Link>
+          }
+        />
+      </DesignPage>
     </SiteLayout>
+  );
+}
+
+function TBar({ label, v, warn }: { label: string; v: number; warn?: boolean }) {
+  return (
+    <div className="tbar">
+      <span>{label}</span>
+      <span className="t">
+        <i className={warn ? "w" : ""} style={{ width: `${v}%` }} />
+      </span>
+      <b>{v}</b>
+    </div>
+  );
+}
+
+function TRow({ initials, title, where, p }: { initials: string; title: string; where: string; p: number }) {
+  return (
+    <div className="trow">
+      <span className="co">{initials}</span>
+      <span className="tx">
+        <b>{title}</b>
+        <small>{where}</small>
+      </span>
+      <span className="cring" style={{ "--p": p } as CSSProperties}>
+        <span>{p}</span>
+      </span>
+    </div>
   );
 }

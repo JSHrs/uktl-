@@ -16,6 +16,7 @@ import { Route as ApproachRouteImport } from './routes/approach'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as EmployerRouteImport } from './routes/employer'
+import { Route as EmployersRouteImport } from './routes/employers'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReachRouteImport } from './routes/reach'
 import { Route as SectorsRouteImport } from './routes/sectors'
@@ -105,6 +106,11 @@ const ContactRoute = ContactRouteImport.update({
 const EmployerRoute = EmployerRouteImport.update({
   id: '/employer',
   path: '/employer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployersRoute = EmployersRouteImport.update({
+  id: '/employers',
+  path: '/employers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -392,6 +398,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
   '/employer': typeof EmployerRoute
+  '/employers': typeof EmployersRoute
   '/privacy': typeof PrivacyRoute
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
@@ -454,6 +461,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
   '/employer': typeof EmployerRoute
+  '/employers': typeof EmployersRoute
   '/privacy': typeof PrivacyRoute
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
@@ -519,6 +527,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteWithChildren
   '/contact': typeof ContactRoute
   '/employer': typeof EmployerRoute
+  '/employers': typeof EmployersRoute
   '/privacy': typeof PrivacyRoute
   '/reach': typeof ReachRoute
   '/sectors': typeof SectorsRoute
@@ -585,6 +594,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/employer'
+    | '/employers'
     | '/privacy'
     | '/reach'
     | '/sectors'
@@ -647,6 +657,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/employer'
+    | '/employers'
     | '/privacy'
     | '/reach'
     | '/sectors'
@@ -711,6 +722,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/employer'
+    | '/employers'
     | '/privacy'
     | '/reach'
     | '/sectors'
@@ -776,6 +788,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   ContactRoute: typeof ContactRoute
   EmployerRoute: typeof EmployerRoute
+  EmployersRoute: typeof EmployersRoute
   PrivacyRoute: typeof PrivacyRoute
   ReachRoute: typeof ReachRoute
   SectorsRoute: typeof SectorsRoute
@@ -844,6 +857,13 @@ declare module '@tanstack/react-router' {
       path: '/employer'
       fullPath: '/employer'
       preLoaderRoute: typeof EmployerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employers': {
+      id: '/employers'
+      path: '/employers'
+      fullPath: '/employers'
+      preLoaderRoute: typeof EmployersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -1342,6 +1362,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   ContactRoute: ContactRoute,
   EmployerRoute: EmployerRoute,
+  EmployersRoute: EmployersRoute,
   PrivacyRoute: PrivacyRoute,
   ReachRoute: ReachRoute,
   SectorsRoute: SectorsRoute,

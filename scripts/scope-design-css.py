@@ -76,6 +76,9 @@ css=[]
 dark=[]
 for f in ['uktl-system.css','uktl-landing.css','uktl-site.css']:
     css.append(f'/* ── from {f} ── */\n'+emit(parse(re.sub(r"@import url\([^)]*\);","",open(f'{D}/{f}').read())),dark))
+page=open(f'{D}/Services.html').read()
+inline=page[page.index('<style>')+7:page.index('</style>')]
+css.append('/* ── shared inline <style> of the marketing pages ── */\n'+emit(parse(inline),dark))
 text='\n'.join(css)
 names=sorted(keyframes,key=len,reverse=True)
 def fix_anim(m):

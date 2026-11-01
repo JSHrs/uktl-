@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
+import type React from "react";
 import { setAudience, useAudience, type Audience } from "@/lib/preferences";
 
 /**
@@ -78,6 +79,126 @@ export function DemoFrame({ title, children, toast }: { title: string; children:
           {toast}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ─────────────── Marketing-page building blocks ─────────────── */
+
+/** Page hero (`.phero`): eyebrow, display title, lede, actions, optional meta and a note. */
+export function PageHero({
+  eyebrow,
+  title,
+  lede,
+  actions,
+  meta,
+  note,
+  style,
+}: {
+  eyebrow: string;
+  title: ReactNode;
+  lede?: ReactNode;
+  actions?: ReactNode;
+  meta?: { label: string; value: string }[];
+  note?: ReactNode;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <header className="phero" style={style}>
+      <div className="wrap">
+        <div className="eyebrow">{eyebrow}</div>
+        <h1 className="disp">{title}</h1>
+        {lede && <p className="lede">{lede}</p>}
+        {actions && <div className="acts">{actions}</div>}
+        {meta && (
+          <div className="meta">
+            {meta.map((m) => (
+              <div key={m.label}>
+                <span className="mono">{m.label}</span>
+                <b>{m.value}</b>
+              </div>
+            ))}
+          </div>
+        )}
+        {note}
+      </div>
+    </header>
+  );
+}
+
+/** "You're viewing as …" banner shown when the page is for the other audience. */
+export function AudienceBanner({ show, children, action }: { show: Audience; children: ReactNode; action: ReactNode }) {
+  return (
+    <div className="xbanner" data-only={show}>
+      <span>{children}</span>
+      {action}
+    </div>
+  );
+}
+
+/** Two-column article row (`.art`) with a sticky heading column. */
+export function Article({
+  id,
+  tag,
+  title,
+  aside,
+  children,
+}: {
+  id?: string;
+  tag: ReactNode;
+  title: ReactNode;
+  aside?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <article className="art rv" id={id}>
+      <div className="stick">
+        <div className="tag">{tag}</div>
+        <h2 className="disp">{title}</h2>
+        {aside}
+      </div>
+      <div>{children}</div>
+    </article>
+  );
+}
+
+export function Ticks({ label, items, one }: { label?: string; items: string[]; one?: boolean }) {
+  return (
+    <>
+      {label && <span className="mono-l">{label}</span>}
+      <ul className={`ticks ${one ? "one" : ""}`}>
+        {items.map((t) => (
+          <li key={t}>{t}</li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
+/** Closing call-to-action strip on a deep background. */
+export function CtaStrip({ title, body, actions }: { title: ReactNode; body: ReactNode; actions: ReactNode }) {
+  return (
+    <section className="sec deep bt" style={{ padding: "64px 0" }}>
+      <div className="wrap cta-strip">
+        <div>
+          <h3 className="disp">{title}</h3>
+          <p>{body}</p>
+        </div>
+        <div className="acts">{actions}</div>
+      </div>
+    </section>
+  );
+}
+
+/** Section heading row (`.sh`): eyebrow + title on the left, a short paragraph on the right. */
+export function SectionHead({ eyebrow, title, body }: { eyebrow: string; title: ReactNode; body?: ReactNode }) {
+  return (
+    <div className="sh rv">
+      <div>
+        <div className="eyebrow">{eyebrow}</div>
+        <h2 className="disp">{title}</h2>
+      </div>
+      {body && <p>{body}</p>}
     </div>
   );
 }
