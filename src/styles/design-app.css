@@ -1,0 +1,40 @@
+/* App-side adjustments to the generated design.css (keep this file hand-written). */
+
+/* Reveal: visible by default; DesignPage only hides content that starts below the fold. */
+.ds .rv { opacity: 1; transform: none; }
+.ds .rv.rv-wait { opacity: 0; transform: translateY(28px); }
+
+/* Audience pill: state comes from <html data-for>, not a JS class. */
+html:not([data-for="employer"]) .ds .aud button[data-set="candidate"],
+html[data-for="employer"] .ds .aud button[data-set="employer"] { color: var(--paper); }
+
+/* Fixed header is the audience bar plus the nav. */
+.ds .hero { padding-top: 170px; }
+.ds .phero { padding-top: 190px; }
+@container (max-width: 720px) {
+  .ds .hero { padding-top: 132px; }
+  .ds .phero { padding-top: 150px; }
+}
+
+/* The global mobile h1 clamp is for older pages; design pages set their own scale. */
+.ds .disp { overflow-wrap: normal; }
+
+/* Inline status messages in design forms. */
+.ds .form-msg { font-size: 13px; color: var(--b-soft, var(--ink-soft)); }
+.ds .form-msg.err { color: oklch(0.8 0.12 25); }
+.ds .tour-steps a.lnk:hover { color: var(--accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ds .rv.rv-wait { opacity: 1; transform: none; }
+}
+
+/* The handoff uses .tl for both hero title lines and the timeline; keep them apart. */
+.ds .hero-h1 .tl { display: block; position: static; margin: 0; grid-template-columns: none; }
+.ds .hero-h1 .tl::before { content: none; }
+/* .hero is a flex column; without this the centred wrapper shrinks to its content. */
+.ds .hero-in { width: 100%; }
+/* Mobile tour frame sits below the fixed header. */
+@container (max-width: 1000px) { .ds .tour-frame { top: 96px; } }
+/* Let the hero grid shrink on very narrow phones. */
+.ds .hero-main > * { min-width: 0; }
+.ds .demo-bar span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

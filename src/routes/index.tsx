@@ -1,16 +1,33 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Fragment, useEffect, useRef, useState, type CSSProperties } from "react";
-import { SiteLayout, Wrap } from "@/components/site/Layout";
-import { Reveal } from "@/components/site/Reveal";
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
+import { toast } from "sonner";
+import { SiteLayout } from "@/components/site/Layout";
+import { AudienceSwitch, DemoFrame, DesignPage } from "@/components/site/ds";
+import { submitEnquiryFn } from "@/lib/functions";
 import heroMark from "@/assets/hero-mark.jpg";
 
+/*
+ * Landing page, rebuilt from the Claude Design handoff (design/claude-design-2026-11,
+ * "UKTL Landing.html"). One page, two audiences: candidate and employer variants
+ * are both rendered and <html data-for> shows one (see lib/preferences.ts).
+ *
+ * Product previews are illustrations and are labelled "Example". They contain no
+ * real people or employers; figures in them are not claims about the firm.
+ */
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "UK Talent Link — Your next role, matched to what you do best" },
-      { name: "description", content: "UK Talent Link is a recruitment firm placing people across the UK and the Gulf. Upload your CV free: get a CV score, specific tips to improve it, and matches to the roles we're recruiting for." },
-      { property: "og:title", content: "UK Talent Link — Your next role, matched to what you do best" },
-      { property: "og:description", content: "Upload your CV free. Get a CV score, specific tips to improve it, and matches to the roles we're recruiting for across the UK and the Gulf." },
+      { title: "UK Talent Link — Recruitment across the UK and the Gulf" },
+      {
+        name: "description",
+        content:
+          "UK Talent Link is a recruitment firm placing people across the UK and the Gulf. Candidates get a free CV score, specific tips and matches to the roles we're recruiting for. Employers get a ranked, reasoned shortlist.",
+      },
+      { property: "og:title", content: "UK Talent Link — Recruitment across the UK and the Gulf" },
+      {
+        property: "og:description",
+        content: "Upload your CV free for a score, tips and matches, or tell us about a role you need to fill.",
+      },
       { property: "og:type", content: "website" },
     ],
   }),
@@ -20,13 +37,23 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <SiteLayout>
-      <Hero />
-      <Marquee />
-      <Services />
-      <Platform />
-      <Approach />
-      <Sectors />
-      <ContactCTA />
+      <DesignPage>
+        <Hero />
+        <div data-only="candidate">
+          <Tour />
+          <FreeBand />
+          <SectorList />
+          <Principles />
+          <CandidateStart />
+        </div>
+        <div data-only="employer">
+          <EmployerServices />
+          <ShortlistExplainer />
+          <SearchTimeline />
+          <Commitments />
+          <EmployerContact />
+        </div>
+      </DesignPage>
     </SiteLayout>
   );
 }
@@ -34,636 +61,862 @@ function Index() {
 /* ─────────────────── Hero ─────────────────── */
 
 function Hero() {
-  const markRef = useRef<HTMLDivElement | null>(null);
-  const [entered, setEntered] = useState(false);
-  const [reduceMotion, setReduceMotion] = useState(false);
-
-  useEffect(() => {
-    const t = window.setTimeout(() => setEntered(true), 100);
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setReduceMotion(reduce);
-    if (reduce) return () => window.clearTimeout(t);
-
-    let raf = 0;
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      raf = window.requestAnimationFrame(() => {
-        const el = markRef.current;
-        if (el) {
-          const y = window.scrollY;
-          const translate = Math.min(y * 0.22, 200);
-          const scale = 1 + Math.min(y * 0.0002, 0.07);
-          const fade = Math.max(1 - y / 1200, 0.35);
-          el.style.transform = `translate3d(0, ${translate}px, 0) scale(${scale})`;
-          el.style.setProperty("--mark-fade", String(fade));
-        }
-        ticking = false;
-      });
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.clearTimeout(t);
-      window.removeEventListener("scroll", onScroll);
-      window.cancelAnimationFrame(raf);
-    };
-  }, []);
-
   return (
-    <section className="relative min-h-[92vh] pt-40 pb-16 md:pt-44 md:pb-20 flex flex-col justify-between overflow-hidden">
-      <div
-        ref={markRef}
-        aria-hidden="true"
-        className="hero-mark absolute inset-0 z-0 pointer-events-none will-change-transform"
-        style={{
-          backgroundImage: `url(${heroMark})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center 40%",
-          maskImage: "radial-gradient(ellipse 70% 65% at 68% 42%, black 0%, black 30%, transparent 80%)",
-          WebkitMaskImage: "radial-gradient(ellipse 70% 65% at 68% 42%, black 0%, black 30%, transparent 80%)",
-          opacity: entered ? `calc(var(--mark-fade, 1) * 0.20)` : 0,
-          transition: "opacity 2000ms var(--ease-publication)",
-        }}
-      />
-      <div className="absolute inset-0 z-0 pointer-events-none hero-mesh" />
-      <RouteLine animate={entered && !reduceMotion} />
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 z-0 pointer-events-none"
-        style={{ background: "linear-gradient(180deg, var(--paper) 0%, transparent 15%, transparent 80%, var(--paper) 100%)" }}
-      />
-
-      <Wrap className="relative z-10 flex-1 flex flex-col justify-between">
-        <div className="eyebrow-rise font-mono text-[11px] tracking-[0.16em] uppercase text-ink-mute flex items-center gap-3">
-          <span className="w-6 h-px bg-current" />
-          Recruitment · London & the Gulf
+    <header className="hero">
+      <div className="hero-mark" style={{ backgroundImage: `url(${heroMark})` }} />
+      <div className="hero-mesh" />
+      <div className="hero-fade" />
+      <div className="wrap hero-in">
+        <div className="hero-top">
+          <AudienceSwitch />
+          <span className="mono">London · Dubai</span>
         </div>
 
-        <h1
-          className="font-display font-light leading-[1.04] tracking-[-0.03em] mt-8 text-ink"
-          style={{ fontSize: "clamp(36px, 8.5vw, 140px)", fontVariationSettings: '"opsz" 144, "SOFT" 35' }}
-        >
-          <span className="title-line"><span style={{ animationDelay: "320ms" }}>Your next role,</span></span>
-          <span className="title-line"><span style={{ animationDelay: "460ms" }}>matched to what</span></span>
-          <span className="title-line">
-            <span style={{ animationDelay: "600ms" }}>
-              you do{" "}
-              <em className="italic font-light text-accent" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 95' }}>
-                best.
-              </em>
-            </span>
-          </span>
-        </h1>
+        <div className="hero-main">
+          <div>
+            <h1 className="disp hero-h1" data-only="candidate">
+              <Line>Your next role,</Line>
+              <Line>
+                found on <em>merit</em>
+              </Line>
+              <Line>not on keywords.</Line>
+            </h1>
+            <h1 className="disp hero-h1" data-only="employer">
+              <Line>Senior hires,</Line>
+              <Line>
+                searched with <em>care</em>
+              </Line>
+              <Line>and the reasons shown.</Line>
+            </h1>
+          </div>
 
-        <div className="foot-rise grid md:grid-cols-[1fr_auto_1fr] items-end gap-10 mt-20 pt-7 border-t border-rule">
-          <p className="m-0 text-[15px] text-ink-soft leading-relaxed max-w-[38ch]">
-            UK Talent Link is a recruitment firm placing people across the UK and the Gulf. Upload your CV once — we score it, show you exactly how to strengthen it, and match you to the roles we're recruiting for. It's free.
+          <div data-only="candidate">
+            <DemoFrame title="CV score" toast="Strong fit: a consultant will be in touch">
+              <div className="d-file ap4">
+                <span className="ext">PDF</span>
+                <div>
+                  <b style={{ fontWeight: 500 }}>your-cv.pdf</b>
+                  <div className="d-track">
+                    <i className="fl4" />
+                  </div>
+                </div>
+                <span className="d-lbl">Uploaded</span>
+              </div>
+              <div className="d-score ap16">
+                <div className="d-big">
+                  <small>/100</small>
+                </div>
+                <div className="d-bars">
+                  <Bar label="Contact" pct={96} cls="fl22" />
+                  <Bar label="Experience" pct={64} cls="fl22" />
+                  <Bar label="Skills" pct={81} cls="fl28" />
+                  <Bar label="Education" pct={88} cls="fl28" />
+                </div>
+              </div>
+              <span className="d-lbl ap36">Your matches</span>
+              <MatchRow cls="ap44" initials="FA" title="Senior Financial Analyst" where="Finance · Dubai" score={94} />
+              <MatchRow cls="ap52" initials="PM" title="Project Manager" where="Construction · London" score={89} />
+              <MatchRow cls="ap60" initials="DE" title="Data Engineer" where="Technology · Remote, UK" score={86} />
+            </DemoFrame>
+          </div>
+
+          <div data-only="employer">
+            <DemoFrame title="Ranking" toast="A consultant reviews the shortlist before you see it">
+              <div className="d-head ap4">
+                <div>
+                  <span className="d-lbl">Example mandate · Dubai</span>
+                  <h4>Senior Financial Analyst</h4>
+                </div>
+                <div className="d-cnt">
+                  <div className="d-big" />
+                  <span className="d-lbl">CVs scored</span>
+                </div>
+              </div>
+              <span className="d-lbl ap22">Ranked shortlist</span>
+              <RankRow cls="ap28" rank={1} who="Candidate A" tags="IFRS · Power BI · UAE resident" score={94} qualified />
+              <RankRow cls="ap36" rank={2} who="Candidate B" tags="Treasury · FP&A · Dubai" score={91} qualified />
+              <RankRow cls="ap44" rank={3} who="Candidate C" tags="Group reporting · London" score={88} qualified />
+              <RankRow cls="ap52" rank={4} who="Candidate D" tags="Corporate finance · Riyadh" score={57} />
+            </DemoFrame>
+          </div>
+        </div>
+
+        <div className="hero-foot">
+          <p data-only="candidate">
+            Upload your CV for a free, honest score. Talent Compass then matches you to the roles we're recruiting for
+            across the UK and the Gulf, and shows you why you fit.
           </p>
-          <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-mute flex items-center gap-2 md:justify-self-center">
-            <span className="w-1.5 h-1.5 rounded-full bg-ink-mute pulse-dot" />
-            Scroll
+          <p data-only="employer">
+            Recruitment for organisations hiring across the UK and the Gulf. You get a ranked shortlist, reviewed by a
+            consultant, with the reasoning behind every name.
+          </p>
+          <div className="scroll" aria-hidden="true">
+            <i />
+            <span className="mono">Scroll</span>
           </div>
-          <div className="flex items-center gap-3 md:justify-end flex-wrap">
-            <Link
-              to="/approach"
-              className="inline-flex items-center gap-2 text-[13px] px-5 py-2.5 border border-rule text-ink rounded-full hover:border-ink transition-colors"
-            >
+          <div className="hero-cta" data-only="candidate">
+            <Link to="/auth/register" className="btn btn-ink btn-lg">
+              Score my CV, free
+            </Link>
+            <a href="#tour" className="btn btn-lg">
               How it works
-            </Link>
-            <Link
-              to="/auth/register"
-              className="inline-flex items-center gap-2 text-[13px] px-5 py-2.5 border border-ink bg-ink text-paper rounded-full hover:opacity-80 transition-opacity"
-            >
-              Register free →
-            </Link>
+            </a>
+          </div>
+          <div className="hero-cta" data-only="employer">
+            <a href="#contact" className="btn btn-ink btn-lg">
+              Book a consultation
+            </a>
+            <a href="#services" className="btn btn-lg">
+              Our services
+            </a>
           </div>
         </div>
-      </Wrap>
-    </section>
+      </div>
+    </header>
   );
 }
 
-/* ─────────────────── Marquee ─────────────────── */
-
-function Marquee() {
-  const items = [
-    "Free CV score",
-    "Tips to strengthen your CV",
-    "Matched to live roles",
-    "Construction & engineering",
-    "Technology & digital",
-    "UK & Gulf opportunities",
-    "Free workplace guidance",
-    "Real consultants",
-  ];
-  const row = (
-    <span className="flex items-center gap-14">
-      {items.map((it, i) => (
-        <span key={i} className="flex items-center gap-14">
-          {it}
-          <span className="w-1 h-1 rounded-full bg-accent inline-block flex-shrink-0" />
-        </span>
-      ))}
+function Line({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="tl">
+      <span>{children}</span>
     </span>
   );
+}
+
+function Bar({ label, pct, cls }: { label: string; pct: number; cls: string }) {
   return (
-    <div className="border-t border-b border-rule py-[18px] overflow-hidden bg-paper">
-      <div
-        className="flex gap-14 whitespace-nowrap marquee-track hover:[animation-play-state:paused] font-display font-light text-[17px] text-ink-soft"
-        style={{ fontVariationSettings: '"opsz" 144, "SOFT" 70', letterSpacing: "-0.01em" }}
-      >
-        {row}{row}
+    <div>
+      <span>{label}</span>
+      <div className="d-track" style={{ margin: 0 }}>
+        <i className={cls} style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
 }
 
-/* ─────────────────── Services ─────────────────── */
-
-const SERVICES = [
-  {
-    num: "01",
-    title: "A free CV score",
-    body: "Your CV is scored out of 100 across contact details, experience, skills, education, and clarity and structure — so you can see exactly where it's strong and where it may be costing you interviews.",
-    link: "/auth/register",
-  },
-  {
-    num: "02",
-    title: "Specific ways to improve it",
-    body: "Not generic advice. Clear, section-by-section suggestions you can act on today. Make the changes, upload again, and watch your score move.",
-    link: "/auth/register",
-  },
-  {
-    num: "03",
-    title: "Matched to real roles",
-    body: "Your CV is matched against every role we're recruiting for, with a fit score and the reasons behind it. Tell us which roles interest you with a single swipe.",
-    link: "/auth/register",
-  },
-  {
-    num: "04",
-    title: "Guidance on your rights at work",
-    body: "Questions about contracts, pay, holiday or dismissal? Get clear answers grounded in ACAS guidance and UK employment law — and book time with a specialist if you need more.",
-    link: "/auth/register",
-  },
-];
-
-function Services() {
+function MatchRow(p: { cls: string; initials: string; title: string; where: string; score: number }) {
   return (
-    <section className="py-20 md:py-32">
-      <Wrap>
-        <Reveal>
-          <div className="flex items-end justify-between gap-8 mb-16">
-            <div>
-              <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute mb-4">
-                — What you get
-              </div>
-              <h2
-                className="font-display font-light leading-[1] tracking-[-0.03em] max-w-[16ch]"
-                style={{ fontSize: "clamp(36px, 5vw, 68px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
-              >
-                <Words text="Four reasons to" accent="upload today." />
-              </h2>
-            </div>
-            <Link
-              to="/approach"
-              className="hidden md:inline-flex items-center gap-2 text-[13px] text-ink-soft hover:text-ink transition-colors border-b border-transparent hover:border-ink pb-0.5 shrink-0"
-            >
-              How it works →
-            </Link>
-          </div>
-        </Reveal>
-
-        <Reveal stagger>
-          <div className="grid md:grid-cols-2 border-t border-rule">
-            {SERVICES.map((s, i) => (
-              <Link
-                key={s.num}
-                to={s.link}
-                className={`group relative p-8 md:p-10 border-b border-rule hover:bg-paper-deep transition-colors duration-500 after:absolute after:left-0 after:bottom-0 after:h-px after:w-full after:bg-ink after:origin-left after:scale-x-0 after:transition-transform after:duration-700 after:[transition-timing-function:var(--ease-publication)] hover:after:scale-x-100 ${i % 2 === 0 ? "md:border-r" : ""}`}
-              >
-                <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-mute group-hover:text-accent transition-colors duration-500 mb-6">
-                  {s.num}
-                </div>
-                <h3
-                  className="font-display font-light leading-[1.05] tracking-[-0.02em] mb-4 text-ink"
-                  style={{ fontSize: "clamp(22px, 2.5vw, 32px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
-                >
-                  {s.title}
-                </h3>
-                <p className="text-[15px] text-ink-soft leading-[1.6] m-0 max-w-[46ch]">{s.body}</p>
-                <div className="mt-6 text-[13px] text-ink-mute group-hover:text-ink transition-colors duration-500">
-                  Get started{" "}
-                  <span className="inline-block transition-transform duration-500 [transition-timing-function:var(--ease-publication)] group-hover:translate-x-1.5">
-                    →
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </Reveal>
-      </Wrap>
-    </section>
+    <div className={`d-row ${p.cls}`}>
+      <span className="co">{p.initials}</span>
+      <div className="t">
+        <b>{p.title}</b>
+        <small>{p.where}</small>
+      </div>
+      <span className="m">{p.score}</span>
+    </div>
   );
 }
 
-/* ─────────────────── Platform ─────────────────── */
+function RankRow(p: { cls: string; rank: number; who: string; tags: string; score: number; qualified?: boolean }) {
+  return (
+    <div className={`d-row ${p.cls} ${p.qualified ? "top" : ""}`}>
+      <span className="rk">{p.rank}</span>
+      <span className="av">{p.who.slice(-1)}</span>
+      <div className="t">
+        <b>
+          {p.who} {p.qualified && <span className="d-pill ap60">Qualified</span>}
+        </b>
+        <small>{p.tags}</small>
+      </div>
+      <span className="m">{p.score}</span>
+    </div>
+  );
+}
 
-function Platform() {
-  const ref = useRef<HTMLElement | null>(null);
-  const [active, setActive] = useState(false);
+/* ─────────────────── Candidate: account tour ─────────────────── */
+
+const TOUR = [
+  {
+    n: "01 · Know where you stand",
+    title: "A CV score out of 100.",
+    body: "Your CV is read the way a recruiter would, and scored section by section (contact details, experience, skills, education, clarity) so you know what's working.",
+    link: { to: "/services", hash: "cv-score", label: "About the score" },
+    frame: "CV score",
+  },
+  {
+    n: "02 · Make it stronger",
+    title: "Specific fixes, not generic advice.",
+    body: "Each suggestion is written for your CV and tied to the section it improves. Make the changes, upload again and watch the score move.",
+    link: { to: "/services", hash: "cv-tips", label: "About the tips" },
+    frame: "Improve",
+  },
+  {
+    n: "03 · Find where you fit",
+    title: "Matched to real roles, with reasons.",
+    body: "Every role we're recruiting for gets a fit score and the reasons behind it. Tell us which ones interest you with a single swipe.",
+    link: { to: "/services", hash: "matching", label: "About matching" },
+    frame: "Matches",
+  },
+  {
+    n: "04 · Know your rights",
+    title: "Workplace guidance, when you need it.",
+    body: "Clear answers on contracts, pay, holiday and dismissal, grounded in ACAS guidance and UK employment law. Book time with a specialist if you need more.",
+    link: { to: "/services", hash: "workplace-guidance", label: "About guidance" },
+    frame: "HR guidance",
+  },
+  {
+    n: "05 · Talk to a person",
+    title: "A consultant when you're a strong fit.",
+    body: "Software ranks the matches. People make the call, and get in touch to talk the role through with you.",
+    link: { to: "/approach", hash: undefined, label: "How we work" },
+    frame: "Messages",
+  },
+] as const;
+
+function Tour() {
+  const [step, setStep] = useState(0);
+  const steps = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (!("IntersectionObserver" in window)) { setActive(true); return; }
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setActive(true); obs.disconnect(); } },
-      { threshold: 0 },
+    if (!("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((e) => {
+          if (e.isIntersecting) setStep(Number((e.target as HTMLElement).dataset.step));
+        }),
+      { rootMargin: "-45% 0px -45% 0px" },
     );
-    obs.observe(el);
-    return () => obs.disconnect();
+    steps.current.forEach((el) => el && io.observe(el));
+    return () => io.disconnect();
   }, []);
 
-  const steps = [
-    { n: "01", title: "Sign up", desc: "A free account keeps your CV, score and matches in one private place.", glyph: "○" },
-    { n: "02", title: "Upload", desc: "PDF, Word or plain text, up to 10 MB. Stored privately, never public.", glyph: "↑" },
-    { n: "03", title: "Get your score", desc: "0–100, with a section-by-section breakdown and tips to improve.", glyph: "◈" },
-    { n: "04", title: "See your matches", desc: "A fit score for every open role we're recruiting for — and why.", glyph: "≡" },
-    { n: "05", title: "Hear from us", desc: "When you're a strong fit for a role, a consultant will be in touch.", glyph: "→" },
-  ];
-
   return (
-    <section
-      ref={ref}
-      className="band bg-ink text-paper py-24 md:py-40 relative overflow-hidden"
-    >
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.035]"
-        style={{
-          backgroundImage: "repeating-linear-gradient(0deg, var(--paper) 0, var(--paper) 1px, transparent 1px, transparent 56px), repeating-linear-gradient(90deg, var(--paper) 0, var(--paper) 1px, transparent 1px, transparent 56px)",
-        }}
-      />
-
-      <Wrap className="relative z-10">
-        <Reveal>
-          <div className="flex items-start justify-between gap-10 flex-col md:flex-row">
-            <div className="md:max-w-[48ch]">
-              <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-paper/80 mb-5 flex items-center gap-3">
-                <span className="w-6 h-px bg-paper/40" />
-                How it works
-              </div>
-              <h2
-                className="font-display font-light leading-[0.95] tracking-[-0.025em]"
-                style={{ fontSize: "clamp(36px, 5vw, 72px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
-              >
-                <Words text="One upload." accent="Every role we're hiring for." accentColor="oklch(0.765 0.055 263)" />
-              </h2>
-              <p className="text-paper/80 text-[15px] leading-relaxed max-w-[48ch] mt-5">
-                Create a free account and upload your CV. Once it's processed you'll have your score, your improvement tips and your best-matched roles — and our consultants see your strongest matches when they're shortlisting.
-              </p>
-            </div>
-            <div className="md:shrink-0 md:pt-2">
-              <Link
-                to="/auth/register"
-                className="inline-flex items-center gap-2 text-[13px] px-5 py-2.5 border border-paper/20 text-paper/70 rounded-full hover:border-paper/60 hover:text-paper transition-colors"
-              >
-                Create your free account →
-              </Link>
-            </div>
+    <section className="sec" id="tour">
+      <div className="wrap">
+        <div className="sh rv">
+          <div>
+            <div className="eyebrow">Inside your account</div>
+            <h2 className="disp">
+              One upload. <em>Five things</em> working for you.
+            </h2>
           </div>
-        </Reveal>
-
-        <div className="mt-20 md:mt-24">
-          <div className="relative h-px bg-paper/10" aria-hidden="true">
-            <div
-              className="absolute inset-y-0 left-0 w-full bg-paper/50 origin-left"
-              style={{
-                transform: active ? "scaleX(1)" : "scaleX(0)",
-                transition: "transform 1800ms var(--ease-publication) 150ms",
-              }}
-            />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5">
-            {steps.map((step, i) => (
+          <p>Create a free account and upload your CV once. Everything below updates whenever you upload a new version.</p>
+        </div>
+        <div className="tour">
+          <div className="tour-steps">
+            {TOUR.map((t, i) => (
               <div
-                key={step.n}
-                className={`pt-8 pr-6 pb-8 transition-all duration-700 [transition-timing-function:var(--ease-publication)] opacity-100 translate-y-0 ${i < steps.length - 1 ? "md:border-r md:border-paper/10" : ""}`}
-                style={{ transitionDelay: active ? `${300 + i * 140}ms` : "0ms" }}
+                key={t.n}
+                data-step={i}
+                ref={(el) => {
+                  steps.current[i] = el;
+                }}
+                className={step === i ? "on" : ""}
               >
-                <div className="font-mono text-[10px] text-paper/80 tracking-[0.1em] mb-6">{step.n}</div>
-                <div
-                  className={`font-mono text-[20px] text-paper/80 mb-5 leading-none transition-all duration-700 scale-100 opacity-100`}
-                  style={{ transitionDelay: active ? `${500 + i * 140}ms` : "0ms" }}
-                >
-                  {step.glyph}
-                </div>
-                <div
-                  className="font-display font-light text-paper leading-tight mb-3"
-                  style={{ fontSize: "clamp(18px, 1.8vw, 24px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
-                >
-                  {step.title}
-                </div>
-                <p className="text-[13px] text-paper/80 leading-relaxed m-0">{step.desc}</p>
+                <span className="n">{t.n.toUpperCase()}</span>
+                <h3 className="disp">{t.title}</h3>
+                <p>{t.body}</p>
+                <Link to={t.link.to} hash={t.link.hash} className="lnk">
+                  {t.link.label} →
+                </Link>
               </div>
             ))}
           </div>
-        </div>
-      </Wrap>
-    </section>
-  );
-}
-
-/* ─────────────────── Approach ─────────────────── */
-
-const PRINCIPLES = [
-  {
-    tag: "Free for candidates",
-    title: "You never pay us a penny.",
-    body: "Employers pay for recruitment. Your account, your CV score, your job matches and our workplace guidance cost you nothing.",
-  },
-  {
-    tag: "Honest",
-    title: "Straight feedback, not silence.",
-    body: "Your score and tips show you exactly how your CV reads to a recruiter, so you're not left guessing why applications go quiet.",
-  },
-  {
-    tag: "Private",
-    title: "Your CV stays yours.",
-    body: "It's stored privately and accessed only through your account or by authorised UK Talent Link staff — never published or sold on.",
-  },
-];
-
-function Approach() {
-  return (
-    <section className="py-20 md:py-32 border-t border-rule">
-      <Wrap>
-        <div className="grid md:grid-cols-[2fr_3fr] gap-16 md:gap-24 items-start">
-          <Reveal>
-            <div className="md:sticky md:top-32">
-              <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute mb-4">
-                — Why UK Talent Link
+          <div className="tour-frame" aria-hidden="true">
+            <div className="bar">
+              <i />
+              <i />
+              <i />
+              <span>Example · {TOUR[step].frame}</span>
+            </div>
+            <TourPanel on={step === 0} style={{}}>
+              <span className="lbl">your-cv.pdf · scored just now</span>
+              <div className="big">
+                78<small> / 100</small>
               </div>
-              <h2
-                className="font-display font-light leading-[1] tracking-[-0.03em]"
-                style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
-              >
-                <Words text="Recruitment that" accent="works for you." />
-              </h2>
-              <p className="text-[15px] text-ink-soft mt-6 leading-[1.65] max-w-[38ch]">
-                We're a recruitment firm, so our job is to put good people in good roles. That starts with telling you honestly where you stand — and matching you to roles that genuinely fit.
+              <div style={{ display: "grid", gap: 12, marginTop: 8 }}>
+                <TBar label="Contact details" v={96} />
+                <TBar label="Experience" v={64} warn />
+                <TBar label="Skills" v={81} />
+                <TBar label="Education" v={88} />
+                <TBar label="Clarity" v={79} />
+              </div>
+              <p className="mute" style={{ marginTop: "auto" }}>
+                Upload a new version any time and the score updates.
               </p>
-              <Link
-                to="/approach"
-                className="mt-8 inline-flex items-center gap-1.5 text-[13px] text-ink-soft hover:text-ink transition-colors border-b border-transparent hover:border-ink pb-0.5"
-              >
-                How we work →
-              </Link>
-            </div>
-          </Reveal>
-
-          <Reveal stagger>
-            <div className="space-y-0">
-              {PRINCIPLES.map((p, i) => (
-                <div
-                  key={i}
-                  className={`py-9 ${i === 0 ? "border-t border-rule" : ""} border-b border-rule`}
-                >
-                  <div className="font-mono text-[11px] tracking-[0.1em] uppercase text-ink-mute mb-4">
-                    {p.tag}
-                  </div>
-                  <h3
-                    className="font-display font-light leading-[1.1] tracking-[-0.02em] mb-3"
-                    style={{ fontSize: "clamp(20px, 2.5vw, 30px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
-                  >
-                    {p.title}
-                  </h3>
-                  <p className="text-[15px] text-ink-soft leading-[1.6] m-0 max-w-[52ch]">{p.body}</p>
-                </div>
-              ))}
-            </div>
-          </Reveal>
+            </TourPanel>
+            <TourPanel on={step === 1}>
+              <span className="lbl">Highest impact first</span>
+              <Fix pill="Experience" warn title="Quantify your impact in your current role">
+                For example, “Cut month-end close from nine days to six”.
+              </Fix>
+              <Fix pill="Profile" warn title="Open with a two-line profile">
+                Your title, years of experience and the markets you work in.
+              </Fix>
+              <Fix pill="Skills" title="List your professional qualifications">
+                Including part-qualified status and expected completion.
+              </Fix>
+            </TourPanel>
+            <TourPanel on={step === 2}>
+              <span className="lbl">Your matches</span>
+              <TRow initials="FA" title="Senior Financial Analyst" where="Finance · Dubai" p={94} />
+              <TRow initials="FP" title="FP&A Manager" where="Finance · London" p={89} />
+              <TRow initials="BP" title="Finance Business Partner" where="Healthcare · Riyadh" p={86} />
+              <div className="why" style={{ fontSize: 12, marginTop: 4 }}>
+                <div>IFRS and Power BI listed as essential</div>
+                <div className="no">Prefers a fully qualified accountant</div>
+              </div>
+            </TourPanel>
+            <TourPanel on={step === 3}>
+              <span className="lbl">Can my employer change my shifts?</span>
+              <div className="tvid">
+                <span>▶</span>
+                <em>Your contract sets out the hours you agreed</em>
+              </div>
+              <span className="lbl" style={{ marginTop: 4 }}>
+                Did this answer your question?
+              </span>
+              <div className="tchips">
+                <span>Resolved</span>
+                <span className="on">Partly</span>
+                <span>Not resolved</span>
+              </div>
+              <p className="mute" style={{ fontSize: 12 }}>
+                General information based on ACAS guidance. Not legal advice.
+              </p>
+            </TourPanel>
+            <TourPanel on={step === 4} style={{ justifyContent: "flex-end" }}>
+              <span className="lbl" style={{ alignSelf: "center" }}>
+                Today
+              </span>
+              <div className="bub them">
+                Hello, you're a strong fit for a Senior Financial Analyst role in Dubai. Could we talk it through on
+                Thursday?<small>YOUR CONSULTANT</small>
+              </div>
+              <div className="bub me">
+                That works. Anything I should prepare?<small>YOU</small>
+              </div>
+              <div className="bub them">
+                I'll send a short brief on the team and the panel beforehand.<small>YOUR CONSULTANT</small>
+              </div>
+            </TourPanel>
+          </div>
         </div>
-      </Wrap>
+      </div>
     </section>
   );
 }
 
-/* ─────────────────── Sectors ─────────────────── */
+function TourPanel({ on, children, style }: { on: boolean; children: React.ReactNode; style?: CSSProperties }) {
+  return (
+    <div className={`tp ${on ? "on" : ""}`} style={style}>
+      {children}
+    </div>
+  );
+}
+
+function TBar({ label, v, warn }: { label: string; v: number; warn?: boolean }) {
+  return (
+    <div className="tbar">
+      <span>{label}</span>
+      <span className="t">
+        <i className={warn ? "w" : ""} style={{ width: `${v}%` }} />
+      </span>
+      <b>{v}</b>
+    </div>
+  );
+}
+
+function Fix({ pill, warn, title, children }: { pill: string; warn?: boolean; title: string; children: React.ReactNode }) {
+  return (
+    <div className="tfix">
+      <span className={`pill ${warn ? "warn" : "good"}`}>{pill}</span>
+      <div>
+        <b>{title}</b>
+        <p>{children}</p>
+      </div>
+    </div>
+  );
+}
+
+function TRow({ initials, title, where, p }: { initials: string; title: string; where: string; p: number }) {
+  return (
+    <div className="trow">
+      <span className="co">{initials}</span>
+      <span className="tx">
+        <b>{title}</b>
+        <small>{where}</small>
+      </span>
+      <span className="cring" style={{ "--p": p } as CSSProperties}>
+        <span>{p}</span>
+      </span>
+    </div>
+  );
+}
+
+/* ─────────────────── Candidate: free band ─────────────────── */
+
+function FreeBand() {
+  return (
+    <section className="band sec">
+      <div className="grid-bg" />
+      <div className="wrap" style={{ position: "relative" }}>
+        <div className="sh rv" style={{ marginBottom: 40 }}>
+          <div>
+            <div className="eyebrow">Free, for good</div>
+            <h2 className="disp">
+              You never pay to <em>find work</em> through us.
+            </h2>
+          </div>
+          <p>
+            Employers pay for recruitment, so everything for candidates is free. There's no premium tier and nothing to
+            unlock. UK rules stop agencies charging you for finding work anyway.
+          </p>
+        </div>
+        <div className="facts rv">
+          <div>
+            <b>£0</b>
+            <p>Account, CV score, tips, matches and guidance</p>
+          </div>
+          <div>
+            <b>0–100</b>
+            <p>Your CV score, broken down section by section</p>
+          </div>
+          <div>
+            <b>2</b>
+            <p>Markets, the UK and the Gulf, from one account</p>
+          </div>
+          <div>
+            <b>10 MB</b>
+            <p>PDF, Word or plain text. Stored privately, never public</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────── Candidate: sectors ─────────────────── */
 
 const SECTORS = [
-  { name: "Construction & Engineering", roles: "Quantity Surveyor · Site Manager · Project Manager · Contracts Director" },
-  { name: "Technology & Digital", roles: "Software Engineer · Data Engineer · Head of Product · CTO" },
-  { name: "Energy & Infrastructure", roles: "Project Director · HSE Lead · Commercial Manager · Country Director" },
-  { name: "Financial Services", roles: "Finance Director · Head of Compliance · Risk · Investment Manager" },
-  { name: "Legal & Professional", roles: "General Counsel · Head of Legal · COO · Business Development" },
-  { name: "Healthcare & Life Sciences", roles: "COO · Head of Clinical Operations · Regulatory Affairs · CFO" },
+  { name: "Construction & engineering", roles: "Quantity Surveyor · Site Manager · Project Manager" },
+  { name: "Technology & digital", roles: "Software Engineer · Data Engineer · Head of Product" },
+  { name: "Energy & infrastructure", roles: "Project Director · HSE Lead · Commercial Manager" },
+  { name: "Financial services", roles: "Finance Director · Compliance · Risk" },
+  { name: "Legal & professional services", roles: "General Counsel · Head of Legal · COO" },
+  { name: "Healthcare & life sciences", roles: "Clinical Operations · Regulatory Affairs · CFO" },
 ];
 
-function Sectors() {
+function SectorList() {
   return (
-    <section className="py-20 md:py-32 border-t border-rule">
-      <Wrap>
-        <Reveal>
-          <div className="flex items-end justify-between gap-8 mb-14">
-            <div>
-              <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute mb-4">
-                — Where we recruit
-              </div>
-              <h2
-                className="font-display font-light leading-[1] tracking-[-0.03em] max-w-[18ch]"
-                style={{ fontSize: "clamp(32px, 4.5vw, 60px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
-              >
-                <Words text="Roles we" accent="recruit for." />
-              </h2>
-            </div>
-            <Link
-              to="/sectors"
-              className="hidden md:inline-flex items-center gap-2 text-[13px] text-ink-soft hover:text-ink transition-colors border-b border-transparent hover:border-ink pb-0.5 shrink-0"
-            >
-              All sectors →
+    <section className="sec">
+      <div className="wrap">
+        <div className="sh rv">
+          <div>
+            <div className="eyebrow">Roles we recruit for</div>
+            <h2 className="disp">
+              Where you'll <em>find us</em> hiring.
+            </h2>
+          </div>
+          <p>Upload once and you're matched against every role we're recruiting for, across all of these sectors.</p>
+        </div>
+        <div className="slist rv">
+          {SECTORS.map((s) => (
+            <Link key={s.name} to="/sectors">
+              <h3 className="disp">{s.name}</h3>
+              <span className="mono" style={{ textAlign: "right" }}>
+                {s.roles}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────── Candidate: principles ─────────────────── */
+
+function Principles() {
+  return (
+    <section className="sec bt">
+      <div className="wrap">
+        <div className="sh rv">
+          <div>
+            <div className="eyebrow">Why UK Talent Link</div>
+            <h2 className="disp">
+              Recruitment that <em>works for you.</em>
+            </h2>
+          </div>
+          <p>
+            We're a recruitment firm, so our job is to put good people in good roles. That starts with telling you
+            honestly where you stand.
+          </p>
+        </div>
+        <div className="cmt rv">
+          <div>
+            <span className="gl">FREE</span>
+            <h4>You never pay us a penny.</h4>
+            <p>Employers pay for recruitment. Your account, score, matches and workplace guidance cost you nothing.</p>
+          </div>
+          <div>
+            <span className="gl">HONEST</span>
+            <h4>Straight feedback, not silence.</h4>
+            <p>Your score and tips show how your CV reads to a recruiter, so you're not left guessing why applications go quiet.</p>
+          </div>
+          <div>
+            <span className="gl">PRIVATE</span>
+            <h4>Your CV stays yours.</h4>
+            <p>Stored privately and seen only through your account or by authorised UK Talent Link staff. Never published or sold on.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────── Candidate: start ─────────────────── */
+
+function CandidateStart() {
+  return (
+    <section className="band sec" id="start">
+      <div className="grid-bg" />
+      <div className="wrap cta" style={{ position: "relative" }}>
+        <div className="cta-l rv">
+          <div className="eyebrow">Start free</div>
+          <h2 className="disp" style={{ marginTop: 20 }}>
+            See where your CV <em>stands.</em>
+          </h2>
+          <p>Create an account, upload your CV and we'll show you what's working, what isn't and where you fit.</p>
+          <div style={{ display: "flex", gap: 12, marginTop: 36, flexWrap: "wrap" }}>
+            <Link to="/auth/register" className="btn btn-light btn-lg">
+              Create free account
+            </Link>
+            <Link to="/auth/login" className="btn btn-lg">
+              Sign in
             </Link>
           </div>
-        </Reveal>
-
-        <Reveal stagger>
-          <div className="grid grid-cols-1 md:grid-cols-2 border-t border-rule">
-            {SECTORS.map((s, i) => (
-              <div
-                key={s.name}
-                className={`group py-7 px-0 border-b border-rule ${i % 2 === 0 ? "md:pr-12" : "md:pl-12 md:border-l"}`}
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="transition-transform duration-500 [transition-timing-function:var(--ease-publication)] group-hover:translate-x-1.5">
-                    <div className="font-mono text-[10px] tracking-[0.15em] uppercase text-ink-mute group-hover:text-accent transition-colors duration-500 mb-2">
-                      {String(i + 1).padStart(2, "0")}
-                    </div>
-                    <h3
-                      className="font-display font-light leading-[1.1] tracking-[-0.02em] text-ink"
-                      style={{ fontSize: "clamp(20px, 2.2vw, 28px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
-                    >
-                      {s.name}
-                    </h3>
-                    <p className="text-[13px] text-ink-mute group-hover:text-ink-soft transition-colors duration-500 mt-2">{s.roles}</p>
-                  </div>
-                  <span
-                    aria-hidden="true"
-                    className="text-ink-mute text-lg opacity-0 -translate-x-2 transition-all duration-500 [transition-timing-function:var(--ease-publication)] group-hover:opacity-100 group-hover:translate-x-0 shrink-0"
-                  >
-                    →
-                  </span>
-                </div>
-              </div>
-            ))}
+        </div>
+        <div className="score-card rv" aria-label="Example score">
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span className="eyebrow">Example score</span>
+            <span className="mono">Illustration</span>
           </div>
-        </Reveal>
-      </Wrap>
+          <div className="disp" style={{ fontSize: 72, lineHeight: 1 }}>
+            78<small style={{ fontSize: 20, color: "var(--b-soft)" }}> / 100</small>
+          </div>
+          <TBar label="Contact details" v={96} />
+          <TBar label="Experience" v={64} />
+          <TBar label="Skills" v={81} />
+          <TBar label="Education" v={88} />
+        </div>
+      </div>
     </section>
   );
 }
 
-/* ─────────────────── Contact CTA ─────────────────── */
+/* ─────────────────── Employer: services ─────────────────── */
 
-function ContactCTA() {
+function EmployerServices() {
   return (
-    <section className="band bg-ink text-paper py-24 md:py-36 relative overflow-hidden">
-      <div
-        className="absolute inset-0 pointer-events-none mesh-drift"
-        style={{
-          background: "radial-gradient(ellipse 60% 50% at 80% 50%, oklch(0.285 0.075 263 / 0.3), transparent 70%), radial-gradient(ellipse 40% 40% at 15% 60%, oklch(0.285 0.075 263 / 0.15), transparent 70%)",
-        }}
-      />
-      <Wrap className="relative z-10">
-        <Reveal>
-          <div className="grid md:grid-cols-[3fr_2fr] gap-16 md:gap-24 items-center">
+    <section className="sec" id="services">
+      <div className="wrap">
+        <div className="sh rv">
+          <div>
+            <div className="eyebrow">For employers</div>
+            <h2 className="disp">
+              Two services. <em>One standard.</em>
+            </h2>
+          </div>
+          <p>Executive search and practical HR consultancy for organisations hiring across the UK and the Gulf.</p>
+        </div>
+        <div className="svc rv">
+          <div id="search">
+            <span className="n">01 · EXECUTIVE SEARCH</span>
+            <h3 className="disp">Senior and specialist hires.</h3>
+            <p>We map the market, approach people quietly and present a ranked shortlist with the evidence for every name.</p>
+            <ul className="ticks one">
+              <li>Market mapping across the UK and the Gulf</li>
+              <li>Confidential approach and assessment</li>
+              <li>Ranked shortlist with reasoning</li>
+              <li>Offer, relocation and onboarding support</li>
+            </ul>
+            <a href="#contact" className="lnk" style={{ color: "var(--ink)", marginTop: "auto" }}>
+              Discuss a search →
+            </a>
+          </div>
+          <div id="hr">
+            <span className="n">02 · HR CONSULTANCY</span>
+            <h3 className="disp">The people side, done properly.</h3>
+            <p>Hands-on HR support: structure, policy, reward and the hard conversations.</p>
+            <ul className="ticks one">
+              <li>Organisation design and workforce planning</li>
+              <li>Policies, handbooks and contracts</li>
+              <li>Reward and benchmarking</li>
+              <li>Employee relations casework</li>
+            </ul>
+            <a href="#contact" className="lnk" style={{ color: "var(--ink)", marginTop: "auto" }}>
+              Discuss HR support →
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────── Employer: shortlist explainer ─────────────────── */
+
+const SHORTLIST = [
+  {
+    who: "Candidate A",
+    meta: "Manchester · 6 yrs · UAE resident",
+    score: 94,
+    bars: [["Skills", 96], ["Seniority", 92], ["Quals", 70]] as const,
+    why: ["Rebuilt a group budgeting model in Power BI", "Already resident in the UAE"],
+    gap: "Part-qualified; the brief prefers fully qualified",
+  },
+  { who: "Candidate B", meta: "Dubai · 8 yrs · Treasury", score: 91, why: ["Eight years in Gulf treasury and FP&A", "Fully qualified"], gap: "Three-month notice period" },
+  { who: "Candidate C", meta: "London · 7 yrs · Group reporting", score: 88, why: ["Led an IFRS 17 implementation"], gap: "Would need visa sponsorship" },
+  { who: "Candidate D", meta: "Riyadh · 5 yrs · Corporate finance", score: 57, why: ["Strong M&A modelling"], gap: "Misses a must-have: FP&A experience" },
+];
+
+function ShortlistExplainer() {
+  const [open, setOpen] = useState(0);
+  return (
+    <section className="sec deep bt">
+      <div className="wrap expl">
+        <div className="rv">
+          <div className="eyebrow">The shortlist, explained</div>
+          <h2 className="disp" style={{ fontSize: "clamp(34px,4.4cqi,60px)", marginTop: 16 }}>
+            A few names, <em className="ac">not forty.</em>
+          </h2>
+          <p className="soft" style={{ marginTop: 20, maxWidth: "46ch" }}>
+            Talent Compass scores every CV we hold against your brief. A consultant reviews the top of the list, and you
+            get the reasons as well as the names.
+          </p>
+          <ol>
+            <li>
+              <div>
+                <b>Must-haves stay must-haves</b>
+                <span>A candidate is only marked qualified with a score of 60 or more and every must-have met.</span>
+              </div>
+            </li>
+            <li>
+              <div>
+                <b>Every score shows its working</b>
+                <span>Strengths and gaps taken from the CV, not a black-box number.</span>
+              </div>
+            </li>
+            <li>
+              <div>
+                <b>The decision stays yours</b>
+                <span>A consultant talks you through the shortlist; you choose who to meet.</span>
+              </div>
+            </li>
+          </ol>
+        </div>
+        <div className="sl rv">
+          <div className="sl-h">
             <div>
-              <div className="font-mono text-[10px] tracking-[0.2em] uppercase text-paper/80 mb-6 flex items-center gap-3">
-                <span className="w-6 h-px bg-paper/40" />
-                Get started
-              </div>
-              <h2
-                className="font-display font-light leading-[0.97] tracking-[-0.03em]"
-                style={{ fontSize: "clamp(40px, 6vw, 96px)", fontVariationSettings: '"opsz" 144, "SOFT" 40' }}
-              >
-                <Words text="Your next move starts" accent="with one upload." accentColor="oklch(0.765 0.055 263)" />
-              </h2>
+              <span className="mono">Example mandate · Dubai</span>
+              <br />
+              <b>Senior Financial Analyst</b>
             </div>
-
-            <div className="flex flex-col gap-5">
-              <p className="text-paper/80 text-[15px] leading-[1.6]">
-                Create a free account, upload your CV and see where you stand today. Questions first? A real person replies, usually within one working day.
-              </p>
-              <div className="flex flex-col gap-3 pt-2">
-                <Link
-                  to="/auth/register"
-                  className="inline-flex items-center justify-center gap-2 text-[14px] font-medium px-6 py-3.5 bg-paper text-ink rounded-full hover:bg-accent-light transition-colors"
-                >
-                  Register free →
-                </Link>
-                <Link
-                  to="/contact"
-                  className="inline-flex items-center justify-center gap-2 text-[14px] px-6 py-3.5 border border-paper/20 text-paper/70 rounded-full hover:border-paper/60 hover:text-paper transition-colors"
-                >
-                  Ask us a question
-                </Link>
-              </div>
-              <div className="pt-4 border-t border-paper/10">
-                <div className="font-mono text-[11px] tracking-[0.1em] uppercase text-paper/80 mb-2">Office</div>
-                <div className="text-[14px] text-paper/80 leading-relaxed">
-                  Chancery House, 53–64 Chancery Lane<br />
-                  London WC2A 1QS<br />
-                  <span className="text-paper/80">Also: Dubai · Abu Dhabi</span>
+            <span className="pill good">Example</span>
+          </div>
+          {SHORTLIST.map((c, i) => (
+            <div key={c.who} style={{ display: "contents" }}>
+              <button
+                type="button"
+                className={`sl-r ${c.score >= 60 ? "top" : ""} ${open === i ? "open" : ""}`}
+                aria-expanded={open === i}
+                onClick={() => setOpen(open === i ? -1 : i)}
+                style={{ width: "100%", textAlign: "left" }}
+              >
+                <span className="rk">{i + 1}</span>
+                <span className="av">{c.who.slice(-1)}</span>
+                <div>
+                  <b>{c.who}</b>
+                  <small>{c.meta}</small>
+                </div>
+                <span className="sc">{c.score}</span>
+              </button>
+              <div className="sl-x">
+                {"bars" in c &&
+                  c.bars?.map(([l, v]) => <TBar key={l} label={l} v={v} warn={v < 75} />)}
+                <div className="why">
+                  {c.why.map((w) => (
+                    <div key={w}>{w}</div>
+                  ))}
+                  <div className="no">{c.gap}</div>
                 </div>
               </div>
             </div>
-          </div>
-        </Reveal>
-      </Wrap>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }
 
-/* ─────────────────── Motion helpers ─────────────────── */
+/* ─────────────────── Employer: how a search runs ─────────────────── */
 
-// Splits a heading into words that rise one by one once the enclosing <Reveal> is in view.
-function Words({
-  text,
-  accent,
-  accentColor,
-}: {
-  text: string;
-  accent?: string;
-  accentColor?: string;
-}) {
-  const parts = [
-    ...text.split(" ").map((w) => ({ w, accent: false })),
-    ...(accent ? accent.split(" ").map((w) => ({ w, accent: true })) : []),
-  ];
+const STAGES = [
+  ["Brief", "A working session on the role, the team and what success looks like in the first year."],
+  ["Map", "We chart the market across the UK and the Gulf and agree the target list with you."],
+  ["Approach", "Confidential conversations with people who fit, assessed against your requirements."],
+  ["Shortlist", "A ranked shortlist with the evidence for every name, reviewed by your consultant."],
+  ["Hire", "Offer, notice, relocation and check-ins through the first months."],
+] as const;
+
+function SearchTimeline() {
   return (
-    <>
-      {parts.map((p, i) => (
-        <Fragment key={i}>
-          <span className="word" style={{ "--i": i } as CSSProperties}>
-            <span
-              className={p.accent ? (accentColor ? "italic" : "italic text-accent") : undefined}
-              style={
-                p.accent
-                  ? { color: accentColor, fontVariationSettings: '"opsz" 144, "SOFT" 100' }
-                  : undefined
-              }
-            >
-              {p.w}
-            </span>
-          </span>
-          {i < parts.length - 1 ? " " : null}
-        </Fragment>
-      ))}
-    </>
+    <section className="band sec">
+      <div className="grid-bg" />
+      <div className="wrap" style={{ position: "relative" }}>
+        <div className="sh rv">
+          <div>
+            <div className="eyebrow">How a search runs</div>
+            <h2 className="disp">
+              From brief to <em>start date.</em>
+            </h2>
+          </div>
+          <p>One consultant runs your search end to end. You see the reasoning at every stage.</p>
+        </div>
+        <div className="tl rv">
+          {STAGES.map(([h, p], i) => (
+            <div key={h}>
+              <div className="wk">Stage {i + 1}</div>
+              <h4>{h}</h4>
+              <p>{p}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
-// London → Gulf route drawn behind the hero headline, with a traveller moving along it.
-const ROUTE_PATH = "M 300 150 C 470 30, 690 120, 820 360";
+/* ─────────────────── Employer: commitments ─────────────────── */
 
-function RouteLine({ animate }: { animate: boolean }) {
+function Commitments() {
   return (
-    <svg
-      aria-hidden="true"
-      className={`absolute inset-0 z-0 w-full h-full pointer-events-none transition-opacity duration-[1500ms] ${animate ? "opacity-100" : "opacity-0"}`}
-      viewBox="0 0 1000 600"
-      preserveAspectRatio="xMidYMid slice"
-      fill="none"
-    >
-      <defs>
-        <linearGradient id="route-grad" x1="0" x2="1" y1="0" y2="0">
-          <stop offset="0" style={{ stopColor: "var(--color-accent)", stopOpacity: 0 }} />
-          <stop offset="0.45" style={{ stopColor: "var(--color-accent)", stopOpacity: 0.55 }} />
-          <stop offset="1" style={{ stopColor: "var(--color-accent)", stopOpacity: 0.1 }} />
-        </linearGradient>
-      </defs>
-      <path d={ROUTE_PATH} stroke="url(#route-grad)" strokeWidth="1" className="route-path" />
-      <g className="route-node" style={{ animationDelay: "1.1s" }}>
-        <circle cx="300" cy="150" r="2.5" className="fill-accent" />
-        <circle cx="300" cy="150" r="2.5" className="stroke-accent route-ring" strokeWidth="0.75" />
-      </g>
-      <g className="route-node" style={{ animationDelay: "3.2s" }}>
-        <circle cx="820" cy="360" r="2.5" className="fill-accent" />
-        <circle cx="820" cy="360" r="2.5" className="stroke-accent route-ring" strokeWidth="0.75" style={{ animationDelay: "1.5s" }} />
-      </g>
-      {animate && (
-        <circle r="2" className="fill-accent">
-          <animateMotion
-            path={ROUTE_PATH}
-            dur="11s"
-            begin="3.4s"
-            repeatCount="indefinite"
-            calcMode="spline"
-            keyTimes="0;1"
-            keySplines="0.42 0 0.58 1"
-          />
-        </circle>
-      )}
-    </svg>
+    <section className="sec">
+      <div className="wrap">
+        <div className="sh rv">
+          <div>
+            <div className="eyebrow">What we commit to</div>
+            <h2 className="disp">
+              Our side of <em>the bargain.</em>
+            </h2>
+          </div>
+          <p>How every search is run, whatever the role.</p>
+        </div>
+        <div className="cmt rv">
+          <div>
+            <span className="gl">I.</span>
+            <h4>Reasons, not just names</h4>
+            <p>Every shortlisted candidate comes with the evidence and the gaps, so you can defend the decision.</p>
+          </div>
+          <div>
+            <span className="gl">II.</span>
+            <h4>A person reviews every list</h4>
+            <p>Software ranks candidates. A consultant checks the ranking before anyone reaches you.</p>
+          </div>
+          <div>
+            <span className="gl">III.</span>
+            <h4>Candidates never pay</h4>
+            <p>Candidates use UK Talent Link free, so the people you meet came to us for the right reasons.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─────────────────── Employer: contact form ─────────────────── */
+
+function EmployerContact() {
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const field = (k: string) => String(fd.get(k) ?? "").trim();
+    setState("sending");
+    try {
+      await submitEnquiryFn({
+        data: {
+          name: field("name"),
+          email: field("email"),
+          company: field("company") || undefined,
+          enquiry_type: `Employer: ${field("service")}`,
+          message: field("message"),
+        },
+      });
+      setState("sent");
+      toast.success("Request sent. We'll reply within one working day.");
+    } catch {
+      setState("error");
+    }
+  }
+
+  return (
+    <section className="band sec" id="contact">
+      <div className="grid-bg" />
+      <div className="wrap cta" style={{ position: "relative" }}>
+        <div className="cta-l rv">
+          <div className="eyebrow">Book a consultation</div>
+          <h2 className="disp" style={{ marginTop: 20 }}>
+            Tell us about <em>the role.</em>
+          </h2>
+          <p>A call with a consultant about what you need. There's no obligation. Prefer to talk now?</p>
+          <div className="cta-meta">
+            <a href="tel:+442071892857">+44 (0)20 7189 2857</a>
+            <a href="mailto:info@uktalentlink.co.uk">info@uktalentlink.co.uk</a>
+          </div>
+        </div>
+        {state === "sent" ? (
+          <div className="rv" role="status">
+            <div className="eyebrow">Request sent</div>
+            <h3 className="disp" style={{ fontSize: "clamp(26px,3cqi,40px)", marginTop: 16 }}>
+              Thank you, we'll be in touch.
+            </h3>
+            <p style={{ marginTop: 16 }}>A consultant will reply personally, usually within one working day.</p>
+          </div>
+        ) : (
+          <form className="cform rv" onSubmit={submit}>
+            <label className="field">
+              <span>Name</span>
+              <input className="inp" name="name" required maxLength={200} autoComplete="name" placeholder="Your name" />
+            </label>
+            <label className="field">
+              <span>Company</span>
+              <input className="inp" name="company" maxLength={200} autoComplete="organization" placeholder="Organisation" />
+            </label>
+            <label className="field">
+              <span>Work email</span>
+              <input className="inp" name="email" type="email" required maxLength={320} autoComplete="email" placeholder="name@company.com" />
+            </label>
+            <label className="field">
+              <span>Service</span>
+              <select className="inp" name="service" defaultValue="Executive search">
+                <option>Executive search</option>
+                <option>HR consultancy</option>
+                <option>Not sure yet</option>
+              </select>
+            </label>
+            <label className="field full">
+              <span>The role or challenge</span>
+              <textarea className="inp" name="message" rows={4} required maxLength={5000} placeholder="A few lines is plenty" />
+            </label>
+            <div className="full form-foot">
+              {state === "error" ? (
+                <small className="form-msg err" role="alert">
+                  We couldn't send that just now. Please email info@uktalentlink.co.uk.
+                </small>
+              ) : (
+                <small>We reply within one working day.</small>
+              )}
+              <button className="btn btn-light btn-lg" disabled={state === "sending"}>
+                {state === "sending" ? "Sending…" : "Request a call"}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </section>
   );
 }
