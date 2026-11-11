@@ -45,6 +45,12 @@ export function Nav({ variant = "overlay" }: { variant?: "overlay" | "solid" }) 
   const signedIn = !!session.userId;
   const isStaff = session.isStaff;
 
+  // A signed-in employer sees the employer menu on public pages (found in live testing).
+  const accountRole = session.accountRole;
+  useEffect(() => {
+    if (signedIn && !isStaff && accountRole === "employer") setAudience("employer");
+  }, [signedIn, isStaff, accountRole]);
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
     onScroll();
