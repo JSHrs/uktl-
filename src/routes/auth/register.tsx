@@ -55,7 +55,9 @@ function RegisterPage() {
       if (result.needsConfirmation) {
         setSuccess(true);
       } else {
-        await router.invalidate();
+        // Navigate first: the root route re-reads the session on navigation. Invalidating
+        // here would re-run this page's "already signed in" guard and send a new
+        // candidate to the dashboard before the guided set-up (found in live testing).
         await router.navigate({
           href: staff ? "/staff" : `/onboarding?for=${result.accountType === "employer" ? "employer" : "candidate"}&step=2`,
         });
