@@ -80,7 +80,7 @@ function UploadPage() {
       }
 
       setStage("done");
-      toast.success(result.status === "queued" ? "CV securely uploaded — processing is queued" : `CV parsed — quality ${result.quality.score}/100`);
+      toast.success(result.status === "queued" ? "CV uploaded. Scoring is queued and your score will appear on this page." : `CV scored: ${result.quality.score}/100`);
       await navigate({ to: "/app/candidates/$id", params: { id: result.id } });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -192,7 +192,7 @@ function UploadPage() {
         {/* Footer row */}
         <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <p className="text-xs text-ink-mute max-w-[44ch]">
-            Files are kept in private storage. Claude processes your document to extract its contents and prepare your assessment.
+            Files are kept in private storage. An AI service reads your document to prepare your assessment; a score is a guide, not a hiring decision.
           </p>
           <button
             type="submit"
@@ -200,7 +200,7 @@ function UploadPage() {
             className="flex-shrink-0 text-[13px] px-5 py-2.5 border border-ink bg-ink text-paper rounded-full
               disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
           >
-            {busy ? STAGE_LABELS[stage].replace("…", "") : "Parse & match →"}
+            {busy ? STAGE_LABELS[stage].replace("…", "") : (isStaff ? "Upload and assess →" : "Upload and score →")}
           </button>
         </div>
       </form>
@@ -213,7 +213,7 @@ function UploadPage() {
         <ol className="space-y-3">
           {[
             ["Store", "Your CV is stored privately and accessed only through your account or authorised UKTL staff."],
-            ["Read", "Claude extracts your experience, skills and education into a structured profile."],
+            ["Read", "We read your experience, skills and education into a profile you can check and correct."],
             ["Score", "Your CV gets a 0–100 quality score with specific tips to improve it."],
             ["Match", "You are matched against every open role; the best fits appear under Job matches."],
           ].map(([step, desc], i) => (

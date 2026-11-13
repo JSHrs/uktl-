@@ -132,12 +132,6 @@ function ProfilePage() {
                 Edit profile
               </button>
             )}
-            <button
-              onClick={handleLogout}
-              className="text-[13px] px-4 py-2 border border-rule text-ink-mute rounded-full hover:border-ink hover:text-ink transition-colors"
-            >
-              Sign out
-            </button>
           </div>
         }
       />

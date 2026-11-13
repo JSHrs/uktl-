@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useRouteContext } from "@tanstack/react-router";
-import { PageHeader, Pill } from "@/components/app/AppLayout";
+import { EmptyState, PageHeader, Pill } from "@/components/app/AppLayout";
 import { z } from "zod";
 import { filterJobs } from "@/lib/job-search";
 import { listJobsFn } from "@/lib/functions";
@@ -38,18 +38,24 @@ function JobsListPage() {
       />
 
       <div className="grid sm:grid-cols-2 gap-4 mb-6">
-        <label className="text-sm">Role, company or skill
-          <input type="search" value={search.q ?? ""} onChange={e => void navigate({ search: { ...search, q: e.target.value || undefined }, replace: true })} className="block w-full border border-rule rounded p-3 mt-1 bg-paper" />
+        <label className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute">Role, company or skill
+          <input type="search" placeholder="e.g. Quantity Surveyor" value={search.q ?? ""} onChange={e => void navigate({ search: { ...search, q: e.target.value || undefined }, replace: true })} className="block w-full border border-rule rounded-md px-4 py-3 mt-1.5 bg-paper text-sm text-ink font-sans normal-case tracking-normal placeholder:text-ink-mute focus:outline-none focus:border-ink" />
         </label>
-        <label className="text-sm">Location
-          <input type="search" value={search.location ?? ""} onChange={e => void navigate({ search: { ...search, location: e.target.value || undefined }, replace: true })} className="block w-full border border-rule rounded p-3 mt-1 bg-paper" />
+        <label className="block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute">Location
+          <input type="search" placeholder="e.g. Dubai" value={search.location ?? ""} onChange={e => void navigate({ search: { ...search, location: e.target.value || undefined }, replace: true })} className="block w-full border border-rule rounded-md px-4 py-3 mt-1.5 bg-paper text-sm text-ink font-sans normal-case tracking-normal placeholder:text-ink-mute focus:outline-none focus:border-ink" />
         </label>
       </div>
       <div className="flex flex-wrap justify-between gap-4 mb-6">
-        <p role="status">{jobs.length} roles found</p>
-        {!isStaff && <Link to="/app/discover" search={search} className="underline">Swipe these roles →</Link>}
+        <p role="status" className="text-sm text-ink-soft">{jobs.length} {jobs.length === 1 ? "role" : "roles"} found</p>
+        {!isStaff && jobs.length > 0 && <Link to="/app/discover" search={search} className="text-sm underline">Swipe these roles →</Link>}
       </div>
-      {jobs.length === 0 && <p className="text-ink-soft">No roles match these filters. Try another skill or location.</p>}
+      {jobs.length === 0 && (
+        <EmptyState
+          title={search.q || search.location ? "No roles match those filters" : "No open roles right now"}
+          body={search.q || search.location ? "Try another skill or location, or clear the filters." : isStaff ? "Add a mandate in the admin area and it appears here." : "New roles are added as we take them on. Upload your CV and you're matched automatically when they arrive."}
+          action={!isStaff && !(search.q || search.location) ? <Link to="/app/upload" className="min-h-10 inline-flex items-center rounded-full bg-ink text-paper px-5 text-[13px]">Upload your CV</Link> : undefined}
+        />
+      )}
       <div className="grid md:grid-cols-2 gap-4">
         {jobs.map((j) => (
           <Link
