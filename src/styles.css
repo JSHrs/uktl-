@@ -3,6 +3,7 @@
 @import "tw-animate-css";
 @import "./styles/design.css";
 @import "./styles/design-app.css";
+@import "./styles/landing.css";
 
 /* `dark:` utilities follow the theme toggle (html.t-dark), or the device
    setting when the visitor has not chosen (no t-light/t-dark class). */
@@ -472,7 +473,7 @@ input, select, textarea { max-width: 100%; }
 @media (max-width: 767px) {
   input, select, textarea { font-size: 16px; }
   main { width: 100%; }
-  h1:not(.disp) { font-size: clamp(1.75rem, 7vw, 2.25rem) !important; }
+  h1:not(.disp):not(.lp-h1) { font-size: clamp(1.75rem, 7vw, 2.25rem) !important; }
   h2 { font-size: clamp(1.25rem, 5vw, 1.75rem); }
 }
 
