@@ -32,12 +32,40 @@ for (const audience of ["candidate", "employer"] as const) {
   }
 }
 
-test("audience switch swaps the landing page and is remembered", async ({ page }) => {
+test("audience choice in the hero swaps the page below and is remembered", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1, name: /Be seen for/ })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: /Five things a recruiter looks for/ })).toBeVisible();
   await page.getByRole("button", { name: "I'm hiring" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: /The right hire/ })).toBeVisible();
-  await expect(page.getByRole("heading", { level: 1, name: /Be seen for/ })).toBeHidden();
+  await expect(page.getByRole("heading", { level: 2, name: /Change the brief/ })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: /Five things a recruiter looks for/ })).toBeHidden();
   await page.reload();
-  await expect(page.getByRole("heading", { level: 1, name: /The right hire/ })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: /Change the brief/ })).toBeVisible();
+});
+
+test("the example shortlist re-ranks when the brief changes", async ({ page }) => {
+  await page.goto("/?for=employer");
+  const status = page.getByRole("status").filter({ hasText: "qualified" });
+  await expect(status).toHaveText("2 of 5 qualified");
+  await page.getByRole("button", { name: "Power BI", exact: true }).click();
+  await expect(status).toHaveText("1 of 5 qualified");
+  await page.getByRole("button", { name: "IFRS", exact: true }).click();
+  await page.getByRole("button", { name: "Financial modelling", exact: true }).click();
+  await page.getByRole("button", { name: "Power BI", exact: true }).click();
+  await expect(status).toHaveText("5 of 5 qualified");
+});
+
+test("picking a CV dimension shows its example feedback", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: /^Skills/ }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Example feedback" })).toContainText("Skills");
+  await expect(page.getByRole("button", { name: /^Skills/ })).toHaveAttribute("aria-pressed", "true");
+});
+
+test("the hero shows both doors and live office clocks", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Recruitment between the UK and the Gulf");
+  await expect(page.getByRole("heading", { level: 2, name: /Be seen for what you can do/ })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: /The right hire, ranked and reasoned/ })).toBeVisible();
+  await expect(page.getByLabel("Local time in our two offices")).toContainText(/London \d{2}:\d{2}/);
+  await expect(page.getByLabel("Local time in our two offices")).toContainText("5,473 km apart");
 });

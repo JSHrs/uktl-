@@ -1,6 +1,6 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
-import { PageHeader } from "@/components/app/AppLayout";
+import { EmptyState, PageHeader } from "@/components/app/AppLayout";
 import {
   inboxFn,
   markMessageReadFn,
@@ -39,9 +39,10 @@ function Messages() {
         title="Messages"
         lede="Messages from your consultant and job-update campaigns. To reply, use the email from your consultant."
       />
-      <label className="flex gap-3 items-start border border-rule rounded p-4 mb-8">
+      <label className="flex gap-3 items-start border border-rule rounded-lg p-4 mb-8 text-sm text-ink-soft max-w-3xl">
         <input
           type="checkbox"
+          className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--ink)]"
           disabled={busy}
           checked={data.preferences.campaignsEnabled}
           onChange={(e) =>
@@ -58,11 +59,13 @@ function Messages() {
           any time. Appointment and individual recruitment messages are separate.
         </span>
       </label>
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert" className="text-bad mb-4">{error}</p>}
       {data.inbox.messages.length === 0 && (
-        <p>No messages yet. Messages appear here after they have been sent.</p>
+        <div className="max-w-3xl">
+          <EmptyState title="No messages yet" body="When a consultant writes to you about a role, the message appears here as well as in your email." />
+        </div>
       )}
-      <div className="space-y-4">
+      <div className="space-y-4 max-w-3xl">
         {[...data.inbox.messages, ...extra].map((m) => (
           <article key={m.id} className="border border-rule rounded p-5">
             <div className="flex flex-wrap justify-between gap-3">

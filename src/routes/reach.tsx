@@ -122,7 +122,7 @@ function ReachPage() {
             title="Open to a move?"
             body="Upload your CV free and see UK and Gulf roles you match."
             actions={
-              <Link to="/auth/register" search={{ for: "candidate" }} className="btn btn-ink btn-lg">
+              <Link to="/onboarding" search={{ for: "candidate", step: 1 }} className="btn btn-ink btn-lg">
                 Register free →
               </Link>
             }

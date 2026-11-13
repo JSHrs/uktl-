@@ -63,7 +63,7 @@ function ProfilePage() {
           <Link to="/auth/login" className="text-sm px-5 py-2.5 bg-ink text-paper rounded-full hover:opacity-90 transition-opacity">
             Sign in
           </Link>
-          <Link to="/auth/register" className="text-sm px-5 py-2.5 border border-rule rounded-full hover:border-ink transition-colors">
+          <Link to="/onboarding" search={{ for: "candidate", step: 1 }} className="text-sm px-5 py-2.5 border border-rule rounded-full hover:border-ink transition-colors">
             Create account
           </Link>
         </div>
@@ -132,12 +132,6 @@ function ProfilePage() {
                 Edit profile
               </button>
             )}
-            <button
-              onClick={handleLogout}
-              className="text-[13px] px-4 py-2 border border-rule text-ink-mute rounded-full hover:border-ink hover:text-ink transition-colors"
-            >
-              Sign out
-            </button>
           </div>
         }
       />

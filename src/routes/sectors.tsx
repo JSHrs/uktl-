@@ -115,8 +115,8 @@ function SectorsPage() {
                 <Ticks label="Typical roles" items={s.roles} />
                 {s.note && <p className="aside-note">{s.note}</p>}
                 <Link
-                  to="/auth/register"
-                  search={{ for: "candidate" }}
+                  to="/onboarding"
+                  search={{ for: "candidate", step: 1 }}
                   className="lnk"
                   data-only="candidate"
                   style={{ display: "inline-block", marginTop: 24, color: "var(--ink)" }}
@@ -141,7 +141,7 @@ function SectorsPage() {
             title="Your sector, your next role."
             body="Upload your CV free and see the roles you match today."
             actions={
-              <Link to="/auth/register" search={{ for: "candidate" }} className="btn btn-ink btn-lg">
+              <Link to="/onboarding" search={{ for: "candidate", step: 1 }} className="btn btn-ink btn-lg">
                 Register free →
               </Link>
             }
