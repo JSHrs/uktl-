@@ -140,10 +140,10 @@ export function Nav({ variant = "overlay" }: { variant?: "overlay" | "solid" }) 
                 </Link>
               </span>
               <span className="hidden min-[561px]:inline-flex">
-                <Link to="/auth/register" search={{ for: "candidate" }} data-only="candidate" className="btn-ink-sm">
+                <Link to="/onboarding" search={{ for: "candidate", step: 1 }} data-only="candidate" className="btn-ink-sm">
                   Register free
                 </Link>
-                <Link to="/auth/register" search={{ for: "employer" }} data-only="employer" className="btn-ink-sm">
+                <Link to="/onboarding" search={{ for: "employer", step: 1 }} data-only="employer" className="btn-ink-sm">
                   Start hiring
                 </Link>
               </span>
@@ -203,10 +203,10 @@ export function Nav({ variant = "overlay" }: { variant?: "overlay" | "solid" }) 
                   </>
                 ) : (
                   <>
-                    <Link to="/auth/register" search={{ for: "candidate" }} data-only="candidate" onClick={() => setOpen(false)} className="btn-ink-lg">
+                    <Link to="/onboarding" search={{ for: "candidate", step: 1 }} data-only="candidate" onClick={() => setOpen(false)} className="btn-ink-lg">
                       Register free
                     </Link>
-                    <Link to="/auth/register" search={{ for: "employer" }} data-only="employer" onClick={() => setOpen(false)} className="btn-ink-lg">
+                    <Link to="/onboarding" search={{ for: "employer", step: 1 }} data-only="employer" onClick={() => setOpen(false)} className="btn-ink-lg">
                       Start hiring
                     </Link>
                     <Link to="/auth/login" onClick={() => setOpen(false)} className="btn-line-lg">

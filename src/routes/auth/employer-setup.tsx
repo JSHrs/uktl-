@@ -11,7 +11,7 @@ export const Route = createFileRoute("/auth/employer-setup")({
   // ?onboarding=1 continues the guided set-up instead of opening the portal.
   validateSearch: (s): { onboarding?: boolean } => ({ onboarding: s.onboarding === 1 || s.onboarding === "1" || s.onboarding === true ? true : undefined }),
   beforeLoad: ({ context, search }) => {
-    if (!context.session.userId) throw redirect({ to: "/auth/register", search: { for: "employer" } });
+    if (!context.session.userId) throw redirect({ to: "/onboarding", search: { for: "employer", step: 1 } });
     if (context.session.isStaff) throw redirect({ href: "/admin" });
     if (context.session.accountRole === "employer") throw redirect({ href: search.onboarding ? "/onboarding?for=employer&step=2" : "/employer" });
   },

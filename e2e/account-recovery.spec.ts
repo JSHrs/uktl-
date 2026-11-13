@@ -21,8 +21,8 @@ test("incomplete callback clears sensitive fragment and rejects link", async ({ 
   await expect(page).not.toHaveURL(/access_token/);
 });
 test("sign-up form enforces the configured minimum password length", async ({ page }) => {
-  await page.goto("/auth/register");
-  const password = page.locator("#register-password");
+  await page.goto("/onboarding?for=candidate&step=1");
+  const password = page.locator("#ob-password");
   await expect(password).toHaveAttribute("minlength", String(MIN_PASSWORD_LENGTH));
   await expect(page.getByText(`(min ${MIN_PASSWORD_LENGTH} chars)`)).toBeVisible();
   await password.fill("Ab1".padEnd(MIN_PASSWORD_LENGTH, "x"));

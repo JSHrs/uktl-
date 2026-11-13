@@ -53,7 +53,7 @@ export function Footer() {
             <FooterCol title="Candidates">
               <FooterLink to="/services">What we offer</FooterLink>
               <li>
-                <Link to="/auth/register" search={{ for: "candidate" }} className="text-[14px] text-ink-soft hover:text-ink transition-colors">
+                <Link to="/onboarding" search={{ for: "candidate", step: 1 }} className="text-[14px] text-ink-soft hover:text-ink transition-colors">
                   Score my CV
                 </Link>
               </li>
@@ -68,7 +68,7 @@ export function Footer() {
             <FooterLink to="/employers" hash="contact">Start hiring</FooterLink>
             {!session.userId && (
               <li>
-                <Link to="/auth/register" search={{ for: "employer" }} className="text-[14px] text-ink-soft hover:text-ink transition-colors">
+                <Link to="/onboarding" search={{ for: "employer", step: 1 }} className="text-[14px] text-ink-soft hover:text-ink transition-colors">
                   Employer account
                 </Link>
               </li>
