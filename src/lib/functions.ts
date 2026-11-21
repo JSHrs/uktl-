@@ -250,10 +250,11 @@ export const uploadAndParseCvFn = createServerFn({ method: "POST" })
       throw new Error("CV processing is unavailable — runtime bindings are not configured");
     }
     await enforceRateLimit(env, "cvUpload", viewer.userId ?? "admin");
-    // TEMPORARY (owner decision, 11 Nov 2026): on the Supabase backend an upload is
-    // accepted without the AI key or scanner gateway. The file is stored and queued;
-    // it is scored when ANTHROPIC_API_KEY is configured. No score is ever invented.
-    if (env.DATA_BACKEND !== "supabase" && !env.ANTHROPIC_API_KEY) throw new Error("Live CV assessment is not configured yet.");
+    // Fail closed: no upload without CV assessment and, on Supabase, the private
+    // malware-scanner gateway. The message is shown to candidates, so keep it plain.
+    const notReady = "CV uploads aren't open yet. Please try again soon, or email info@uktalentlink.co.uk and we'll help.";
+    if (!env.ANTHROPIC_API_KEY) { console.error("[cv] upload refused: ANTHROPIC_API_KEY not configured"); throw new Error(notReady); }
+    if (env.DATA_BACKEND === "supabase" && (!env.CV_SCAN_URL || !env.CV_SCAN_TOKEN)) { console.error("[cv] upload refused: CV_SCAN_URL / CV_SCAN_TOKEN not configured"); throw new Error(notReady); }
     const bytes = await file.arrayBuffer();
     const validated = validateCvUpload(file.name, bytes);
     // Reject malformed/oversized DOCX content before writing a private object.

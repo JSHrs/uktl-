@@ -1,152 +1,141 @@
-# Talent Compass — project deliverables and handover note
+# UK Talent Link — handover
 
-**For:** the next developer or agent picking up development (prepared for ChatGPT "Astra").
-**Current source:** `devacnt/UKTL`; mirror `JSHrs/uktl-` and active Claude branch. Older sections below are historical; current release evidence is in RELEASE_CHECKLIST.md and DEVELOPMENT_GATES.md.
-**As of:** 17 September 2026.
+**As of 21 November 2026.** This replaces the September handover note (still in git history at commit `eb50024`, together with the stage documents listed in §9).
 
-Read `CLAUDE.md` first — it is the development guide (commands, architecture, hard rules, auth model, verification checklist). `DEPLOYMENT.md` is the infrastructure runbook. This note is the status report and the backlog: what exists, what was just delivered, what is proven, what is still needed to go live, and what to build next, in order.
+**Status in one line:** the product is built and wired for candidates, employers and staff, and its automated tests pass; it is **not live and not production-ready**. The site is unpublished, CV scoring is not switched on, and live end-to-end acceptance on the current code has not been run.
+
+Read in this order: this note → `CLAUDE.md` (developer rules, architecture, auth model) → `DEPLOYMENT.md` (hosting and settings) → `OPERATIONS_RUNBOOK.md` (scanner, privacy, backups).
 
 ---
 
-## 1. What the product is
+## 1. What exists
 
-UK Talent Link's public website plus **Talent Compass**, a recruitment intelligence platform:
-
-| Area | Routes | What it does |
+| Who | Where | What they can do |
 |---|---|---|
-| Public site | `/`, `/approach`, `/services`, `/sectors`, `/contact` | Editorial marketing site (Fraunces/Geist, OKLCH tokens, scroll-reveal motion). Contact form persists to D1 and emails the team. |
-| Talent Compass (app) | `/app`, `/app/upload`, `/app/candidates`, `/app/candidates/:id`, `/app/jobs`, `/app/jobs/:id`, `/app/discover`, `/app/hr`, `/app/profile` | CV upload → R2 storage → Claude extraction → skills normalisation → 0–100 quality grade with per-section breakdown → scored against every open mandate. Pipeline stages per candidate–mandate. Discover (swipe) view. HR & employment-law FAQ with Claude escalation. Candidate profile. |
-| Candidate auth | `/auth/login`, `/auth/register`, `/auth/forgot`, `/auth/callback` | Supabase Auth, server-side sessions in httpOnly cookies, magic-link and sign-up confirmation via the callback route. |
-| Admin | `/admin/*` | Overview, FAQ topics, mandates (with Reed.co.uk sync), candidates, bookings, **enquiries**, analytics. Password-protected (see §5). |
-| API | `/api/cv/:id` | Streams the original CV from R2 to an admin or the owning candidate. |
+| Visitors | `/`, `/services`, `/employers`, `/approach`, `/sectors`, `/reach`, `/contact`, `/privacy`, `/terms`, `/unsubscribe` | Public site with a Candidate / Employer switch. Landing page: two-door hero, annotated example CV, example shortlist that re-ranks live, enquiry form. Light and dark themes. |
+| New users | `/onboarding?for=candidate\|employer` | Guided set-up. Step 1 creates the account (email, Google or Apple). Candidate: account → upload CV → score. Employer: account → company → hiring needs → first role → portal. |
+| Candidates | `/app/*` | Dashboard, CV upload and history, score and tips, job matches (swipe), all jobs, interests, HR & employment-law guidance, consultation booking, messages, profile, data export/erasure requests, optional two-step verification. |
+| Employers | `/employer/*` | Company details, post/edit/withdraw/close roles, see candidates a consultant shares (**anonymised**: alias, consultant summary, score, matched and missing skills — never names, contacts, CVs or ids), respond "I'd like to meet" / "Not for us", optional two-step verification. |
+| Staff | `/admin/*`, `/app/candidates`, `/app/jobs` | Overview of what needs attention, mandates (rank, pipeline, fill, reopen), employer-role review (publish as mandate, share candidates), candidates, consultations and hours, enquiries, HR content, campaigns, calendar sync, analytics, CV processing, operations and privacy, CSV exports, settings. Admin vs consultant roles. |
+| Sign-in | `/auth/login`, `/admin/login`, `/auth/two-step`, `/auth/forgot`, `/auth/reset`, `/auth/callback` | One Sign in / Create account toggle. Two-step verification is **optional for every account type** (owner decision, 1 November) and enforced at every sign-in once switched on. |
 
-**Stack:** TanStack Start (React 19) · Tailwind v4 · Cloudflare Workers + D1 + R2 · Supabase Auth · Anthropic API · Resend · Reed.co.uk API · Playwright · GitHub Actions. Built through `@lovable.dev/vite-tanstack-config` with Nitro's `cloudflare-module` preset.
+**Stack:** TanStack Start (React 19) · Tailwind v4 · hosted by Lovable (Cloudflare Workers runtime) · Supabase Postgres, Auth and Storage (project `UKTL`, ref `fvkffdeindboirukscfq`, eu-west-1) · Anthropic API (CV extraction and scoring) · Resend (email) · Reed.co.uk (job import).
 
----
-
-## 2. Delivered in the last development cycle
-
-| PR | Delivered |
-|---|---|
-| #3 | Adopted this branch as `main`, superseding an earlier rebuild. Brought in: Supabase candidate auth, CV quality breakdown + improvement report, Reed.co.uk job sync, bookings + analytics, the minimalist redesign of the site and app shell, removal of candidate/job mock datasets (AI/parser fallback removal followed in launch hardening). |
-| #4 | Fixed all seven Codex review findings: admin server functions now authenticate; candidate data scoped (admin all / candidate own / anonymous nothing); migration 0005 rebuilt correctly; contact form persists + emails; DOCX text extraction; CV linked to the signed-in candidate; magic-link callback. **Also fixed the runtime break that made every page return 500** (`.validator` → `.inputValidator`) and the build failure (import-protection, stale route tree). |
-| #5 | `CLAUDE.md`, `README.md`, rewritten `DEPLOYMENT.md`. Landing page: stats strip removed, London→Gulf route animation, word-by-word heading reveals, hover motion, all `prefers-reduced-motion`-safe. |
-| #6 | Deployable Workers build + `wrangler deploy --dry-run` passing for staging and production. CI workflow. Playwright suite repaired (24 pass / 7 skipped / 0 fail). Pipeline stages (migration 0008). Admin enquiries inbox. CV download route. Toast notifications. |
+**Repositories:** `devacnt/UKTL` was the stated source of truth; `JSHrs/uktl-` (also reachable as `JSHrs/talent-compass`) is the repository Lovable builds from (`main`). Recent work (PRs #26–#33) was merged into `JSHrs/uktl-` only. **Reconcile the two before further development** (see §6).
 
 ---
 
-## 3. Proven state (reproduce before changing anything)
+## 2. How to run, test and deploy
 
 ```bash
-npm ci
-npx tsc --noEmit            # 0 errors — keep it there
-npm run build               # Workers bundle → dist/server + dist/client
-npm run test:unit            # current security/integration regression tests
-PW_EXECUTABLE_PATH=/opt/pw-browsers/chromium npm run test:e2e   # historic baseline: 24 passed, 7 skipped; authenticated tests now require staging credentials
-npx wrangler deploy --dry-run --outdir /tmp/wr --env production   # lists DB, CV_BUCKET, ASSETS, vars
+npm ci                                  # Node 24+
+npx tsc --noEmit                        # must be 0 errors
+npm run build                           # must pass
+npm run test:unit                       # 111 tests
+npm run dev                             # http://localhost:5173 (no data backend: empty states)
+PW_EXECUTABLE_PATH=/opt/pw-browsers/chromium E2E_BASE_URL=http://127.0.0.1:5173 \
+  npx playwright test --project=chromium
 ```
 
-CI (`.github/workflows/ci.yml`) runs typecheck, build and e2e on every PR and push to `main`; the first run on `main` passed in ~2 minutes. Do not merge red.
+- **CI** (`.github/workflows/ci.yml`) runs on every PR: unit tests, typecheck, build, Playwright, and a `postgres-policies` job that replays every Supabase migration on an isolated database and runs the security and integration tests. Do not merge red.
+- **Deploy:** Lovable builds `main` automatically into its preview. The public site `https://uktl.lovable.app` only changes when someone presses **Publish** in Lovable (project `b976b2a4-fea6-43dc-a8da-72d7238985c7`).
+- **Database changes:** new files in `supabase/migrations/` only; CI replays them; apply to the live project, then rename the file to the version the live database records (see `CLAUDE.md` rule 5).
 
-Migrations `0001`–`0009` replay cleanly on SQLite (`node:sqlite`, Node 22) — replay them again whenever you add one.
-
----
-
-## 4. Not yet done — required before go-live
-
-Nothing has been deployed to any environment yet. In order:
-
-1. **Cloudflare infrastructure** — create D1 databases and R2 buckets, paste the D1 ids into `wrangler.toml`, apply migrations (`DEPLOYMENT.md` §1).
-2. **Supabase project** — apply `supabase/migrations/20260915000001_initial.sql`; set Site URL; add `<SITE_URL>/auth/callback` to Redirect URLs for each environment (§1.4).
-3. **Vars and secrets** — fill every `[vars]` / `[env.*.vars]` block; `wrangler secret put` for `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `JWT_SECRET`, `ADMIN_PASSWORD_HASH`, `SUPABASE_SERVICE_ROLE_KEY`, `REED_API_KEY` (§2).
-4. **Configure secure admin access.** Demo-password and signing-key fallbacks are removed. Set both secrets and apply D1 migration 0009. Browser tests read `E2E_ADMIN_PASSWORD` and require a configured staging URL.
-5. **Deploy staging, run the post-deploy checklist** (`DEPLOYMENT.md` §4), then production.
-6. **Resend sender domain** — `noreply@uktalentlink.co.uk` must be verified in Resend or notifications otherwise fail and are recorded in the admin delivery status.
-
-Housekeeping worth one dedicated commit each: run `prettier --write .` once so `npm run lint` becomes meaningful (currently ~250 formatting errors on untouched lines); and remove the unused `AI` binding / `PARSE_PROVIDER` from `src/lib/server/env.ts`.
+Last verified (21 November, PR #33): typecheck 0 errors, build passes, 111/111 unit tests, Playwright chromium 91 passed / 15 skipped (the skipped ones need staging credentials).
 
 ---
 
-## 5. Auth and access model (do not weaken)
+## 3. Settings and secrets (Lovable → project settings)
 
-- **Admin:** PBKDF2-SHA256 password → HMAC-signed `admin_session` cookie (8 h). Single check: `isAdminRequest()` in `src/lib/server/viewer.ts`. Every admin server function calls `requireAdmin()` first.
-- **Candidates:** Supabase Auth; `sb-access-token` / `sb-refresh-token` httpOnly cookies re-validated per request by `getCandidateSession()`.
-- **Candidate data:** `getViewer()` + `canAccessCandidate()` — admin sees all, a signed-in candidate only rows whose `candidates.auth_user_id` is theirs, anyone else gets `[]` / `null` / 404. This applies to server functions and the `/api/cv/:id` route alike. Any new endpoint touching candidates must use it.
-- Route guards (`beforeLoad`) only protect navigation; they are never the security boundary.
+Full table and step-by-step in `DEPLOYMENT.md` "Hosting on Lovable". UKTL values use the `UKTL_` prefix because Lovable Cloud (an empty project `jwfycrmrgwslxyxvirfn`) occupies the plain names.
 
----
+| Setting | Needed for | Status on 21 November |
+|---|---|---|
+| `UKTL_SUPABASE_URL`, `UKTL_SUPABASE_ANON_KEY`, `UKTL_SUPABASE_SERVICE_ROLE_KEY` | everything | Set (sign-up and sign-in worked in live tests on 11 November) |
+| `SITE_URL` | email links, Google/Apple return | Check it is `https://uktl.lovable.app` or the final domain |
+| `ANTHROPIC_API_KEY` | CV scoring | **Not set** — CV uploads are refused |
+| `CV_SCAN_URL`, `CV_SCAN_TOKEN` | private malware scanning of every CV | **Not set** — CV uploads are refused. Gateway code is in `services/cv-scanner`; it must be deployed privately (`OPERATIONS_RUNBOOK.md`) |
+| `RESEND_API_KEY` + verified sender domain | all email | Unconfirmed |
+| `CRON_SECRET` | worker, maintenance, health endpoints | Unconfirmed |
+| `REED_API_KEY` | job import | Unconfirmed; scheduling not activated (`REED_SYNC.md`) |
+| Google / Apple credentials (in Supabase Auth) | social sign-in | **Not set** — buttons show "use email for now" |
+| GitHub: variable `UKTL_MAINTENANCE_URL` (`https://<site>/api/maintenance`), secret `CRON_SECRET` (same value as the server), then variable `ENABLE_CV_WORKER=true` | scores queued CVs every five minutes (`.github/workflows/cv-processing.yml`) | **Off** — even with the API key, uploaded CVs are only queued until this worker runs (`STAGE_2_UAT.md`) |
 
-## 6. Data model (D1)
-
-`candidates` (+ `candidate_skills`, `candidate_experience`, `candidate_education`, `candidate_swipes`) · `jobs` (`source`/`source_id` for Reed dedup, `expiry_date`) · `matches` (score fields owned by the matcher; `stage` owned by consultants — re-scoring never resets it) · `faq_topics` · `hr_queries` · `bookings` · `enquiries`.
-
-Supabase holds `profiles` (mirror: `d1_candidate_id`), plus Postgres copies of `bookings`/`hr_queries` with RLS for a future direct-client path. D1 is the source of truth; `candidates.raw_profile` keeps the full Claude extraction for re-matching.
-
----
-
-## 7. Backlog — recommended order, with implementation notes
-
-1. **Scheduled Reed sync + expiry.** Add a Workers cron trigger in `wrangler.toml` (`[triggers] crons = ["0 2 * * *"]`) and a `scheduled` handler that calls the sync logic now inside `syncReedJobsFn` (extract it into `src/lib/server/reed.ts`, keep the server function as a thin wrapper), then closes jobs whose `expiry_date` has passed. Nitro's cloudflare preset supports a scheduled export — check its docs for the entry hook.
-2. **Analytics charts.** Recharts is installed and unused. `adminGetAnalyticsFn` returns totals only; add time-bucketed queries (uploads per week, score histogram, funnel by stage using `matches.stage`) and render area/bar charts on `/admin/analytics` using the design tokens (`var(--color-accent)` etc.).
-3. **GDPR tooling.** "Delete everything about this candidate" across D1 (`deleteCandidate` already cascades tables), R2 (`CV_BUCKET.delete(source_r2_key)`) and Supabase (`profiles`); a JSON export endpoint; a retention policy (e.g. purge unlinked CVs after N months via the same cron).
-4. **Named admin users + audit trail.** Move admin auth onto Supabase with an `admin` role claim; keep `requireAdmin()` as the single check but resolve it from the Supabase session. Add an `audit_log` table (actor, action, entity, before/after JSON, at) written from every mutating admin function.
-5. **Candidate password reset.** `/auth/forgot` sends a magic link only; add `resetPasswordForEmail` + a `/auth/reset` route that calls `updateUser({ password })` after the callback establishes the session.
-6. **Notes and activity log** on candidate and mandate pages (`candidate_notes` table; timeline from `created_at`, `stage_updated_at`, notes, emails).
-7. **Saved jobs / applications.** `candidate_swipes.action = 'interested'` is recorded but nothing follows; surface interested candidates on the mandate pipeline as a "Applied" signal and notify the consultant.
-8. **Email outreach from the platform.** Resend is wired for notifications; add templated candidate emails (intro, interview invite, rejection) logged against the candidate.
-9. **Global search** across candidates, mandates and FAQ topics — `candidate_skills.skill` is already normalised, so skill search is a simple join.
-10. **CSV export** of candidate lists and mandate shortlists.
-11. **Job alerts** (nightly email of new matches above a threshold) — depends on item 2.
-12. **Dark palette** — `@custom-variant dark` exists in `styles.css` but no dark tokens are defined.
-13. ~~Calendly embed~~ — replaced by the native consultation calendar (Admin → Consultations; candidates book at /app/consultations).
+Never put secrets in the repository, chat or a `VITE_` variable.
 
 ---
 
-## 8. Gotchas that have already cost time (all documented in CLAUDE.md)
+## 4. What is not finished
 
-- `createServerFn().inputValidator()` — the older `.validator()` throws at module load and takes every page down.
-- Client code must never import from `src/lib/server/**` (import-protection). Server functions live in `src/lib/functions.ts`; server-only helpers used by both server functions and server routes live in `src/lib/server/viewer.ts`.
-- `wrangler.toml` is the only Wrangler config. Wrangler silently prefers a `wrangler.json`/`.jsonc` if one exists — one did, and it overrode every binding.
-- `[vars]` are not inherited by named environments; repeat them under `[env.staging.vars]` and `[env.production.vars]`.
-- `src/routeTree.gen.ts` is generated; a stale copy silently drops routes from the type map. Commit it after adding routes.
-- Migrations are append-only and must be correct against the schema the previous files actually produce.
-- Playwright: interact only after `<html data-hydrated="true">` (the shared fixture handles it). Scope admin sidebar clicks to `getByRole("navigation")` — overview cards are links with overlapping names.
-- `getEnv()` throws outside the Workers runtime; return honest empty states, never fabricated data.
+**Blocks real users**
+1. **CV scoring is off.** Needs `ANTHROPIC_API_KEY`, the private scanner gateway (`CV_SCAN_URL`/`CV_SCAN_TOKEN`) and the CV worker schedule. Until then the upload step tells candidates uploads "aren't open yet".
+2. **Not live.** The site was unpublished after testing on 11 November.
+3. **No end-to-end test on the current code.** The 11 November live test passed for all three account types, but the onboarding, landing and dashboard changes merged since have only been tested locally and in CI. Run the script in §7 after publishing.
+4. **Supabase plan.** The free plan paused the database twice. Move to a paid plan before launch.
+5. **Legal text.** `/privacy` and `/terms` are factual product information, not a reviewed notice. They need controller identity, lawful bases, recipients, retention periods and complaint information approved by the owner's lawyer.
+6. **No content.** At last check: 0 jobs, 0 HR guides, no consultation hours. Candidates would see empty pages.
+
+**Should be done before launch**
+- Turn on Supabase **leaked-password protection** (the only Supabase security-advisor warning).
+- Google and Apple sign-in credentials.
+- Verify the Resend sender domain and test real delivery.
+- External uptime monitor on `/api/operations/health` (`OPERATIONS_RUNBOOK.md`).
+- Backup restore and rollback rehearsal; real privacy-request fulfilment test.
+- Confirm the company facts used on the site (addresses, phone, sector notes) and add any real figures or quotes the owner wants; none are invented.
+
+**Known product gaps** (built in code, not activated or accepted): Reed scheduling, email campaigns, appointment reminders, Google/Outlook calendar sync. See `COMMUNICATIONS_RUNBOOK.md` and `REED_SYNC.md`.
 
 ---
 
-## 9. Working agreement
+## 5. Owner decisions on record (do not reverse without the owner)
 
-- Feature branches → PR to `main` → CI green → merge. Keep `npx tsc --noEmit` at 0 and `npm run build` passing before every push.
-- Follow the design system (tokens, Fraunces/Geist, `Reveal`, `AppLayout` primitives); no ad-hoc colours.
-- Update `CLAUDE.md` when a rule changes, `DEPLOYMENT.md` when infrastructure changes, and add a row to §2 of this note when you ship something.
-- Never commit secrets. `.dev.vars` is gitignored for local Wrangler runs.
+| Date | Decision |
+|---|---|
+| 13 Oct | Three account types: candidate, employer (self-service), staff. |
+| 1 Nov | Employer portal with **anonymised** shared candidates; identities only through a consultant with the candidate's agreement. |
+| 1 Nov | Two-step verification optional for candidates, employers **and staff**; switched on in settings, never forced at sign-up. The advice that staff use it (they can see all candidate data) stands. |
+| 1 Nov | No "I'm viewing as" bar; Google/Apple as logo buttons at the bottom; old "candidate preview" simulation deleted. |
+| 11 Nov | Temporary bypass of scanner/API-key for CV uploads, for testing only — **reverted on 21 November (PR #33)**. |
+| 13 Nov | New landing page; account creation as step 1 of onboarding. |
+| Ongoing | No fabricated records, testimonials, statistics or legal terms anywhere. Illustrations are labelled "Example". |
 
+---
 
-## 10. Launch-readiness work — 17 September 2026
+## 6. Housekeeping for the next developer
 
-The first Lovable pass exhausted available credits and left an undefined `DEV_JWT_SECRET` reference plus a package/lock mismatch. The GitHub repair restores the locked dependencies and completes the integration of fail-closed admin auth, authenticated and D1-rate-limited CV/AI actions, candidate refresh-cookie renewal, notification delivery state/retry controls, explicit CV grading failures, corrected Reed counts and protected-read outage states.
+- **Two repositories.** Bring `devacnt/UKTL` up to date with `JSHrs/uktl-` main (or retire one) before anyone else commits.
+- **A live database change is missing from the repo:** `20261020120208_candidate_conversation_threads` (creates `recruitment.conversation_messages`). It was applied to the live database on 20 October from elsewhere. Copy it into `supabase/migrations/` with that exact version; do not re-create it.
+- **Leftover test file in storage:** `cvs/cand_ed9e00abd2bb4d40a644/test-cv.txt` in the private `uktl-cvs` bucket (674 bytes, fictional content). Delete it in Supabase → Storage. All test accounts and records were removed on 11 November.
+- **Network access for agents:** the Claude Code "Default" environment was given access to `uktl.lovable.app`, its Lovable preview and Google Fonts for live testing; a separate "talent-compass" environment was created and is unused. Remove either if no longer wanted.
+- The Claude agent's Supabase connection was refused on 21 November ("no permission"); re-authorise it only if an agent should keep working on the database.
+- `npm run lint` fails on ~250 formatting lines because the repo was never formatted with Prettier; format once in its own commit.
 
-New regression tests cover credentials, malformed tokens, candidate ownership, refresh-only sessions, invalid refreshed sessions, durable limits, migration replay, grading failures, real zero scores, email failures/concurrent retries and Reed counters. Local results: 14 tests passed, TypeScript passed, Workers build passed. Browser installation was blocked by upstream download failures; browser verification must be completed in CI and configured staging. Supabase hardening SQL is prepared but has not been applied to a live project.
+---
 
-Remaining launch gates: passing final PR CI; provision dedicated UKTL staging Supabase and Cloudflare D1/R2; apply migrations; supply API keys and secrets securely; verify sender domain; run database-backed staging acceptance; review production domain/configuration; deploy only after those gates pass. Rate-limit cleanup scheduling and automatic notification retries remain future operational work. No environment has been deployed by this change.
+## 7. Live acceptance script (run after publishing)
 
+Use clearly labelled test accounts (e.g. `uktl-test-…@example.com`) and delete them afterwards.
 
-## 11. Site structure and sign-in fixes — 23 September 2026
+1. **Candidate:** Register free → onboarding step 1 → step 2 upload a CV → step 3 score → dashboard, every menu page, sign out and in, wrong password.
+2. **Employer:** Start hiring → step 1 → company → needs → first role → portal shows the role "With UKTL for review".
+3. **Staff:** `/admin/login` → overview shows the role to review → Employer roles → publish as mandate → share the candidate with a written summary.
+4. **Employer again:** role shows "1 awaiting you"; the card says "Candidate A" with no name, email, file name or id anywhere in the page; "I'd like to meet" is saved and visible to staff.
+5. **Access rules:** candidate cannot open `/employer` or `/admin`; employer cannot open `/app` or `/admin`; signed-out users are sent to sign-in.
+6. **Two-step:** switch it on in settings for one test account, sign out, sign in, confirm the code is required, switch it off.
+7. Clean up: delete test users (their records cascade), their storage files and any test mandate.
 
-UKTL is one firm, so there is no client/employer portal (removed from the backlog). Two user types: candidates and firm staff.
+---
 
-- One header (`Nav`) on the public site, the candidate area and the sign-in pages. It shows *Sign in / Upload your CV* when signed out, *My account / Sign out* for candidates and *Admin* for staff. Previously the candidate area had its own header that looked signed-in to everyone.
-- `/app` now requires sign-in and returns the visitor to the page they wanted afterwards. The candidate menu is Dashboard · My CV · Job matches · All jobs · My interests · HR & Law · Profile; staff tools are no longer in it.
-- New candidate dashboard (CV score, strongest matches). Candidates see "Your CV" without the consultant buttons (anonymise, re-match, pipeline stages). Job matches use the candidate's own CV automatically.
-- Upload page: removed the duplicate sign-in link; copy rewritten for candidates.
-- Footer links fixed (service anchors, `/reach` linked, candidate column), and the landing page buttons go to sign-up.
-- Ported onto devacnt/UKTL (the source of truth) on 23 September; JSHrs/uktl- `main` mirrors devacnt.
-- Public pages rewritten for candidates first (free CV score, tips, matched roles, workplace guidance). UKTL is a staffing firm for candidates only, so there is no employer-facing copy, "I'm hiring" route or employer services section; construction, engineering and technology lead because that is where the platform's live roles come from. Unverified stats (e.g. "14+ years", "100% retained") were removed from `/reach`. Company facts (addresses, phone, sector notes) are unchanged and still need the owner's confirmation.
-- Light and dark mode follow the device setting (`prefers-color-scheme`): dark tokens in `styles.css`, `.band` keeps the landing feature bands dark in both themes, `.hero-mark` handles the hero illustration, and Tailwind `dark:` now means "system dark".
+## 8. Recent history (since the September note)
 
-## 12. Operations, privacy and dependency hardening — 23 September 2026
+| PR | What |
+|---|---|
+| #26–#28 | Claude Design redesign: tokens, dark mode, site chrome, marketing pages, `/employers` |
+| #29 | Employer portal (migration `20261101195519_employer_portal`), guided onboarding, optional two-step for all (migration `20261101203633_optional_staff_two_step`) |
+| #30–#31 | Migration reconciliation; live-testing fixes (sign-up redirect, employer header); temporary upload bypass |
+| #32 | New landing page, onboarding step 1, dashboard UI audit fixes |
+| #33 | Upload bypass reverted; plain wording when uploads are not configured; this handover |
 
-New administrator operations dashboard and protected health endpoint; request-scoped transactional audit attribution; AI usage and global hourly request budget; private scanner integration that fails closed; retryable CV-file erasure; candidate self-service data copy and reviewed privacy request queue; corrected same-origin redirect and sign-out revocation; mobile admin shell; working privacy/usage information links. Dependency updates remove the recorded advisories and required adapting the router error type. Supabase migration and actual PostgreSQL regressions accompany the changes. Live scanner/provider acceptance, complete reviewed notices, live full-scope erasure/provider acceptance, approved retention/orphan cleanup and operational exercises remain required. Cloudflare is deliberately last.
+## 9. Other documents
 
-Follow-up: dependency-free private ClamAV gateway with bounded authenticated scanning; reviewed account-erasure workflow with tombstone write protection, retryable private-file cleanup and Auth deletion last. Synthetic protocol tests and real PostgreSQL integration cover failure/retry and ownership behavior; real engine/provider deployment remains open.
+`CLAUDE.md` (rules and architecture) · `DEPLOYMENT.md` (hosting, settings, Google/Apple) · `OPERATIONS_RUNBOOK.md` (scanner, privacy, backups, monitoring) · `COMMUNICATIONS_RUNBOOK.md` (email, campaigns, calendar) · `REED_SYNC.md` · `SUPABASE_INSTALLATION.md` · `RELEASE_CHECKLIST.md` and `DEVELOPMENT_GATES.md` (acceptance evidence ledger; September-era, still the gate list) · `PHASE_1_ACCEPTANCE.md` · `design/claude-design-2026-11/` (design handoff, reference only).

@@ -9,11 +9,6 @@ export function createPrivateCvStorage(url: string, key: string, scanner: ScanCo
     global: { fetch: (input, init) => fetch(input, { ...init, signal: AbortSignal.timeout(30000) }) },
   });
   const bucket = client.storage.from("uktl-cvs");
-  // TEMPORARY (owner decision, 11 Nov 2026): while no scanner gateway is configured at
-  // all, CVs are stored and released unscanned so uploads can be exercised. As soon as
-  // CV_SCAN_URL or CV_SCAN_TOKEN is set, every upload and download is scanned and any
-  // misconfiguration fails closed again. Type and size validation always applies.
-  const scan = (bytes: ArrayBuffer) => (scanner.url || scanner.token ? scanPrivateCv(bytes, scanner) : Promise.resolve());
   return {
     async put(path, value, options) {
       if (!(value instanceof ArrayBuffer) && typeof value !== "string") {
@@ -23,7 +18,7 @@ export function createPrivateCvStorage(url: string, key: string, scanner: ScanCo
       if (bytes.byteLength === 0 || bytes.byteLength > 10 * 1024 * 1024) {
         throw new Error("CV must be between 1 byte and 10 MiB");
       }
-      await scan(bytes instanceof ArrayBuffer ? bytes : bytes.buffer as ArrayBuffer);
+      await scanPrivateCv(bytes instanceof ArrayBuffer ? bytes : bytes.buffer as ArrayBuffer, scanner);
       const { error } = await bucket.upload(path, bytes, {
         contentType: options?.httpMetadata?.contentType,
         upsert: false,
@@ -37,7 +32,7 @@ export function createPrivateCvStorage(url: string, key: string, scanner: ScanCo
         throw new Error("Private CV download failed");
       }
       if (data.size > 10 * 1024 * 1024) throw new Error("Private file is too large");
-      await scan(await data.arrayBuffer());
+      await scanPrivateCv(await data.arrayBuffer(), scanner);
       return {
         body: data.stream(), size: data.size,
         httpMetadata: { contentType: data.type },
