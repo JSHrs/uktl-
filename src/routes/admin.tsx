@@ -2,6 +2,7 @@ import { DataError } from "@/components/app/DataError";
 import type { ReactNode } from "react";
 import { createFileRoute, Link, Outlet, redirect, useRouter } from "@tanstack/react-router";
 import { adminLogoutFn } from "@/lib/functions";
+import { setTheme, useTheme } from "@/lib/preferences";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -40,7 +41,9 @@ const NAV = [
 
 function AdminLayout() {
   const router = useRouter();
-  const { staffRole } = Route.useRouteContext();
+  const { staffRole, session } = Route.useRouteContext();
+  const theme = useTheme();
+  const nextTheme = theme === "dark" ? "light" : "dark";
   if (router.state.location.pathname.startsWith("/admin/login")) return <Outlet />;
 
   async function logout() {
@@ -54,10 +57,23 @@ function AdminLayout() {
       {/* Sidebar */}
       <aside className="w-full md:w-52 flex-shrink-0 border-r border-rule bg-paper-deep/40 flex flex-col">
         <div className="px-5 py-5 border-b border-rule">
-          <div className="font-mono text-[10px] tracking-[0.18em] uppercase text-ink-mute">
-            UK Talent Link
+          <div className="flex items-center justify-between gap-2">
+            <Link to="/" className="font-display text-[17px] font-medium tracking-[-0.025em] text-ink whitespace-nowrap">
+              UK <em className="italic font-normal text-ink-soft">Talent</em> Link
+            </Link>
+            <button
+              type="button"
+              onClick={() => setTheme(nextTheme)}
+              aria-label={`Switch to ${nextTheme} mode`}
+              title={`Switch to ${nextTheme} mode`}
+              className="w-7 h-7 rounded-full border border-rule hover:border-ink grid place-items-center shrink-0"
+            >
+              <i className="theme-dot" aria-hidden="true" />
+            </button>
           </div>
-          <div className="font-display font-light text-lg mt-0.5 text-ink">Admin</div>
+          <div className="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-mute mt-1.5">
+            {staffRole === "admin" ? "Admin" : "Consultant"} workspace
+          </div>
         </div>
         <nav className="flex-1 px-3 py-4 flex flex-wrap gap-1 md:block md:space-y-0.5">
           {NAV.filter(item => staffRole === "admin" || item.to === "/admin/candidates" || item.to === "/admin/employer-roles" || item.to === "/admin/settings").map((item) => (
@@ -73,6 +89,7 @@ function AdminLayout() {
           ))}
         </nav>
         <div className="px-3 py-4 border-t border-rule">
+          <p className="px-3 mb-1 text-xs text-ink-mute truncate" title={session.email ?? undefined}>{session.email}</p>
           <button
             onClick={logout}
             className="w-full text-left px-3 py-2 rounded text-sm text-ink-mute hover:text-ink hover:bg-paper-deep transition-colors"

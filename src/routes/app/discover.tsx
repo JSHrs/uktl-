@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getDiscoverJobsFn, recordSwipeFn, undoSwipeFn } from "@/lib/functions";
 import { filterJobs } from "@/lib/job-search";
 import { ReedApply } from "@/components/app/ReedApply";
+import { EmptyState as SharedEmptyState, PageHeader } from "@/components/app/AppLayout";
 import type { Job } from "@/lib/schemas/job";
 
 export const Route = createFileRoute("/app/discover")({
@@ -163,16 +164,19 @@ function DiscoverPage() {
         ? "translateX(-140vw) rotate(-28deg)"
         : undefined;
 
-  const feedback = <div className="w-full max-w-[520px] my-4 text-sm" aria-live="polite">
-    <Link to="/app/jobs" search={{ q: search.q, location: search.location }} className="underline block mb-3">Search roles / change filters</Link>
-    {(search.q || search.location) && <p className="mb-3">Filtered by: {[search.q, search.location].filter(Boolean).join(" · ")}</p>}
-    {saving && <p>Saving…</p>}
-    {saveError && <p role="alert" className="text-red-700">{saveError}</p>}
-    {lastDecision && <button disabled={saving} onClick={undoLast} className="underline mt-2 disabled:opacity-50">Undo last decision</button>}
-    {signedIn && <Link to="/app/activity" className="underline block mt-3">View interests and history</Link>}
+  const feedback = <div className="w-full max-w-[520px] mb-4 text-sm" aria-live="polite">
+    <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-2 text-ink-soft">
+      <Link to="/app/jobs" search={{ q: search.q, location: search.location }} className="underline hover:text-ink">Search or filter roles</Link>
+      {signedIn && <Link to="/app/activity" className="underline hover:text-ink">Your interests</Link>}
+    </div>
+    {(search.q || search.location) && <p className="mt-3 text-ink-mute">Filtered by: {[search.q, search.location].filter(Boolean).join(" · ")}</p>}
+    {saving && <p className="mt-3 text-ink-mute">Saving…</p>}
+    {saveError && <p role="alert" className="mt-3 text-bad">{saveError}</p>}
+    {lastDecision && <button disabled={saving} onClick={undoLast} className="underline mt-3 disabled:opacity-50">Undo last decision</button>}
   </div>;
+  const header = <div className="w-full max-w-[520px]"><PageHeader eyebrow="Job matches" title="Roles ranked for you" lede="Swipe right if you're interested, left to pass. Saying you're interested lets a consultant review your profile for that role." /></div>;
   if (unavailable) return <div role="alert"><h1 className="font-display text-3xl">Discovery is temporarily unavailable</h1><p className="my-4">Your decisions have not been changed. Please reload to try again.</p></div>;
-  if (queue.length === 0) return <div className="flex flex-col items-center">{feedback}{(search.q || search.location) ? <p className="my-10 text-center">No undecided roles match these filters. Change your search or view your interests and history.</p> : <EmptyState swipedCount={swipedCount} candidateId={candidateId} />}</div>;
+  if (queue.length === 0) return <div className="flex flex-col items-center">{header}{feedback}<div className="w-full max-w-[520px]">{(search.q || search.location) ? <SharedEmptyState title="No undecided roles match those filters" body="Change your search, or look back at the roles you've already decided on." action={<Link to="/app/jobs" className="min-h-10 inline-flex items-center rounded-full border border-rule px-5 text-[13px] hover:border-ink">Change filters</Link>} /> : <EmptyState swipedCount={swipedCount} candidateId={candidateId} />}</div></div>;
 
   return (
     <div className="flex flex-col items-center min-h-[calc(100vh-100px)] pb-12 select-none">
@@ -428,40 +432,28 @@ function ActionButton({
 
 function EmptyState({ swipedCount, candidateId }: { swipedCount: number; candidateId?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] text-center px-4">
-      <div className="font-mono text-[11px] tracking-[0.15em] uppercase text-ink-mute mb-6">
-        — Discover
-      </div>
-      <h2
-        className="font-display font-light leading-[1.1] tracking-[-0.02em] mb-4"
-        style={{ fontSize: "clamp(28px, 4vw, 40px)" }}
-      >
-        You're all caught up
-      </h2>
-      <p className="text-ink-soft text-[15px] max-w-[40ch] leading-relaxed mb-8">
-        {swipedCount > 0
-          ? `You reviewed ${swipedCount} role${swipedCount !== 1 ? "s" : ""}.`
-          : "No open roles at the moment."}{" "}
-        New mandates are added as they come in.
-      </p>
-      <div className="flex flex-wrap gap-3 justify-center">
-        <Link
-          to="/app"
-          className="text-sm px-5 py-2.5 border border-ink bg-ink text-paper rounded-full hover:opacity-90 transition-opacity"
-        >
-          Back to overview
-        </Link>
-        {candidateId && (
-          <Link
-            to="/app/candidates/$id"
-            params={{ id: candidateId }}
-            className="text-sm px-5 py-2.5 border border-rule rounded-full hover:border-ink transition-colors"
-          >
-            View your profile
+    <SharedEmptyState
+      title={swipedCount > 0 ? "You're all caught up" : candidateId ? "No open roles right now" : "Upload your CV to see matches"}
+      body={
+        swipedCount > 0
+          ? `You reviewed ${swipedCount} role${swipedCount !== 1 ? "s" : ""}. New roles appear here as we take them on.`
+          : candidateId
+            ? "New roles appear here, ranked against your CV, as we take them on."
+            : "Matches are ranked against your CV, so add one first."
+      }
+      action={
+        <>
+          {!candidateId && (
+            <Link to="/app/upload" className="min-h-10 inline-flex items-center rounded-full bg-ink text-paper px-5 text-[13px]">
+              Upload your CV
+            </Link>
+          )}
+          <Link to="/app" className="min-h-10 inline-flex items-center rounded-full border border-rule px-5 text-[13px] hover:border-ink">
+            Back to dashboard
           </Link>
-        )}
-      </div>
-    </div>
+        </>
+      }
+    />
   );
 }
 

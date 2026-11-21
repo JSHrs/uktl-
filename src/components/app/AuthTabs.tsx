@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
 
 /**
- * "Sign in | Create account" toggle shared by the sign-in and sign-up pages, so the
- * header's Sign in and Register links open the matching side of one control.
+ * "Sign in | Create account" toggle shared by the sign-in page and step 1 of
+ * onboarding, so the header's Sign in and Register links open the matching side.
  */
 export function AuthTabs({ active, forType, redirect }: { active: "login" | "register"; forType?: "candidate" | "employer"; redirect?: string }) {
   const base = "flex-1 text-center rounded-full py-2 text-[13px] transition-colors";
@@ -19,8 +19,8 @@ export function AuthTabs({ active, forType, redirect }: { active: "login" | "reg
         Sign in
       </Link>
       <Link
-        to="/auth/register"
-        search={forType ? { for: forType } : {}}
+        to="/onboarding"
+        search={{ for: forType ?? "candidate", step: 1 }}
         aria-current={active === "register" ? "page" : undefined}
         className={`${base} ${active === "register" ? on : off}`}
       >

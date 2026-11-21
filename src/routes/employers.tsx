@@ -59,7 +59,7 @@ function Employers() {
               <a href="#contact" className="btn btn-ink btn-lg">
                 Start hiring →
               </a>
-              <Link to="/auth/register" search={{ for: "employer" }} className="btn btn-lg">
+              <Link to="/onboarding" search={{ for: "employer", step: 1 }} className="btn btn-lg">
                 Create employer account
               </Link>
             </>

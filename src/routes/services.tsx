@@ -36,7 +36,7 @@ function Services() {
           lede="Create an account, upload your CV once, and you get all of this: your score, ways to improve it, the roles you match, guidance on your rights at work, and a consultant when you're a strong fit."
           actions={
             <>
-              <Link to="/auth/register" search={{ for: "candidate" }} className="btn btn-ink btn-lg">
+              <Link to="/onboarding" search={{ for: "candidate", step: 1 }} className="btn btn-ink btn-lg">
                 Register free →
               </Link>
               <Link to="/approach" className="btn btn-lg">
@@ -174,7 +174,7 @@ function Services() {
           title="See where you stand today."
           body="Create a free account and upload your CV. It takes a couple of minutes."
           actions={
-            <Link to="/auth/register" search={{ for: "candidate" }} className="btn btn-ink btn-lg">
+            <Link to="/onboarding" search={{ for: "candidate", step: 1 }} className="btn btn-ink btn-lg">
               Register free →
             </Link>
           }

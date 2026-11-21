@@ -14,6 +14,9 @@ export const Route = createFileRoute("/auth/register")({
   }),
   beforeLoad: ({ context, search }) => {
     if (context.session.userId) throw redirect({ href: registrationDestination(context.session, search.staff) });
+    // Candidates and employers create their account as step 1 of onboarding; this page
+    // remains for staff sign-up only.
+    if (!search.staff) throw redirect({ to: "/onboarding", search: { for: search.for ?? "candidate", step: 1 } });
   },
   head: () => ({ meta: [{ title: "Create your account — UK Talent Link" }, { name: "description", content: "Create a free UK Talent Link account." }, { property: "og:title", content: "Create your account — UK Talent Link" }, { property: "og:description", content: "Join UK Talent Link and build your career profile." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }),
   component: RegisterPage,

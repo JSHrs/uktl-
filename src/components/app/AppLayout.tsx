@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import { Link, useRouteContext, useRouter, useRouterState } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut, Menu, Settings, X } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { signOutFn } from "@/lib/functions";
+import { setTheme, useTheme } from "@/lib/preferences";
 
 type Section = { to: string; label: string; exact?: boolean };
 
@@ -36,24 +37,88 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { session } = useRouteContext({ from: "__root__" });
   const router = useRouter();
   const current = useRouterState().location.pathname;
+  const theme = useTheme();
   const [open, setOpen] = useState(false);
-  const sections = session.isStaff ? STAFF_SECTIONS : session.accountRole === "employer" ? EMPLOYER_SECTIONS : CANDIDATE_SECTIONS;
+  const employer = session.accountRole === "employer" && !session.isStaff;
+  const sections = session.isStaff ? STAFF_SECTIONS : employer ? EMPLOYER_SECTIONS : CANDIDATE_SECTIONS;
+  const area = session.isStaff ? "Staff workspace" : employer ? "Employer portal" : "Your account";
+  const nextTheme = theme === "dark" ? "light" : "dark";
+  // The longest matching section is the current one, so "/employer/roles/new" does not also light "Your roles".
+  const active = [...sections]
+    .filter((item) => (item.exact ? current === item.to : current === item.to || current.startsWith(item.to + "/")))
+    .sort((a, b) => b.to.length - a.to.length)[0]?.to;
   async function signOut() {
     await signOutFn();
     await router.navigate({ to: "/auth/login", replace: true });
     await router.invalidate();
   }
-  return <div className="min-h-screen bg-paper text-ink md:flex">
-    <div className="md:hidden flex items-center justify-between px-5 py-4 border-b border-rule"><span className="font-display text-xl">Talent Compass</span><Button variant="ghost" size="icon" aria-label={open ? "Close account menu" : "Open account menu"} onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</Button></div>
-    <aside className={`${open ? "flex" : "hidden"} md:flex flex-col w-full md:w-60 md:h-screen md:sticky md:top-0 shrink-0 border-r border-rule bg-paper-deep/40 p-5`}>
-      <Link to="/" className="flex items-center gap-2 text-xs text-ink-soft mb-7"><ArrowLeft size={14} />UK Talent Link</Link>
-      <p className="font-display text-2xl mb-6">Talent Compass</p>
-      <nav aria-label="Account" className="flex-1 space-y-1">{sections.map(item => <Link key={item.to} to={item.to} onClick={() => setOpen(false)} className={`flex px-3 py-3 text-sm rounded-md ${item.exact ? current === item.to ? "bg-paper border border-rule" : "text-ink-soft" : current.startsWith(item.to) ? "bg-paper border border-rule" : "text-ink-soft"}`}>{item.label}</Link>)}
-      <Link to={session.accountRole === "employer" && !session.isStaff ? "/employer/company" : "/app/profile"} onClick={() => setOpen(false)} className="flex items-center gap-2 px-3 py-3 text-sm"><Settings size={16} />Settings</Link></nav>
-      <div className="mt-8 pt-4 border-t border-rule"><p className="text-xs break-all text-ink-mute">{session.email}</p><Button variant="ghost" className="w-full justify-start mt-3" onClick={signOut}><LogOut />Sign out</Button></div>
-    </aside>
-    <div className="flex-1 min-w-0"><main className="max-w-[1440px] mx-auto p-5 md:p-10">{children}</main><footer className="border-t border-rule px-5 py-5 text-xs text-ink-soft flex flex-wrap justify-center gap-6" aria-label="Account support"><Link to="/privacy">Privacy</Link><Link to="/terms">Terms</Link><Link to="/contact">Support</Link></footer></div>
-  </div>;
+  const brand = (
+    <Link to="/" className="font-display text-[19px] font-medium tracking-[-0.025em] text-ink whitespace-nowrap" style={{ fontVariationSettings: '"opsz" 144, "SOFT" 30' }}>
+      UK <em className="italic font-normal text-ink-soft">Talent</em> Link
+    </Link>
+  );
+  const themeButton = (
+    <button
+      type="button"
+      onClick={() => setTheme(nextTheme)}
+      aria-label={`Switch to ${nextTheme} mode`}
+      title={`Switch to ${nextTheme} mode`}
+      className="w-8 h-8 rounded-full border border-rule hover:border-ink grid place-items-center transition-colors shrink-0"
+    >
+      <i className="theme-dot" aria-hidden="true" />
+    </button>
+  );
+  return (
+    <div className="min-h-screen bg-paper text-ink md:flex">
+      <div className="md:hidden sticky top-0 z-40 flex items-center justify-between gap-3 px-5 py-3 border-b border-rule bg-paper">
+        {brand}
+        <div className="flex items-center gap-2">
+          {themeButton}
+          <Button variant="ghost" size="icon" aria-label={open ? "Close account menu" : "Open account menu"} aria-expanded={open} onClick={() => setOpen(!open)}>
+            {open ? <X /> : <Menu />}
+          </Button>
+        </div>
+      </div>
+      <aside className={`${open ? "flex" : "hidden"} md:flex flex-col w-full md:w-60 md:h-screen md:sticky md:top-0 shrink-0 border-b md:border-b-0 md:border-r border-rule bg-paper-deep/40 p-5`}>
+        <div className="hidden md:flex items-center justify-between gap-2 mb-2">
+          {brand}
+          {themeButton}
+        </div>
+        <p className="font-mono text-[10px] tracking-[0.16em] uppercase text-ink-mute mb-6">{area}</p>
+        <nav aria-label="Account" className="flex-1 space-y-0.5">
+          {sections.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              onClick={() => setOpen(false)}
+              aria-current={active === item.to ? "page" : undefined}
+              className={`flex items-center px-3 py-2.5 text-sm rounded-md border transition-colors ${
+                active === item.to ? "bg-paper border-rule text-ink font-medium" : "border-transparent text-ink-soft hover:text-ink hover:bg-paper/60"
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="mt-8 pt-4 border-t border-rule">
+          {session.displayName && <p className="text-sm text-ink truncate">{session.displayName}</p>}
+          <p className="text-xs text-ink-mute truncate" title={session.email ?? undefined}>{session.email}</p>
+          <Button variant="ghost" className="w-full justify-start mt-3 -ml-2" onClick={signOut}>
+            <LogOut />
+            Sign out
+          </Button>
+        </div>
+      </aside>
+      <div className="flex-1 min-w-0 flex flex-col min-h-screen">
+        <main className="flex-1 w-full max-w-[1200px] mx-auto p-5 md:p-10">{children}</main>
+        <footer className="border-t border-rule px-5 py-5 text-xs text-ink-soft flex flex-wrap justify-center gap-6" aria-label="Account support">
+          <Link to="/privacy" className="hover:text-ink">Privacy</Link>
+          <Link to="/terms" className="hover:text-ink">Terms</Link>
+          <Link to="/contact" className="hover:text-ink">Support</Link>
+        </footer>
+      </div>
+    </div>
+  );
 }
 
 export function PageHeader({
@@ -201,10 +266,10 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="border border-dashed border-rule rounded-lg p-12 text-center">
-      <div className="text-[15px] text-ink-soft mb-1.5">{title}</div>
-      {body && <div className="text-[13px] text-ink-mute max-w-[36ch] mx-auto">{body}</div>}
-      {action && <div className="mt-5">{action}</div>}
+    <div className="border border-dashed border-rule rounded-lg px-6 py-12 text-center">
+      <div className="font-display text-xl tracking-[-0.01em] text-ink mb-1.5">{title}</div>
+      {body && <div className="text-[14px] text-ink-soft max-w-[48ch] mx-auto">{body}</div>}
+      {action && <div className="mt-5 flex flex-wrap justify-center gap-3">{action}</div>}
     </div>
   );
 }

@@ -1,9 +1,12 @@
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import { AuthTabs } from "@/components/app/AuthTabs";
 import { CompanyForm, RoleForm } from "@/components/app/EmployerForms";
+import { SocialSignIn } from "@/components/app/SocialSignIn";
+import { MIN_PASSWORD_LENGTH } from "@/lib/password-policy";
 import { Logo } from "@/components/site/Nav";
-import { uploadAndParseCvFn } from "@/lib/functions";
+import { candidateRegisterFn, uploadAndParseCvFn } from "@/lib/functions";
 import { myEmployerProfileFn, saveEmployerProfileFn, submitEmployerRoleFn } from "@/lib/employer-functions";
 import { setTheme, useTheme } from "@/lib/preferences";
 import heroMark from "@/assets/hero-mark.jpg";
@@ -55,9 +58,10 @@ export const Route = createFileRoute("/onboarding")({
   beforeLoad: ({ context, search }) => {
     const { session } = context;
     if (session.isStaff) throw redirect({ href: "/admin" });
-    // Later steps need an account; a signed-in visitor skips the account step.
-    // Accounts are created on the shared Sign in | Create account page, then continue here.
-    if (!session.userId) throw redirect({ to: "/auth/register", search: { for: search.for } });
+    // Step 1 creates the account inside the flow; later steps need one, and a
+    // signed-in visitor skips the account step.
+    if (!session.userId && search.step > 1) throw redirect({ to: "/onboarding", search: { for: search.for, step: 1 } });
+    if (!session.userId) return;
     if (session.userId && search.step === 1) throw redirect({ to: "/onboarding", search: { for: search.for, step: 2 } });
     // Each account type only walks its own flow.
     // A signed-in candidate choosing to hire goes through the safe conversion check.
@@ -207,6 +211,87 @@ function Heading({ title, lede }: { title: ReactNode; lede?: ReactNode }) {
   );
 }
 
+/* ───────────── Step 1: account (both flows) ───────────── */
+
+const field =
+  "w-full border border-rule rounded-md px-4 py-3 text-sm bg-paper text-ink placeholder:text-ink-mute focus:outline-none focus:border-ink transition-colors";
+const lbl = "block font-mono text-[11px] tracking-[0.12em] uppercase text-ink-mute mb-1.5";
+
+function AccountStep({ type }: { type: For }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const employer = type === "employer";
+
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const f = (k: string) => String(fd.get(k) ?? "");
+    if (f("password") !== f("confirm")) return setError("Passwords do not match.");
+    if (f("password").length < MIN_PASSWORD_LENGTH) return setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+    setBusy(true);
+    setError(null);
+    try {
+      await candidateRegisterFn({ data: { name: f("name").trim(), email: f("email").trim(), password: f("password"), accountType: type } });
+      // Navigating re-reads the session; no invalidate, so this page's guards run once.
+      await router.navigate({ to: "/onboarding", search: { for: type, step: 2 } });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "We couldn't create your account. Please try again.");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <AuthTabs active="register" forType={type} />
+      <Heading
+        title={employer ? "Set up your client portal." : "Create your free account."}
+        lede={
+          employer
+            ? "Use your work email. Next you'll tell us about your company and post your first role."
+            : "It takes a minute, and everything for candidates is free. Next you'll upload your CV for a score."
+        }
+      />
+      <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <label htmlFor="ob-name" className={lbl}>Full name</label>
+          <input id="ob-name" name="name" required autoFocus autoComplete="name" maxLength={200} className={field} />
+        </div>
+        <div className="sm:col-span-2">
+          <label htmlFor="ob-email" className={lbl}>{employer ? "Work email" : "Email"}</label>
+          <input id="ob-email" name="email" type="email" required autoComplete="email" className={field} />
+        </div>
+        <div>
+          <label htmlFor="ob-password" className={lbl}>
+            Password <span className="normal-case tracking-normal font-sans">(min {MIN_PASSWORD_LENGTH} chars)</span>
+          </label>
+          <input id="ob-password" name="password" type="password" required minLength={MIN_PASSWORD_LENGTH} autoComplete="new-password" className={field} />
+        </div>
+        <div>
+          <label htmlFor="ob-confirm" className={lbl}>Confirm password</label>
+          <input id="ob-confirm" name="confirm" type="password" required autoComplete="new-password" className={field} />
+        </div>
+        <p className="sm:col-span-2 text-[13px] text-ink-soft">
+          By creating an account you confirm you've read <Link to="/privacy" className="underline">how your information is used</Link> and the{" "}
+          <Link to="/terms" className="underline">terms of use</Link>.
+        </p>
+        {error && (
+          <p role="alert" className="sm:col-span-2 text-sm text-bad">{error}</p>
+        )}
+        <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-1">
+          <Link to="/onboarding" search={{ for: employer ? "candidate" : "employer", step: 1 }} className="text-[13px] text-ink-mute underline">
+            {employer ? "Looking for work? Create a candidate account" : "Hiring? Set up a client portal"}
+          </Link>
+          <button disabled={busy} className="min-h-11 rounded-full bg-ink text-paper px-6 text-[14px] disabled:opacity-60">
+            {busy ? "Creating account…" : "Create account"}
+          </button>
+        </div>
+      </form>
+      <SocialSignIn mode="register" redirect={employer ? "/auth/employer-setup?onboarding=1" : "/onboarding?for=candidate&step=2"} />
+    </>
+  );
+}
+
 /* ───────────── Candidate ───────────── */
 
 type UploadResult = { id: string; score: number | null };
@@ -222,6 +307,7 @@ function CandidateStep({
   result: UploadResult | null;
   onUploaded: (r: UploadResult) => void;
 }) {
+  if (step === 1) return <AccountStep type="candidate" />;
   if (step === 2) return <UploadStep onDone={onUploaded} />;
   return <ScoreStep result={result} />;
 }
@@ -374,6 +460,7 @@ function EmployerStep({ step, go, profile }: { step: number; go: (n: number) => 
       ← Back
     </button>
   );
+  if (step === 1) return <AccountStep type="employer" />;
   if (step === 2)
     return (
       <>
